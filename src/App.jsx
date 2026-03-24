@@ -258,7 +258,7 @@ From header extract: propertyName, inspectorName, inspectionDate (YYYY-MM-DD fro
 Return ONLY valid JSON:
 {"propertyName":"","inspectorName":"","inspectionDate":"","items":[{"description":"","category":"","priority":"","location":"","photoNote":""}]}`;
 
-  fetch("https://api.anthropic.com/v1/messages",{
+  fetch("/api/anthropic",{
     method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:2000,
       messages:[{role:"user",content:[
@@ -292,7 +292,7 @@ Return ONLY valid JSON:
 function genAISummary(prop,propItems,cb,setLoading) {
   setLoading(true);
   const open=propItems.filter(i=>i.status!=="Completed");
-  fetch("https://api.anthropic.com/v1/messages",{
+  fetch("/api/anthropic",{
     method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:180,
       messages:[{role:"user",content:`Write a 2-3 sentence maintenance status summary for ${prop.name}. Open: ${open.length}. Critical: ${open.filter(i=>i.priority==="Critical").length}. Items: ${propItems.slice(0,5).map(i=>i.description).join("; ")}. Plain professional prose, no bullets.`}]
