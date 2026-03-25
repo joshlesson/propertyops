@@ -259,26 +259,28 @@ function SlideOver({children,title,sub,onClose}) {
 
 function parsePDF({pdfBase64,propertyId,inspectionId,overrideDate,overrideInspector},setLoading,onResult) {
   setLoading(true);
-  const prompt=`You are a property maintenance coordinator reviewing a SnapInspect inspection PDF from Dembs Development Inc.
+  const prompt=`You are reviewing a property inspection PDF. Extract ALL actionable repair and maintenance items.
 
-FORMAT: Each row has Item | Condition | Comments.
-- "Yes" = issue exists and needs attention. "No" / "N/A" / blank = SKIP.
-- PRESENCE-ONLY items (Yes just means it exists — only extract if Comments describe damage): Dumpster Coral/Enclosure, Dumpster Pad, Irrigation system turned off/on, Handicap spaces properly striped, Overhead Doors Tested, Dock Leveler Tested.
-- COMMENT RULE: Yes with ANY comment (even short like "Paint" or "2026") = EXTRACT. Yes with no comment = SKIP unless the item name itself clearly describes a repair need.
-- "Satisfactory" condition with a comment describing an issue = EXTRACT.
-- Also check the Comment Section pages at end for free-text actionable notes — these are always actionable.
-- Dumpster Area Trash Requires Clean Out with any comment = EXTRACT.
+EXTRACT an item when ANY of these are true:
+1. Condition column says "Yes" AND the item name describes a problem (e.g. "Overhead Doors Need of Repair", "Man Door Need of Repair", "Building Need of Painting", "Dumpster Area Trash Requires Clean Out")
+2. Condition says "Yes" AND there is ANY comment text (even just "Paint" or "2026")
+3. Condition says "Satisfactory" BUT the comment describes an issue (e.g. "catch basins settling / crack fill needed")
+4. The Comment Section at the end has any actionable text
 
-For each valid item return:
-- description: actionable task (1-2 sentences with comment and photo context)
+SKIP when:
+- Condition is "No", "N/A", or blank
+- Item is just confirming something exists with no problem: "Handicap spaces properly striped Yes", "Irrigation system turned off Yes", "Overhead Doors Tested No", "Dock Leveler Tested No", "Dumpster Coral Yes" (no comment), "Dumpster Pad Yes" (no comment)
+
+For each extracted item return:
+- description: clear actionable task combining item name + comment
 - category: one of ${CATEGORIES.join(", ")}
 - priority: Critical/High/Medium/Low
-- location: specific location if known (or "")
-- photoNote: what photos show (or "")
+- location: specific location if mentioned (or "")
+- photoNote: ""
 
-From header extract: propertyName, inspectorName, inspectionDate (YYYY-MM-DD from MM/DD/YY)
+From header extract: propertyName, inspectorName, inspectionDate (YYYY-MM-DD)
 
-Return ONLY valid JSON:
+Return ONLY valid JSON with no markdown:
 {"propertyName":"","inspectorName":"","inspectionDate":"","items":[{"description":"","category":"","priority":"","location":"","photoNote":""}]}`;
 
   fetch("/api/anthropic",{
