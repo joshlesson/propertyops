@@ -262,10 +262,12 @@ function parsePDF({pdfBase64,propertyId,inspectionId,overrideDate,overrideInspec
   const prompt=`You are a property maintenance coordinator reviewing a SnapInspect inspection PDF from Dembs Development Inc.
 
 FORMAT: Each row has Item | Condition | Comments.
-- "Yes" = issue exists. "No" / "N/A" / blank = SKIP.
-- PRESENCE-ONLY items (Yes just means feature exists — only extract if Comments describe actual damage): Exterior Stairs Conditions, Dumpster Coral/Enclosure, Dumpster Pad, Irrigation system turned off/on, Handicap spaces properly striped, Overhead Doors Tested, Dock Leveler Tested.
-- COMMENT RULE: Yes with no comment = SKIP. Only extract if there is a comment or clear photo evidence.
-- Also check the Comment Section pages at end for free-text actionable notes.
+- "Yes" = issue exists and needs attention. "No" / "N/A" / blank = SKIP.
+- PRESENCE-ONLY items (Yes just means it exists — only extract if Comments describe damage): Dumpster Coral/Enclosure, Dumpster Pad, Irrigation system turned off/on, Handicap spaces properly striped, Overhead Doors Tested, Dock Leveler Tested.
+- COMMENT RULE: Yes with ANY comment (even short like "Paint" or "2026") = EXTRACT. Yes with no comment = SKIP unless the item name itself clearly describes a repair need.
+- "Satisfactory" condition with a comment describing an issue = EXTRACT.
+- Also check the Comment Section pages at end for free-text actionable notes — these are always actionable.
+- Dumpster Area Trash Requires Clean Out with any comment = EXTRACT.
 
 For each valid item return:
 - description: actionable task (1-2 sentences with comment and photo context)
