@@ -424,13 +424,10 @@ ${CONTACT_EMAIL}`;
         {/* Email preview */}
         <div style={{marginBottom:18}}>
           <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:"#9c9a93",marginBottom:8}}>Email Preview</div>
-          <div style={{background:"#f5f4f1",borderRadius:8,padding:"12px 14px",fontSize:12,color:MUTED,lineHeight:1.7,whiteSpace:"pre-wrap",maxHeight:180,overflowY:"auto"}}>
-            <strong style={{color:TEXT}}>To:</strong> {vendorEmail||"(vendor email)"}{"
-"}
-            <strong style={{color:TEXT}}>Subject:</strong> {subject}{"
-
-"}
-            {body}
+          <div style={{background:"#f5f4f1",borderRadius:8,padding:"12px 14px",fontSize:12,color:MUTED,lineHeight:1.7,maxHeight:180,overflowY:"auto"}}>
+            <div><strong style={{color:TEXT}}>To:</strong> {vendorEmail||"(vendor email)"}</div>
+            <div><strong style={{color:TEXT}}>Subject:</strong> {subject}</div>
+            <div style={{marginTop:8,whiteSpace:"pre-wrap"}}>{body}</div>
           </div>
         </div>
 
