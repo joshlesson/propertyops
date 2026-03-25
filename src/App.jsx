@@ -11,6 +11,27 @@ const sb = createClient(
 const TEAM       = ["Kenny Perkins","Josh Lesson","Rob Stout","Spencer Vankirk","Dylan Dembs"];
 const CATEGORIES = ["Signage","Structural","Concrete / Hardscape","Painting / Finishes","Dock / Loading","Roofing","HVAC","Plumbing","Electrical","Landscaping","Safety","Other"];
 const PRIORITIES = ["Critical","High","Medium","Low"];
+
+const CONTACT_EMAIL = "management@dembsroth.com";
+
+const VENDORS = {
+  "Roofing":             [{name:"TBD",email:""}],
+  "Masonry":             [{name:"TBD",email:""}],
+  "Concrete / Hardscape":[{name:"TBD",email:""}],
+  "Painting / Finishes": [{name:"TBD",email:""}],
+  "Asphalt":             [{name:"TBD",email:""}],
+  "Striping":            [{name:"TBD",email:""}],
+  "Dock / Loading":      [{name:"TBD",email:""}],
+  "Signage":             [{name:"TBD",email:""}],
+  "HVAC":                [{name:"TBD",email:""}],
+  "Electrical":          [{name:"TBD",email:""}],
+  "Plumbing":            [{name:"TBD",email:""}],
+  "Landscaping":         [{name:"TBD",email:""}],
+  "Structural":          [{name:"TBD",email:""}],
+  "Safety":              [{name:"TBD",email:""}],
+  "Other":               [{name:"TBD",email:""}],
+};
+
 const STATUSES   = ["Not Started","PO Issued","Scheduled","In Progress","Completed"];
 const STATUS_NEXT= {"Not Started":"PO Issued","PO Issued":"Scheduled","Scheduled":"In Progress","In Progress":"Completed"};
 
@@ -303,6 +324,130 @@ function genAISummary(prop,propItems,cb,setLoading) {
   }).catch(()=>setLoading(false));
 }
 
+
+// ─── Quote Request ────────────────────────────────────────────────────────────
+
+function QuoteModal({item, onClose}) {
+  const prop = PROPERTIES.find(p=>p.id===item.propertyId);
+  const categoryVendors = VENDORS[item.category] || [];
+  const [vendorName, setVendorName] = useState(categoryVendors[0]?.name!=="TBD" ? categoryVendors[0]?.name : "");
+  const [vendorEmail, setVendorEmail] = useState(categoryVendors[0]?.name!=="TBD" ? categoryVendors[0]?.email : "");
+  const [customVendor, setCustomVendor] = useState(false);
+
+  const subject = `Quote Request — ${item.description.slice(0,60)} — ${prop?.name}`;
+  const body = `Hello,
+
+We are requesting a quote for the following repair at one of our properties.
+
+PROPERTY: ${prop?.name}
+ADDRESS: ${prop?.address}
+
+SCOPE OF WORK: ${item.description}
+
+PRIORITY: ${item.priority}
+
+Please reply to this email with your quote at your earliest convenience. For questions, contact us at ${CONTACT_EMAIL}.
+
+Thank you,
+Dembs Development Inc.
+${CONTACT_EMAIL}`;
+
+  function openEmail() {
+    const mailto = `mailto:${vendorEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.open(mailto);
+  }
+
+  const TEXT="#1a1a1a"; const MUTED="#555550"; const BORDER="#d0cec8";
+  const INPUT={fontFamily:"var(--font-sans)",fontSize:13,width:"100%",borderRadius:7,
+    border:`1px solid ${BORDER}`,background:"#fff",color:TEXT,padding:"8px 10px",boxSizing:"border-box"};
+
+  return (
+    <div onClick={e=>e.target===e.currentTarget&&onClose()}
+      style={{position:"absolute",inset:0,zIndex:300,background:"rgba(0,0,0,0.35)",
+        display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"52px 16px",overflowY:"auto"}}>
+      <div style={{background:"#fff",borderRadius:12,border:`1px solid ${BORDER}`,
+        width:"100%",maxWidth:580,padding:"26px 26px 22px",boxShadow:"0 12px 40px rgba(0,0,0,0.15)"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18}}>
+          <div>
+            <div style={{fontSize:16,fontWeight:700,color:TEXT}}>Request Vendor Quote</div>
+            <div style={{fontSize:12,color:MUTED,marginTop:3}}>{prop?.name} · {item.category}</div>
+          </div>
+          <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",fontSize:22,color:MUTED,padding:0}}>×</button>
+        </div>
+
+        {/* Work summary */}
+        <div style={{background:"#f5f4f1",borderRadius:8,padding:"12px 14px",marginBottom:18}}>
+          <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:"#9c9a93",marginBottom:6}}>Scope of Work</div>
+          <div style={{fontSize:14,color:TEXT,lineHeight:1.5}}>{item.description}</div>
+          <div style={{marginTop:8,display:"flex",gap:8}}>
+            <span style={{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:99,
+              background:item.priority==="Critical"?"#fef2f2":item.priority==="High"?"#fefce8":"#eff6ff",
+              color:item.priority==="Critical"?"#b91c1c":item.priority==="High"?"#b45309":"#1d4ed8",
+              border:`1px solid ${item.priority==="Critical"?"#fecaca":item.priority==="High"?"#fde68a":"#bfdbfe"}`}}>
+              {item.priority} Priority
+            </span>
+          </div>
+        </div>
+
+        {/* Vendor selection */}
+        <div style={{marginBottom:14}}>
+          <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:"#9c9a93",marginBottom:8}}>Vendor</div>
+          {categoryVendors.length>0 && categoryVendors[0].name!=="TBD" && !customVendor && (
+            <div style={{marginBottom:10}}>
+              <select value={vendorName} onChange={e=>{
+                const v=categoryVendors.find(v=>v.name===e.target.value);
+                setVendorName(e.target.value);
+                setVendorEmail(v?.email||"");
+              }} style={INPUT}>
+                {categoryVendors.map(v=><option key={v.name} value={v.name}>{v.name}</option>)}
+              </select>
+            </div>
+          )}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+            <div>
+              <div style={{fontSize:11,color:MUTED,marginBottom:4}}>Vendor name</div>
+              <input value={vendorName} onChange={e=>setVendorName(e.target.value)}
+                placeholder="Enter vendor name" style={INPUT}/>
+            </div>
+            <div>
+              <div style={{fontSize:11,color:MUTED,marginBottom:4}}>Vendor email</div>
+              <input value={vendorEmail} onChange={e=>setVendorEmail(e.target.value)}
+                placeholder="vendor@example.com" style={INPUT}/>
+            </div>
+          </div>
+        </div>
+
+        {/* Email preview */}
+        <div style={{marginBottom:18}}>
+          <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:"#9c9a93",marginBottom:8}}>Email Preview</div>
+          <div style={{background:"#f5f4f1",borderRadius:8,padding:"12px 14px",fontSize:12,color:MUTED,lineHeight:1.7,whiteSpace:"pre-wrap",maxHeight:180,overflowY:"auto"}}>
+            <strong style={{color:TEXT}}>To:</strong> {vendorEmail||"(vendor email)"}{"
+"}
+            <strong style={{color:TEXT}}>Subject:</strong> {subject}{"
+
+"}
+            {body}
+          </div>
+        </div>
+
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={openEmail} disabled={!vendorEmail}
+            style={{flex:1,fontSize:13,fontWeight:600,borderRadius:8,padding:"10px",
+              background:vendorEmail?"#1a1a1a":"#d1d0cb",color:vendorEmail?"#fff":"#9c9a93",
+              border:"none",cursor:vendorEmail?"pointer":"not-allowed"}}>
+            Open in Email Client →
+          </button>
+          <button onClick={onClose}
+            style={{fontSize:13,borderRadius:8,padding:"10px 16px",
+              background:"transparent",color:MUTED,border:`1px solid ${BORDER}`,cursor:"pointer"}}>
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Components ───────────────────────────────────────────────────────────────
 
 function PropRow({prop,items,inspections,isLast,onClick}) {
@@ -381,6 +526,7 @@ function ItemRow({item,showProperty,onClick,onAdvance}) {
 function ItemDetail({item,inspections,onUpdate,onAdvance,onClose}) {
   const [editing,setEditing]=useState(false);
   const [form,setForm]=useState({...item});
+  const [showQuote,setShowQuote]=useState(false);
   const prop=PROPERTIES.find(p=>p.id===item.propertyId);
   const insp=inspections.find(i=>i.id===item.inspectionId);
   const next=STATUS_NEXT[item.status];
@@ -434,7 +580,15 @@ function ItemDetail({item,inspections,onUpdate,onAdvance,onClose}) {
             </div>
           ))}
         </div>
-        <GhostBtn onClick={()=>setEditing(true)}>Edit item</GhostBtn>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          <GhostBtn onClick={()=>setEditing(true)}>Edit item</GhostBtn>
+          <button onClick={()=>setShowQuote(true)} style={{fontFamily:"var(--font-sans)",fontSize:13,
+            borderRadius:8,padding:"9px 16px",background:"#eff6ff",
+            color:"#1d4ed8",border:"1px solid #bfdbfe",cursor:"pointer",fontWeight:500}}>
+            Request Quote →
+          </button>
+        </div>
+        {showQuote&&<QuoteModal item={item} onClose={()=>setShowQuote(false)}/>}
       </> : (
         <div style={{display:"flex",flexDirection:"column",gap:14}}>
           <FInput label="Description" value={form.description} onChange={v=>setForm(f=>({...f,description:v}))} rows={2}/>
@@ -489,7 +643,16 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}) {
     if(!file||file.type!=="application/pdf"){alert("Please upload a PDF.");return;}
     setFileName(file.name);
     const r=new FileReader();
-    r.onload=e=>setPdfBase64(e.target.result.split(",")[1]);
+    r.onload=e=>{
+      const base64=e.target.result.split(",")[1];
+      // Check size — Vercel limit is 4.5MB, warn if over 3MB
+      const sizeInMB = (base64.length * 0.75) / (1024 * 1024);
+      if(sizeInMB > 4) {
+        alert(`This PDF is ${sizeInMB.toFixed(1)}MB which may be too large. Try compressing it at smallpdf.com first, then re-upload.`);
+        return;
+      }
+      setPdfBase64(base64);
+    };
     r.readAsDataURL(file);
   }
 
@@ -966,4 +1129,3 @@ export default function App() {
     </div>
   );
 }
- 
