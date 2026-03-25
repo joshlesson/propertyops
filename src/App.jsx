@@ -293,7 +293,10 @@ Return ONLY valid JSON with no markdown:
     })
   }).then(r=>r.json()).then(data=>{
     const raw=data.content?.find(b=>b.type==="text")?.text||"{}";
+    console.log("AI RAW RESPONSE:", raw);
+    console.log("AI DATA:", JSON.stringify(data).slice(0,500));
     const parsed=JSON.parse(raw.replace(/```json|```/g,"").trim());
+    console.log("PARSED ITEMS:", parsed.items?.length, parsed.items);
     const now=today();
     const newItems=(parsed.items||[]).map(item=>({
       id:"r"+uid(),inspectionId,propertyId,
