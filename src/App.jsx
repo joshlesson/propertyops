@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "@supabase/supabase-js";
 
 const sb = createClient(
   "https://rvpacnokfnvwscxvjsou.supabase.co",
