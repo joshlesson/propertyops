@@ -110,6 +110,7 @@ const SBDR   = {"Not Started":"#eaeaea","PO Issued":"#ddd6fe","Scheduled":"#bfdb
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function uid()   { return Math.random().toString(36).slice(2,9); }
+function nowISO(){ return new Date().toISOString(); }
 function today() { return new Date().toISOString().slice(0,10); }
 
 // ─── Supabase data layer ──────────────────────────────────────────────────────
@@ -120,8 +121,8 @@ async function loadAll() {
       sb.from("inspections").select("*").order("date", { ascending: false }),
       sb.from("items").select("*").order("created_at", { ascending: false }),
     ]);
-    if (e1) console.error("inspections load error:", e1);
-    if (e2) console.error("items load error:", e2);
+    if (e1) { console.error("inspections load error:", e1); return null; }
+    if (e2) { console.error("items load error:", e2); return null; }
     const inspections = (insps || []).map(r => ({
       id: r.id, propertyId: r.property_id, date: r.date,
       inspector: r.inspector, notes: r.notes,
@@ -129,23 +130,28 @@ async function loadAll() {
     const items = (its || []).map(r => ({
       id: r.id, inspectionId: r.inspection_id, propertyId: r.property_id,
       description: r.description, category: r.category, priority: r.priority,
-      status: r.status, assignee: r.assignee, vendor: r.vendor, notes: r.notes,
+      status: r.status, assignee: r.assignee || "", vendor: r.vendor || "",
+      notes: r.notes || "",
       scheduledDate: r.scheduled_date || "", completedDate: r.completed_date || "",
       createdAt: r.created_at, statusHistory: r.status_history || [],
     }));
     return { inspections, items };
   } catch(e) {
-    console.error("loadAll error", e);
-    return { inspections:[], items:[] };
+    console.error("loadAll exception:", e);
+    return null;
   }
 }
 
 async function saveInspection(insp) {
   const { error } = await sb.from("inspections").upsert({
-    id: insp.id, property_id: insp.propertyId, date: insp.date,
-    inspector: insp.inspector, notes: insp.notes,
-  });
+    id: insp.id,
+    property_id: insp.propertyId,
+    date: insp.date,
+    inspector: insp.inspector,
+    notes: insp.notes,
+  }, { onConflict: "id" });
   if (error) console.error("saveInspection error:", error);
+  return error;
 }
 
 async function saveItemToDB(item) {
@@ -164,8 +170,8 @@ async function saveItemToDB(item) {
     completed_date: item.completedDate || "",
     created_at: item.createdAt,
     status_history: item.statusHistory,
-    updated_at: new Date().toISOString(),
-  });
+    updated_at: nowISO(),
+  }, { onConflict: "id" });
   if (error) console.error("saveItemToDB error:", error);
   return error;
 }
@@ -237,7 +243,6 @@ function Overlay({children,onClose}) {
     </div>
   </div>;
 }
-
 function OverlayHeader({title,sub,onClose}) {
   return <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20}}>
     <div>
@@ -248,7 +253,6 @@ function OverlayHeader({title,sub,onClose}) {
       fontSize:22,color:C.faint,padding:0,marginLeft:12,lineHeight:1}}>x</button>
   </div>;
 }
-
 function SlideOver({children,title,sub,onClose}) {
   return <div style={{position:"absolute",inset:0,zIndex:200,display:"flex"}}
     onClick={e=>e.target===e.currentTarget&&onClose()}>
@@ -276,29 +280,23 @@ function SlideOver({children,title,sub,onClose}) {
 function parsePDF({pdfBase64,propertyId,inspectionId,overrideDate,overrideInspector},setLoading,onResult) {
   setLoading(true);
   const prompt=`You are reviewing a SnapInspect property inspection report for Dembs Development Inc.
-
 Extract ALL actionable repair and maintenance items from this inspection.
-
 RULES:
-- Extract when Condition = "Yes" AND the item name describes a problem (repair, damage, needs painting, needs cleaning, etc.)
+- Extract when Condition = "Yes" AND the item name describes a problem
 - Extract when Condition = "Yes" AND there is a comment
 - Extract when Condition = "Satisfactory" but comment describes an issue
 - Extract ALL items from the Comment Section at the end
 - SKIP: Condition = "No", "N/A", or blank
 - SKIP: "Overhead Doors Tested", "Dock Leveler Tested", "Handicap spaces properly striped", "Irrigation system turned off" when Yes with no damage comment
 - SKIP: "Dumpster Coral", "Dumpster Pad", "Dumpster Gates" when Yes with no damage comment
-
 For each item return:
 - description: item name + comment combined into one clear actionable sentence
 - category: one of ${CATEGORIES.join(", ")}
 - priority: Critical/High/Medium/Low
 - location: specific location if mentioned, else ""
-- photoNote: ""
-
 Also extract from header: propertyName, inspectorName, inspectionDate (YYYY-MM-DD format)
-
-Respond ONLY with valid JSON, no markdown, no explanation:
-{"propertyName":"","inspectorName":"","inspectionDate":"","items":[{"description":"","category":"","priority":"","location":"","photoNote":""}]}`;
+Respond ONLY with valid JSON, no markdown:
+{"propertyName":"","inspectorName":"","inspectionDate":"","items":[{"description":"","category":"","priority":"","location":""}]}`;
 
   fetch("/api/anthropic",{
     method:"POST",headers:{"Content-Type":"application/json"},
@@ -313,23 +311,24 @@ Respond ONLY with valid JSON, no markdown, no explanation:
     let parsed={items:[]};
     try { parsed=JSON.parse(raw.replace(/```json|```/g,"").trim()); }
     catch(e) { console.error("Parse error:", e, raw); }
-    const now=today();
+    const ts=nowISO();
+    const dateOnly=today();
     const newItems=(parsed.items||[]).map(item=>({
-      id:"r"+uid(),inspectionId,propertyId,
+      id:"r"+uid(), inspectionId, propertyId,
       description:item.description+(item.location?` (${item.location})`:""),
-      category:item.category,priority:item.priority,
-      status:"Not Started",assignee:"",vendor:"",notes:item.photoNote||"",
-      createdAt:now,scheduledDate:"",completedDate:"",
-      statusHistory:[{status:"Not Started",date:now}],
+      category:item.category, priority:item.priority,
+      status:"Not Started", assignee:"", vendor:"", notes:"",
+      createdAt:ts, scheduledDate:"", completedDate:"",
+      statusHistory:[{status:"Not Started",date:dateOnly}],
     }));
     onResult({
       items:newItems,
-      date:overrideDate||parsed.inspectionDate||now,
+      date:overrideDate||parsed.inspectionDate||dateOnly,
       inspector:overrideInspector||parsed.inspectorName||"",
       detectedProperty:parsed.propertyName,
     });
     setLoading(false);
-  }).catch(e=>{setLoading(false);console.error("Fetch error:",e);alert("Failed to parse PDF. Check your connection.");});
+  }).catch(e=>{setLoading(false);console.error("Fetch error:",e);alert("Failed to parse PDF.");});
 }
 
 function genAISummary(prop,propItems,cb,setLoading) {
@@ -352,25 +351,20 @@ function QuoteModal({item,onClose}) {
   const prop = PROPERTIES.find(p=>p.id===item.propertyId);
   const categoryVendors = (VENDORS[item.category]||[]).filter(v=>v.name!=="TBD");
   const [selectedVendorName, setSelectedVendorName] = useState("");
-  const [selectedEmail,      setSelectedEmail]      = useState("");
-
-  const selectedVendor  = categoryVendors.find(v=>v.name===selectedVendorName);
-  const contactOptions  = selectedVendor?.contacts || [];
-
+  const [selectedEmail, setSelectedEmail] = useState("");
+  const selectedVendor = categoryVendors.find(v=>v.name===selectedVendorName);
+  const contactOptions = selectedVendor?.contacts || [];
   const subject = `Quote Request - ${item.description.slice(0,60)} - ${prop?.name}`;
-  const body    = `Hello,\n\nWe are requesting a quote for the following repair at one of our properties.\n\nPROPERTY: ${prop?.name}\nADDRESS: ${prop?.address}\n\nSCOPE OF WORK: ${item.description}\n\nPRIORITY: ${item.priority}\n\nPlease reply to this email with your quote at your earliest convenience. For questions, contact us at ${CONTACT_EMAIL}.\n\nThank you,\nDembs Development Inc.\n${CONTACT_EMAIL}`;
-
+  const body = `Hello,\n\nWe are requesting a quote for the following repair at one of our properties.\n\nPROPERTY: ${prop?.name}\nADDRESS: ${prop?.address}\n\nSCOPE OF WORK: ${item.description}\n\nPRIORITY: ${item.priority}\n\nPlease reply with your quote at your earliest convenience. For questions contact us at ${CONTACT_EMAIL}.\n\nThank you,\nDembs Development Inc.\n${CONTACT_EMAIL}`;
   const TEXT="#1a1a1a"; const MUTED="#555550"; const BORDER="#d0cec8";
   const INPUT={fontFamily:"var(--font-sans)",fontSize:13,width:"100%",borderRadius:7,
     border:`1px solid ${BORDER}`,background:"#fff",color:TEXT,padding:"8px 10px",boxSizing:"border-box"};
-
   return (
     <div onClick={e=>e.target===e.currentTarget&&onClose()}
       style={{position:"absolute",inset:0,zIndex:300,background:"rgba(0,0,0,0.35)",
         display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"52px 16px",overflowY:"auto"}}>
       <div style={{background:"#fff",borderRadius:12,border:`1px solid ${BORDER}`,
         width:"100%",maxWidth:580,padding:"26px 26px 22px",boxShadow:"0 12px 40px rgba(0,0,0,0.15)"}}>
-
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18}}>
           <div>
             <div style={{fontSize:16,fontWeight:700,color:TEXT}}>Request Vendor Quote</div>
@@ -378,8 +372,6 @@ function QuoteModal({item,onClose}) {
           </div>
           <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",fontSize:22,color:MUTED,padding:0}}>x</button>
         </div>
-
-        {/* Scope of work */}
         <div style={{background:"#f5f4f1",borderRadius:8,padding:"12px 14px",marginBottom:18}}>
           <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:"#9c9a93",marginBottom:6}}>Scope of Work</div>
           <div style={{fontSize:14,color:TEXT,lineHeight:1.5}}>{item.description}</div>
@@ -392,8 +384,6 @@ function QuoteModal({item,onClose}) {
             </span>
           </div>
         </div>
-
-        {/* Two dropdowns */}
         <div style={{marginBottom:18}}>
           <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:"#9c9a93",marginBottom:10}}>Vendor</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
@@ -404,9 +394,7 @@ function QuoteModal({item,onClose}) {
                   <option value="">Select vendor...</option>
                   {categoryVendors.map(v=><option key={v.name} value={v.name}>{v.name}</option>)}
                 </select>
-              ) : (
-                <input placeholder="No vendors on file" style={{...INPUT,color:"#aaa"}} disabled/>
-              )}
+              ) : <input placeholder="No vendors on file" style={{...INPUT,color:"#aaa"}} disabled/>}
             </div>
             <div>
               <div style={{fontSize:11,color:MUTED,marginBottom:4}}>Contact email</div>
@@ -415,15 +403,10 @@ function QuoteModal({item,onClose}) {
                   <option value="">Select contact...</option>
                   {contactOptions.map(c=><option key={c.email} value={c.email}>{c.person} — {c.email}</option>)}
                 </select>
-              ) : (
-                <input placeholder={selectedVendorName?"No contacts on file":"Select vendor first"}
-                  style={{...INPUT,color:"#aaa"}} disabled/>
-              )}
+              ) : <input placeholder={selectedVendorName?"No contacts on file":"Select vendor first"} style={{...INPUT,color:"#aaa"}} disabled/>}
             </div>
           </div>
         </div>
-
-        {/* Email preview */}
         <div style={{marginBottom:18}}>
           <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:"#9c9a93",marginBottom:8}}>Email Preview</div>
           <div style={{background:"#f5f4f1",borderRadius:8,padding:"12px 14px",fontSize:12,color:MUTED,lineHeight:1.7,maxHeight:180,overflowY:"auto"}}>
@@ -432,9 +415,8 @@ function QuoteModal({item,onClose}) {
             <div style={{marginTop:8,whiteSpace:"pre-wrap"}}>{body}</div>
           </div>
         </div>
-
         <div style={{display:"flex",gap:8}}>
-          <button onClick={()=>{const m=`mailto:${selectedEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;window.open(m);}}
+          <button onClick={()=>window.open(`mailto:${selectedEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`)}
             disabled={!selectedEmail}
             style={{flex:1,fontSize:13,fontWeight:600,borderRadius:8,padding:"10px",
               background:selectedEmail?"#1a1a1a":"#d1d0cb",color:selectedEmail?"#fff":"#9c9a93",
@@ -495,15 +477,10 @@ function ItemRow({item,showProperty,onClick,onAdvance}) {
       <div style={{flex:1,minWidth:0}}>
         <div style={{fontSize:14,fontWeight:600,color:C.text,marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.description}</div>
         <div style={{display:"flex",gap:5,alignItems:"center",flexWrap:"wrap"}}>
-          {showProperty&&<>
-            <span style={{fontSize:12,color:C.muted}}>{GROUPS[prop?.group]}</span>
-            <span style={{color:C.border,fontSize:11}}>·</span>
-          </>}
+          {showProperty&&<><span style={{fontSize:12,color:C.muted}}>{GROUPS[prop?.group]}</span><span style={{color:C.border,fontSize:11}}>·</span></>}
           <span style={{fontSize:11,color:C.muted}}>{item.category}</span>
-          {item.assignee&&<><span style={{color:C.border,fontSize:11}}>·</span>
-            <span style={{fontSize:11,color:C.muted}}>{item.assignee.split(" ")[0]}</span></>}
-          {item.scheduledDate&&<><span style={{color:C.border,fontSize:11}}>·</span>
-            <span style={{fontSize:11,color:C.muted}}>{item.scheduledDate}</span></>}
+          {item.assignee&&<><span style={{color:C.border,fontSize:11}}>·</span><span style={{fontSize:11,color:C.muted}}>{item.assignee.split(" ")[0]}</span></>}
+          {item.scheduledDate&&<><span style={{color:C.border,fontSize:11}}>·</span><span style={{fontSize:11,color:C.muted}}>{item.scheduledDate}</span></>}
         </div>
       </div>
       <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0}}>
@@ -542,7 +519,7 @@ function ItemDetail({item,inspections,onUpdate,onAdvance,onClose}) {
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:1,marginBottom:20,
           border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
           {[["Assignee",item.assignee||"Unassigned"],["Vendor",item.vendor||"—"],
-            ["Created",item.createdAt],["Scheduled",item.scheduledDate||"—"],
+            ["Created",item.createdAt?.slice(0,10)||""],["Scheduled",item.scheduledDate||"—"],
             ["Completed",item.completedDate||"—"],["Inspection",insp?.date||"Manual"]
           ].map(([label,val],i)=>(
             <div key={label} style={{padding:"11px 14px",background:i%2===0?C.bg:C.surface}}>
@@ -623,7 +600,6 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}) {
   const [loading,setLoading]=useState(false);
   const [preview,setPreview]=useState(null);
   const [dragOver,setDragOver]=useState(false);
-
   function handleFile(file) {
     if(!file||file.type!=="application/pdf"){alert("Please upload a PDF.");return;}
     setFileName(file.name);
@@ -631,14 +607,12 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}) {
     r.onload=e=>{
       const base64=e.target.result.split(",")[1];
       const sizeInMB=(base64.length*0.75)/(1024*1024);
-      if(sizeInMB>4){alert(`This PDF is ${sizeInMB.toFixed(1)}MB which may be too large. Try compressing at smallpdf.com first.`);return;}
+      if(sizeInMB>4){alert(`PDF is ${sizeInMB.toFixed(1)}MB — too large. Compress at smallpdf.com first.`);return;}
       setPdfBase64(base64);
     };
     r.readAsDataURL(file);
   }
-
   const prop=PROPERTIES.find(p=>p.id===propertyId);
-
   if(preview) return (
     <Overlay onClose={onClose}>
       <OverlayHeader title="Review extracted items" sub={`${preview.items.length} items from ${fileName}`} onClose={onClose}/>
@@ -669,7 +643,6 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}) {
       </div>
     </Overlay>
   );
-
   return (
     <Overlay onClose={onClose}>
       <OverlayHeader title="Import SnapInspect report" sub="Notes and photos extracted automatically" onClose={onClose}/>
@@ -684,11 +657,9 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}) {
           <input id="pdf-upload-input" type="file" accept="application/pdf" style={{display:"none"}}
             onChange={e=>handleFile(e.target.files[0])}/>
           {pdfBase64?<>
-            <div style={{fontSize:28,marginBottom:6}}>PDF</div>
             <div style={{fontSize:13,fontWeight:600,color:C.text}}>{fileName}</div>
             <div style={{fontSize:11,color:C.faint,marginTop:2}}>Click to change</div>
           </>:<>
-            <div style={{fontSize:22,color:C.faint,marginBottom:8}}>Upload</div>
             <div style={{fontSize:13,fontWeight:600,color:C.text}}>Drop SnapInspect PDF here</div>
             <div style={{fontSize:11,color:C.faint,marginTop:3}}>or click to browse</div>
           </>}
@@ -710,10 +681,7 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}) {
 }
 
 function AddItemForm({onSubmit,onClose}) {
-  const [form,setForm]=useState({
-    propertyId:PROPERTIES[0].id,description:"",
-    category:CATEGORIES[0],priority:"Medium",assignee:"",vendor:"",notes:""
-  });
+  const [form,setForm]=useState({propertyId:PROPERTIES[0].id,description:"",category:CATEGORIES[0],priority:"Medium",assignee:"",vendor:"",notes:""});
   return (
     <Overlay onClose={onClose}>
       <OverlayHeader title="Add repair item" onClose={onClose}/>
@@ -731,10 +699,10 @@ function AddItemForm({onSubmit,onClose}) {
         </div>
         <FInput label="Notes" value={form.notes} onChange={v=>setForm(f=>({...f,notes:v}))} placeholder="Optional..." rows={2}/>
         <PrimaryBtn full disabled={!form.description.trim()} onClick={()=>{
-          const now=today();
+          const ts=nowISO();
           onSubmit({id:"r"+uid(),inspectionId:null,...form,
-            status:"Not Started",createdAt:now,scheduledDate:"",completedDate:"",
-            statusHistory:[{status:"Not Started",date:now}]});
+            status:"Not Started",createdAt:ts,scheduledDate:"",completedDate:"",
+            statusHistory:[{status:"Not Started",date:today()}]});
         }}>Add item</PrimaryBtn>
       </div>
     </Overlay>
@@ -745,6 +713,8 @@ function AddItemForm({onSubmit,onClose}) {
 
 export default function App() {
   const [loaded,setLoaded]           = useState(false);
+  const [dbError,setDbError]         = useState(false);
+  const [saveError,setSaveError]     = useState("");
   const [saving,setSaving]           = useState(false);
   const [inspections,setInspections] = useState([]);
   const [items,setItems]             = useState([]);
@@ -760,9 +730,10 @@ export default function App() {
   const [search,setSearch]           = useState("");
 
   useEffect(()=>{
-    loadAll().then(({inspections:insp,items:its})=>{
-      setInspections(insp);
-      setItems(its);
+    loadAll().then(result=>{
+      if(result===null){ setDbError(true); setLoaded(true); return; }
+      setInspections(result.inspections);
+      setItems(result.items);
       setLoaded(true);
     });
   },[]);
@@ -771,35 +742,39 @@ export default function App() {
     const updated=items.map(i=>i.id===id?{...i,...changes}:i);
     setItems(updated);
     if(selItem?.id===id) setSelItem(p=>({...p,...changes}));
-    setSaving(true);
-    const err = await saveItemToDB(updated.find(i=>i.id===id));
-    if(err) console.error("updateItem save failed:", err);
+    setSaving(true); setSaveError("");
+    const err=await saveItemToDB(updated.find(i=>i.id===id));
+    if(err) setSaveError("Save failed: "+err.message);
     setSaving(false);
   }
 
   async function advance(item) {
     const next=STATUS_NEXT[item.status]; if(!next)return;
-    const now=today();
-    const h=[...item.statusHistory,{status:next,date:now}];
+    const d=today();
+    const h=[...item.statusHistory,{status:next,date:d}];
     const ch={status:next,statusHistory:h};
-    if(next==="Completed") ch.completedDate=now;
+    if(next==="Completed") ch.completedDate=d;
     await updateItem(item.id,ch);
   }
 
   async function addInspectionAndItems(insp,newItems) {
-    setSaving(true);
-    await saveInspection(insp);
-    for(const item of newItems){ await saveItemToDB(item); }
+    setSaving(true); setSaveError("");
+    const e1=await saveInspection(insp);
+    if(e1){ setSaveError("Failed to save inspection: "+e1.message); setSaving(false); return; }
+    for(const item of newItems){
+      const e2=await saveItemToDB(item);
+      if(e2){ setSaveError("Failed to save item: "+e2.message); }
+    }
     setInspections(prev=>[insp,...prev]);
     setItems(prev=>[...newItems,...prev]);
     setSaving(false);
   }
 
   async function addItem(item) {
-    setSaving(true);
-    const err = await saveItemToDB(item);
-    if(!err) setItems(prev=>[item,...prev]);
-    else alert("Failed to save item. Please check your connection and try again.");
+    setSaving(true); setSaveError("");
+    const err=await saveItemToDB(item);
+    if(err){ setSaveError("Save failed: "+err.message); setSaving(false); return; }
+    setItems(prev=>[item,...prev]);
     setSaving(false);
   }
 
@@ -833,8 +808,7 @@ export default function App() {
       <div style={{width:220,background:"#000",display:"flex",flexDirection:"column",flexShrink:0,borderRight:"1px solid #1a1a1a"}}>
         <div style={{padding:"20px 20px 16px",display:"flex",alignItems:"center",gap:10}}>
           <div style={{width:36,height:36,background:"#222",borderRadius:6,flexShrink:0,
-            display:"flex",alignItems:"center",justifyContent:"center",
-            border:"1px solid #333"}}>
+            display:"flex",alignItems:"center",justifyContent:"center",border:"1px solid #333"}}>
             <span style={{color:"#fff",fontSize:15,fontWeight:800}}>D</span>
           </div>
           <div>
@@ -859,16 +833,22 @@ export default function App() {
           {[["48","properties"],[openItems.length,"open items"],[critical.length,"critical"]].map(([n,l])=>(
             <div key={l} style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
               <span style={{fontSize:12,color:C.sideMuted}}>{l}</span>
-              <span style={{fontSize:12,fontWeight:700,
-                color:critical.length>0&&l==="critical"?"#fca5a5":C.sideText}}>{n}</span>
+              <span style={{fontSize:12,fontWeight:700,color:critical.length>0&&l==="critical"?"#fca5a5":C.sideText}}>{n}</span>
             </div>
           ))}
-          {saving&&<div style={{fontSize:10,color:C.sideMuted,marginTop:6}}>Saving...</div>}
+          {saving&&<div style={{fontSize:10,color:"#86efac",marginTop:6}}>Saving...</div>}
+          {saveError&&<div style={{fontSize:10,color:"#fca5a5",marginTop:6,lineHeight:1.4}}>{saveError}</div>}
         </div>
       </div>
 
       {/* Main */}
       <div style={{flex:1,minWidth:0,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+
+        {/* DB error banner */}
+        {dbError&&<div style={{background:"#fef2f2",borderBottom:"1px solid #fecaca",padding:"10px 24px",
+          fontSize:13,color:"#b91c1c",flexShrink:0}}>
+          Could not connect to database. Check your internet connection and refresh the page.
+        </div>}
 
         {/* Topbar */}
         <div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,
@@ -902,10 +882,10 @@ export default function App() {
           {view==="portfolio"&&!selProp&&<>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:12,marginBottom:24}}>
               {[
-                {l:"Open Items", v:openItems.length,                                      s:"across portfolio", red:false},
-                {l:"Critical",   v:critical.length,                                       s:"immediate action", red:critical.length>0},
-                {l:"Scheduled",  v:items.filter(i=>i.status==="Scheduled").length,        s:"confirmed with vendors"},
-                {l:"Completed",  v:items.filter(i=>i.status==="Completed").length,        s:"all time"},
+                {l:"Open Items",v:openItems.length,s:"across portfolio",red:false},
+                {l:"Critical",v:critical.length,s:"immediate action",red:critical.length>0},
+                {l:"Scheduled",v:items.filter(i=>i.status==="Scheduled").length,s:"confirmed with vendors"},
+                {l:"Completed",v:items.filter(i=>i.status==="Completed").length,s:"all time"},
               ].map(k=>(
                 <div key={k.l} style={{background:C.surface,border:`1px solid ${k.red?PBDR.Critical:C.border}`,borderRadius:10,padding:"16px 18px"}}>
                   <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.06em",textTransform:"uppercase",color:k.red?PCOLOR.Critical:C.faint,marginBottom:8}}>{k.l}</div>
@@ -914,7 +894,6 @@ export default function App() {
                 </div>
               ))}
             </div>
-
             <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,
               padding:"12px 18px",marginBottom:24,display:"flex",gap:24,flexWrap:"wrap",alignItems:"center"}}>
               <span style={{fontSize:10,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:C.faint}}>Status</span>
@@ -927,7 +906,6 @@ export default function App() {
                 </div>;
               })}
             </div>
-
             {Object.entries(GROUPS).map(([gkey,gname])=>{
               const gps=PROPERTIES.filter(p=>p.group===gkey);
               if(!gps.length) return null;
@@ -968,9 +946,7 @@ export default function App() {
                   ))}
                 </div>
               </div>
-
               <AISummaryCard prop={prop} propItems={pi}/>
-
               {PRIORITIES.map(p=>{
                 const grp=oi.filter(i=>i.priority===p);
                 if(!grp.length) return null;
@@ -987,10 +963,7 @@ export default function App() {
                   </div>
                 );
               })}
-              {oi.length===0&&<div style={{textAlign:"center",padding:"48px 0",color:C.faint,fontSize:13}}>
-                No open items — this property is clear.
-              </div>}
-
+              {oi.length===0&&<div style={{textAlign:"center",padding:"48px 0",color:C.faint,fontSize:13}}>No open items — this property is clear.</div>}
               {pInsp.length>0&&<div style={{marginTop:28}}>
                 <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.09em",textTransform:"uppercase",color:C.faint,marginBottom:10}}>Inspection history</div>
                 <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
