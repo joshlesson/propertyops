@@ -144,11 +144,8 @@ async function loadAll() {
 
 async function saveInspection(insp) {
   const { error } = await sb.from("inspections").upsert({
-    id: insp.id,
-    property_id: insp.propertyId,
-    date: insp.date,
-    inspector: insp.inspector,
-    notes: insp.notes,
+    id: insp.id, property_id: insp.propertyId, date: insp.date,
+    inspector: insp.inspector, notes: insp.notes,
   }, { onConflict: "id" });
   if (error) console.error("saveInspection error:", error);
   return error;
@@ -679,8 +676,11 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}) {
   );
 }
 
-function AddItemForm({onSubmit,onClose}) {
-  const [form,setForm]=useState({propertyId:PROPERTIES[0].id,description:"",category:CATEGORIES[0],priority:"Medium",assignee:"",vendor:"",notes:""});
+function AddItemForm({selectedPropertyId,onSubmit,onClose}) {
+  const [form,setForm]=useState({
+    propertyId:selectedPropertyId||PROPERTIES[0].id,
+    description:"",category:CATEGORIES[0],priority:"Medium",assignee:"",vendor:"",notes:""
+  });
   return (
     <Overlay onClose={onClose}>
       <OverlayHeader title="Add repair item" onClose={onClose}/>
@@ -1057,6 +1057,7 @@ export default function App() {
         </div>
       </div>
 
+      {/* Overlays */}
       {selItem&&<ItemDetail item={selItem} inspections={inspections}
         onUpdate={ch=>updateItem(selItem.id,ch)} onAdvance={()=>advance(selItem)}
         onClose={()=>setSelItem(null)}/>}
@@ -1064,9 +1065,9 @@ export default function App() {
         onSubmit={(insp,its)=>{addInspectionAndItems(insp,its);setShowImport(false);}}
         onClose={()=>setShowImport(false)}/>}
       {showAdd&&<AddItemForm
-  selectedPropertyId={selProp}
-  onSubmit={it=>{addItem(it);setShowAdd(false);}}
-  onClose={()=>setShowAdd(false)}/>}
+        selectedPropertyId={selProp}
+        onSubmit={it=>{addItem(it);setShowAdd(false);}}
+        onClose={()=>setShowAdd(false)}/>}
     </div>
   );
 }
