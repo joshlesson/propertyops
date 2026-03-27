@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const sb = createClient(
   "https://rvpacnokfnvwscxvjsou.supabase.co",
-  "sb_publishable_589WA1eqRL7D7q4KlIb7Qw_QVc6E4im"
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2cGFjbm9rZm52d3NjeHZqc291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNjk4MjEsImV4cCI6MjA4OTg0NTgyMX0.KRYZU6mnQpfXtJjUwVV-QvRf-2Gl72gkQBKc_pq7Yow"
 );
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -15,21 +15,23 @@ const PRIORITIES = ["Critical","High","Medium","Low"];
 const CONTACT_EMAIL = "management@dembsroth.com";
 
 const VENDORS = {
-  "Roofing":             [{name:"TBD",email:""}],
-  "Masonry":             [{name:"TBD",email:""}],
-  "Concrete / Hardscape":[{name:"TBD",email:""}],
-  "Painting / Finishes": [{name:"TBD",email:""}],
-  "Asphalt":             [{name:"TBD",email:""}],
-  "Striping":            [{name:"TBD",email:""}],
-  "Dock / Loading":      [{name:"TBD",email:""}],
-  "Signage":             [{name:"TBD",email:""}],
-  "HVAC":                [{name:"TBD",email:""}],
-  "Electrical":          [{name:"TBD",email:""}],
-  "Plumbing":            [{name:"TBD",email:""}],
-  "Landscaping":         [{name:"TBD",email:""}],
-  "Structural":          [{name:"TBD",email:""}],
-  "Safety":              [{name:"TBD",email:""}],
-  "Other":               [{name:"TBD",email:""}],
+  "Roofing":             [{name:"Lutz Roofing",              email:"btomayko@lutzroofing.com"}],
+  "Masonry":             [{name:"Custom Masonry",             email:"jimcustommasonry@gmail.com"}],
+  "Concrete / Hardscape":[{name:"Custom Masonry",             email:"jimcustommasonry@gmail.com"},
+                          {name:"S&J Asphalt",                email:"jeff_sandjasphalt@yahoo.com"}],
+  "Painting / Finishes": [{name:"Ray's Paint",                email:"bitnerpaintman@yahoo.com"}],
+  "Asphalt":             [{name:"S&J Asphalt",                email:"jeff_sandjasphalt@yahoo.com"}],
+  "Striping":            [{name:"TBD",                        email:""}],
+  "Dock / Loading":      [{name:"West Metro Door",            email:"office@westmetrodoor.com"},
+                          {name:"Raynor Overhead Door",       email:"clwikentiew@ameritech.net"}],
+  "Signage":             [{name:"TBD",                        email:""}],
+  "HVAC":                [{name:"AFM Heating & Cooling",      email:"kevin@afmheatcool.com"}],
+  "Electrical":          [{name:"DMS Electric",               email:"dmselectric@comcast.net"}],
+  "Plumbing":            [{name:"JLM Plumbing",               email:"jlmplumbingllc@gmail.com"}],
+  "Landscaping":         [{name:"Excell Landscape",           email:"rob-excell@comcast.net"}],
+  "Structural":          [{name:"Inter-Office Construction",  email:"patcarneyioc@aol.com"}],
+  "Safety":              [{name:"TBD",                        email:""}],
+  "Other":               [{name:"Inter-Office Construction",  email:"patcarneyioc@aol.com"}],
 };
 
 const STATUSES   = ["Not Started","PO Issued","Scheduled","In Progress","Completed"];
@@ -49,7 +51,7 @@ const PROPERTIES = [
   {id:"FD1",    name:"35015 Glendale",             address:"35015 Glendale, Livonia, MI 48150",                 owner:"Dembs Roth Management Company LP",  group:"FDEMBS"},
   {id:"FD2",    name:"35255 Glendale",             address:"35255 Glendale, Livonia, MI 48150",                 owner:"Dembs Roth Management Company LP",  group:"FDEMBS"},
   {id:"FD3",    name:"13455 Stamford Court",       address:"13455 Stamford Ct., Livonia, MI 48150",             owner:"SGS Owner, LLC",                    group:"FDEMBS"},
-  {id:"STMFRD", name:"13481–13489 Stamford Court", address:"13481–13489 Stamford Court, Livonia, MI 48150",     owner:"SGS Owner, LLC",                    group:"FDEMBS"},
+  {id:"STMFRD", name:"13481-13489 Stamford Court", address:"13481-13489 Stamford Court, Livonia, MI 48150",     owner:"SGS Owner, LLC",                    group:"FDEMBS"},
   {id:"CANTON", name:"4280 Haggerty",              address:"4280 Haggerty Rd., Canton, MI 48188",               owner:"4280 Haggerty, LLC",                group:"FDRGRP"},
   {id:"DR2",    name:"45701 Mast St.",             address:"45701 Mast St., Plymouth, MI 48170",                owner:"45 Mast, LLC",                      group:"FDRGRP"},
   {id:"DR3",    name:"45801 Mast St.",             address:"45801 Mast St., Plymouth, MI 48170",                owner:"45 Mast, LLC",                      group:"FDRGRP"},
@@ -59,7 +61,7 @@ const PROPERTIES = [
   {id:"DR7",    name:"40985 Concept Drive",        address:"40985 Concept Drive, Plymouth, MI 48110",           owner:"D R Group LP",                      group:"FDRGRP"},
   {id:"DR8",    name:"44895 Helm Court",           address:"44895 Helm Ct., Plymouth, MI 48170",                owner:"Helm Owner, LLC",                   group:"FDRGRP"},
   {id:"DR9",    name:"45889 Mast St.",             address:"45889 Mast St., Plymouth, MI 48176",                owner:"MG Group, LLC",                     group:"FDRGRP"},
-  {id:"DR10",   name:"44176–44190 Plymouth Oaks",  address:"44176–44190 Plymouth Oaks Dr., Plymouth, MI 48176", owner:"Oaks 44747, LLC",                   group:"FDRGRP"},
+  {id:"DR10",   name:"44176-44190 Plymouth Oaks",  address:"44176-44190 Plymouth Oaks Dr., Plymouth, MI 48176", owner:"Oaks 44747, LLC",                   group:"FDRGRP"},
   {id:"DR11",   name:"44330 Plymouth Oaks Blvd.",  address:"44330 Plymouth Oaks Blvd., Plymouth, MI 48176",     owner:"Oaks 44747, LLC",                   group:"FDRGRP"},
   {id:"DR12",   name:"44747 Helm Court",           address:"44747 Helm Ct., Plymouth, MI 48176",                owner:"Oaks 44747, LLC",                   group:"FDRGRP"},
   {id:"DR13",   name:"44064 Plymouth Oaks",        address:"44064 Plymouth Oaks, Plymouth, MI 48176",           owner:"Plymouth Oaks Owner, LLC",          group:"FDRGRP"},
@@ -73,7 +75,7 @@ const PROPERTIES = [
   {id:"LG3",    name:"34425 Schoolcraft",          address:"34425 Schoolcraft Road, Livonia, MI 48150",         owner:"Ashurst LLC",                       group:"FLIVGR"},
   {id:"LG4",    name:"34450 Industrial Road",      address:"34450 Industrial Road, Livonia, MI 48150",          owner:"Livonia Industrial Group, LLC",     group:"FLIVGR"},
   {id:"NB1",    name:"12623 Newburgh Road",        address:"12623 Newburgh Road, Livonia, MI 48150",            owner:"12623 Newburgh, LLC",               group:"FNEWBR"},
-  {id:"AMRHEI", name:"37564–37584 Amrhein",        address:"37564–37584 Amrhein, Livonia, MI 48150",            owner:"Amrhein Property, LLC",             group:"FNEWBR"},
+  {id:"AMRHEI", name:"37564-37584 Amrhein",        address:"37564-37584 Amrhein, Livonia, MI 48150",            owner:"Amrhein Property, LLC",             group:"FNEWBR"},
   {id:"NB3",    name:"12649 Richfield Court",      address:"12649 Richfield Court, Livonia, MI 48150",          owner:"Newburgh Industrial Group, LLC",    group:"FNEWBR"},
   {id:"NB4",    name:"12671 Richfield Court",      address:"12671 Richfield Court, Livonia, MI 48150",          owner:"Newburgh Industrial Group, LLC",    group:"FNEWBR"},
   {id:"NB5",    name:"12749 Richfield Court",      address:"12749 Richfield Court, Livonia, MI 48150",          owner:"Newburgh Industrial Group, LLC",    group:"FNEWBR"},
@@ -115,10 +117,12 @@ function today() { return new Date().toISOString().slice(0,10); }
 
 async function loadAll() {
   try {
-    const [{ data: insps }, { data: its }] = await Promise.all([
+    const [{ data: insps, error: e1 }, { data: its, error: e2 }] = await Promise.all([
       sb.from("inspections").select("*").order("date", { ascending: false }),
       sb.from("items").select("*").order("created_at", { ascending: false }),
     ]);
+    if (e1) console.error("inspections load error:", e1);
+    if (e2) console.error("items load error:", e2);
     const inspections = (insps || []).map(r => ({
       id: r.id, propertyId: r.property_id, date: r.date,
       inspector: r.inspector, notes: r.notes,
@@ -135,14 +139,15 @@ async function loadAll() {
 }
 
 async function saveInspection(insp) {
-  await sb.from("inspections").upsert({
+  const { error } = await sb.from("inspections").upsert({
     id: insp.id, property_id: insp.propertyId, date: insp.date,
     inspector: insp.inspector, notes: insp.notes,
   });
+  if (error) console.error("saveInspection error:", error);
 }
 
 async function saveItemToDB(item) {
-  await sb.from("items").upsert({
+  const { error } = await sb.from("items").upsert({
     id: item.id, inspection_id: item.inspectionId || null,
     property_id: item.propertyId, description: item.description,
     category: item.category, priority: item.priority, status: item.status,
@@ -151,6 +156,7 @@ async function saveItemToDB(item) {
     created_at: item.createdAt, status_history: item.statusHistory,
     updated_at: new Date().toISOString(),
   });
+  if (error) console.error("saveItemToDB error:", error);
 }
 
 // ─── Primitives ───────────────────────────────────────────────────────────────
@@ -229,7 +235,7 @@ function OverlayHeader({title,sub,onClose}) {
       <div style={{fontSize:16,fontWeight:700,color:C.text}}>{title}</div>
     </div>
     <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",
-      fontSize:22,color:C.faint,padding:0,marginLeft:12,lineHeight:1}}>×</button>
+      fontSize:22,color:C.faint,padding:0,marginLeft:12,lineHeight:1}}>x</button>
   </div>;
 }
 
@@ -247,7 +253,7 @@ function SlideOver({children,title,sub,onClose}) {
             <div style={{fontSize:15,fontWeight:700,color:C.text,lineHeight:1.35}}>{title}</div>
           </div>
           <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",
-            fontSize:22,color:C.faint,lineHeight:1,padding:0,flexShrink:0}}>×</button>
+            fontSize:22,color:C.faint,lineHeight:1,padding:0,flexShrink:0}}>x</button>
         </div>
       </div>
       <div style={{padding:"20px 24px",flex:1}}>{children}</div>
@@ -297,7 +303,7 @@ Respond ONLY with valid JSON, no markdown, no explanation:
     const raw=data.content?.find(b=>b.type==="text")?.text||"{}";
     console.log("Raw text:", raw.slice(0,300));
     let parsed={items:[]};
-    try { parsed=JSON.parse(raw.replace(/```json|```/g,"").trim()); } 
+    try { parsed=JSON.parse(raw.replace(/```json|```/g,"").trim()); }
     catch(e) { console.error("Parse error:", e, raw); }
     const now=today();
     const newItems=(parsed.items||[]).map(item=>({
@@ -318,6 +324,7 @@ Respond ONLY with valid JSON, no markdown, no explanation:
     setLoading(false);
   }).catch(e=>{setLoading(false);console.error("Fetch error:",e);alert("Failed to parse PDF. Check your connection.");});
 }
+
 function genAISummary(prop,propItems,cb,setLoading) {
   setLoading(true);
   const open=propItems.filter(i=>i.status!=="Completed");
@@ -332,7 +339,6 @@ function genAISummary(prop,propItems,cb,setLoading) {
   }).catch(()=>setLoading(false));
 }
 
-
 // ─── Quote Request ────────────────────────────────────────────────────────────
 
 function QuoteModal({item, onClose}) {
@@ -340,9 +346,8 @@ function QuoteModal({item, onClose}) {
   const categoryVendors = VENDORS[item.category] || [];
   const [vendorName, setVendorName] = useState(categoryVendors[0]?.name!=="TBD" ? categoryVendors[0]?.name : "");
   const [vendorEmail, setVendorEmail] = useState(categoryVendors[0]?.name!=="TBD" ? categoryVendors[0]?.email : "");
-  const [customVendor, setCustomVendor] = useState(false);
 
-  const subject = `Quote Request — ${item.description.slice(0,60)} — ${prop?.name}`;
+  const subject = `Quote Request - ${item.description.slice(0,60)} - ${prop?.name}`;
   const body = `Hello,
 
 We are requesting a quote for the following repair at one of our properties.
@@ -378,12 +383,11 @@ ${CONTACT_EMAIL}`;
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18}}>
           <div>
             <div style={{fontSize:16,fontWeight:700,color:TEXT}}>Request Vendor Quote</div>
-            <div style={{fontSize:12,color:MUTED,marginTop:3}}>{prop?.name} · {item.category}</div>
+            <div style={{fontSize:12,color:MUTED,marginTop:3}}>{prop?.name} - {item.category}</div>
           </div>
-          <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",fontSize:22,color:MUTED,padding:0}}>×</button>
+          <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",fontSize:22,color:MUTED,padding:0}}>x</button>
         </div>
 
-        {/* Work summary */}
         <div style={{background:"#f5f4f1",borderRadius:8,padding:"12px 14px",marginBottom:18}}>
           <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:"#9c9a93",marginBottom:6}}>Scope of Work</div>
           <div style={{fontSize:14,color:TEXT,lineHeight:1.5}}>{item.description}</div>
@@ -397,10 +401,9 @@ ${CONTACT_EMAIL}`;
           </div>
         </div>
 
-        {/* Vendor selection */}
         <div style={{marginBottom:14}}>
           <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:"#9c9a93",marginBottom:8}}>Vendor</div>
-          {categoryVendors.length>0 && categoryVendors[0].name!=="TBD" && !customVendor && (
+          {categoryVendors.length>0 && categoryVendors[0].name!=="TBD" && (
             <div style={{marginBottom:10}}>
               <select value={vendorName} onChange={e=>{
                 const v=categoryVendors.find(v=>v.name===e.target.value);
@@ -425,7 +428,6 @@ ${CONTACT_EMAIL}`;
           </div>
         </div>
 
-        {/* Email preview */}
         <div style={{marginBottom:18}}>
           <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:"#9c9a93",marginBottom:8}}>Email Preview</div>
           <div style={{background:"#f5f4f1",borderRadius:8,padding:"12px 14px",fontSize:12,color:MUTED,lineHeight:1.7,maxHeight:180,overflowY:"auto"}}>
@@ -440,7 +442,7 @@ ${CONTACT_EMAIL}`;
             style={{flex:1,fontSize:13,fontWeight:600,borderRadius:8,padding:"10px",
               background:vendorEmail?"#1a1a1a":"#d1d0cb",color:vendorEmail?"#fff":"#9c9a93",
               border:"none",cursor:vendorEmail?"pointer":"not-allowed"}}>
-            Open in Email Client →
+            Open in Email Client
           </button>
           <button onClick={onClose}
             style={{fontSize:13,borderRadius:8,padding:"10px 16px",
@@ -521,7 +523,7 @@ function ItemRow({item,showProperty,onClick,onAdvance}) {
         {next&&<button onClick={e=>{e.stopPropagation();onAdvance();}} style={{
           fontSize:11,background:"none",border:`1px solid ${C.border}`,borderRadius:6,
           padding:"3px 10px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)",whiteSpace:"nowrap"}}>
-          → {next}
+          {next}
         </button>}
       </div>
     </div>
@@ -539,7 +541,7 @@ function ItemDetail({item,inspections,onUpdate,onAdvance,onClose}) {
 
   return (
     <SlideOver onClose={onClose}
-      sub={`${GROUPS[prop?.group]} · ${prop?.name}`}
+      sub={`${GROUPS[prop?.group]} - ${prop?.name}`}
       title={item.description}>
 
       <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:18}}>
@@ -550,15 +552,15 @@ function ItemDetail({item,inspections,onUpdate,onAdvance,onClose}) {
       {next&&<button onClick={onAdvance} style={{width:"100%",marginBottom:20,padding:"10px 16px",
         background:SBG[next],color:SCOLOR[next],border:`1px solid ${SBDR[next]}`,
         borderRadius:8,cursor:"pointer",fontFamily:"var(--font-sans)",fontSize:13,fontWeight:600}}>
-        Mark as {next} →
+        Mark as {next}
       </button>}
 
       {!editing ? <>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:1,marginBottom:20,
           border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
-          {[["Assignee",item.assignee||"Unassigned"],["Vendor",item.vendor||"—"],
-            ["Created",item.createdAt],["Scheduled",item.scheduledDate||"—"],
-            ["Completed",item.completedDate||"—"],["Inspection",insp?.date||"Manual"]
+          {[["Assignee",item.assignee||"Unassigned"],["Vendor",item.vendor||"-"],
+            ["Created",item.createdAt],["Scheduled",item.scheduledDate||"-"],
+            ["Completed",item.completedDate||"-"],["Inspection",insp?.date||"Manual"]
           ].map(([label,val],i)=>(
             <div key={label} style={{padding:"11px 14px",background:i%2===0?C.bg:C.surface}}>
               <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",
@@ -590,7 +592,7 @@ function ItemDetail({item,inspections,onUpdate,onAdvance,onClose}) {
           <button onClick={()=>setShowQuote(true)} style={{fontFamily:"var(--font-sans)",fontSize:13,
             borderRadius:8,padding:"9px 16px",background:"#eff6ff",
             color:"#1d4ed8",border:"1px solid #bfdbfe",cursor:"pointer",fontWeight:500}}>
-            Request Quote →
+            Request Quote
           </button>
         </div>
         {showQuote&&<QuoteModal item={item} onClose={()=>setShowQuote(false)}/>}
@@ -604,7 +606,7 @@ function ItemDetail({item,inspections,onUpdate,onAdvance,onClose}) {
             <FInput label="Vendor" value={form.vendor} onChange={v=>setForm(f=>({...f,vendor:v}))} placeholder="Optional"/>
             <FInput label="Scheduled date" value={form.scheduledDate} onChange={v=>setForm(f=>({...f,scheduledDate:v}))} type="date"/>
           </div>
-          <FInput label="Notes" value={form.notes} onChange={v=>setForm(f=>({...f,notes:v}))} placeholder="Optional…" rows={3}/>
+          <FInput label="Notes" value={form.notes} onChange={v=>setForm(f=>({...f,notes:v}))} placeholder="Optional..." rows={3}/>
           <div style={{display:"flex",gap:8,marginTop:4}}>
             <PrimaryBtn onClick={save}>Save changes</PrimaryBtn>
             <GhostBtn onClick={()=>setEditing(false)}>Cancel</GhostBtn>
@@ -626,7 +628,7 @@ function AISummaryCard({prop,propItems}) {
         <button onClick={()=>genAISummary(prop,propItems,setText,setLoading)} disabled={loading}
           style={{fontSize:11,background:C.surface,border:`1px solid ${C.border}`,borderRadius:6,
             padding:"4px 10px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>
-          {loading?"Generating…":text?"Refresh":"Generate"}
+          {loading?"Generating...":text?"Refresh":"Generate"}
         </button>
       </div>
       {text&&<p style={{fontSize:13,color:C.text,margin:0,lineHeight:1.7}}>{text}</p>}
@@ -650,7 +652,6 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}) {
     const r=new FileReader();
     r.onload=e=>{
       const base64=e.target.result.split(",")[1];
-      // Check size — Vercel limit is 4.5MB, warn if over 3MB
       const sizeInMB = (base64.length * 0.75) / (1024 * 1024);
       if(sizeInMB > 4) {
         alert(`This PDF is ${sizeInMB.toFixed(1)}MB which may be too large. Try compressing it at smallpdf.com first, then re-upload.`);
@@ -669,7 +670,7 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}) {
         sub={`${preview.items.length} items from ${fileName}`} onClose={onClose}/>
       {preview.detectedProperty&&<div style={{fontSize:12,color:C.muted,background:C.bg,
         padding:"8px 12px",borderRadius:8,border:`1px solid ${C.border}`,marginBottom:14}}>
-        PDF property: <strong style={{color:C.text}}>{preview.detectedProperty}</strong> → {prop?.name}
+        PDF property: <strong style={{color:C.text}}>{preview.detectedProperty}</strong> - {prop?.name}
       </div>}
       <div style={{maxHeight:420,overflowY:"auto",marginBottom:16,
         border:`1px solid ${C.border}`,borderRadius:10}}>
@@ -692,7 +693,7 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}) {
             inspector:overrideInspector||preview.inspector||"SnapInspect",
             notes:`SnapInspect PDF: ${fileName}`},
             preview.items);
-        }}>Confirm & add {preview.items.length} items</PrimaryBtn>
+        }}>Confirm and add {preview.items.length} items</PrimaryBtn>
         <GhostBtn onClick={()=>setPreview(null)}>Back</GhostBtn>
       </div>
     </Overlay>
@@ -713,17 +714,17 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}) {
           <input id="pdf-upload-input" type="file" accept="application/pdf" style={{display:"none"}}
             onChange={e=>handleFile(e.target.files[0])}/>
           {pdfBase64?<>
-            <div style={{fontSize:28,marginBottom:6}}>📄</div>
+            <div style={{fontSize:28,marginBottom:6}}>PDF</div>
             <div style={{fontSize:13,fontWeight:600,color:C.text}}>{fileName}</div>
             <div style={{fontSize:11,color:C.faint,marginTop:2}}>Click to change</div>
           </>:<>
-            <div style={{fontSize:22,color:C.faint,marginBottom:8}}>↑</div>
+            <div style={{fontSize:22,color:C.faint,marginBottom:8}}>Upload</div>
             <div style={{fontSize:13,fontWeight:600,color:C.text}}>Drop SnapInspect PDF here</div>
             <div style={{fontSize:11,color:C.faint,marginTop:3}}>or click to browse</div>
           </>}
         </div>
         <FSelect label="Property" value={propertyId} onChange={setPropertyId}
-          options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} — ${p.name}`}))}/>
+          options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} - ${p.name}`}))}/>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
           <FSelect label="Inspector (optional)" value={overrideInspector} onChange={setOverrideInspector}
             options={[{v:"",l:"Auto-detect from PDF"},...TEAM.map(t=>({v:t,l:t}))]}/>
@@ -731,7 +732,7 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}) {
         </div>
         <PrimaryBtn full disabled={loading||!pdfBase64}
           onClick={()=>{const id="i"+uid();parsePDF({pdfBase64,propertyId,inspectionId:id,overrideDate,overrideInspector},setLoading,r=>setPreview({...r,inspId:id}));}}>
-          {loading?"Extracting items from PDF…":"Extract repair items →"}
+          {loading?"Extracting items from PDF...":"Extract repair items"}
         </PrimaryBtn>
       </div>
     </Overlay>
@@ -748,10 +749,10 @@ function AddItemForm({onSubmit,onClose}) {
       <OverlayHeader title="Add repair item" onClose={onClose}/>
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
         <FSelect label="Property" value={form.propertyId} onChange={v=>setForm(f=>({...f,propertyId:v}))}
-          options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} — ${p.name}`}))}/>
+          options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} - ${p.name}`}))}/>
         <FInput label="Description" value={form.description}
           onChange={v=>setForm(f=>({...f,description:v}))}
-          placeholder="Describe the repair task clearly…" rows={2}/>
+          placeholder="Describe the repair task clearly..." rows={2}/>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
           <FSelect label="Category" value={form.category} onChange={v=>setForm(f=>({...f,category:v}))} options={CATEGORIES}/>
           <FSelect label="Priority" value={form.priority} onChange={v=>setForm(f=>({...f,priority:v}))} options={PRIORITIES}/>
@@ -759,7 +760,7 @@ function AddItemForm({onSubmit,onClose}) {
             options={[{v:"",l:"Unassigned"},...TEAM.map(t=>({v:t,l:t}))]}/>
           <FInput label="Vendor" value={form.vendor} onChange={v=>setForm(f=>({...f,vendor:v}))} placeholder="Optional"/>
         </div>
-        <FInput label="Notes" value={form.notes} onChange={v=>setForm(f=>({...f,notes:v}))} placeholder="Optional…" rows={2}/>
+        <FInput label="Notes" value={form.notes} onChange={v=>setForm(f=>({...f,notes:v}))} placeholder="Optional..." rows={2}/>
         <PrimaryBtn full disabled={!form.description.trim()} onClick={()=>{
           const now=today();
           onSubmit({id:"r"+uid(),inspectionId:null,...form,
@@ -774,21 +775,21 @@ function AddItemForm({onSubmit,onClose}) {
 // ─── App ──────────────────────────────────────────────────────────────────────
 
 export default function App() {
-  const [loaded,setLoaded]         = useState(false);
-  const [saving,setSaving]         = useState(false);
+  const [loaded,setLoaded]           = useState(false);
+  const [saving,setSaving]           = useState(false);
   const [inspections,setInspections] = useState([]);
-  const [items,setItems]           = useState([]);
-  const [view,setView]             = useState("portfolio");
-  const [selProp,setSelProp]       = useState(null);
-  const [selItem,setSelItem]       = useState(null);
-  const [showImport,setShowImport] = useState(false);
-  const [showAdd,setShowAdd]       = useState(false);
-  const [fStatus,setFStatus]       = useState("All");
-  const [fPriority,setFPriority]   = useState("All");
-  const [fCategory,setFCategory]   = useState("All");
-  const [fAssignee,setFAssignee]   = useState("All");
-  const [search,setSearch]         = useState("");
-  // Load from Supabase on mount
+  const [items,setItems]             = useState([]);
+  const [view,setView]               = useState("portfolio");
+  const [selProp,setSelProp]         = useState(null);
+  const [selItem,setSelItem]         = useState(null);
+  const [showImport,setShowImport]   = useState(false);
+  const [showAdd,setShowAdd]         = useState(false);
+  const [fStatus,setFStatus]         = useState("All");
+  const [fPriority,setFPriority]     = useState("All");
+  const [fCategory,setFCategory]     = useState("All");
+  const [fAssignee,setFAssignee]     = useState("All");
+  const [search,setSearch]           = useState("");
+
   useEffect(()=>{
     loadAll().then(({inspections:insp,items:its})=>{
       setInspections(insp);
@@ -846,7 +847,7 @@ export default function App() {
   if(!loaded) return (
     <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",
       background:C.bg,fontFamily:"var(--font-sans)",color:C.faint,fontSize:13}}>
-      Loading…
+      Loading...
     </div>
   );
 
@@ -857,8 +858,9 @@ export default function App() {
       {/* Sidebar */}
       <div style={{width:220,background:"#000",display:"flex",flexDirection:"column",flexShrink:0,borderRight:"1px solid #1a1a1a"}}>
         <div style={{padding:"20px 20px 16px",display:"flex",alignItems:"center",gap:10}}>
-          <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCADhAOEDASIAAhEBAxEB/8QAHQABAAICAwEBAAAAAAAAAAAAAAYIBQcBAwkEAv/EAFUQAAEDAgMCBg0HBwkGBwAAAAEAAgMEBQYHERIhCBMXMVaUFBgiMjdBUVRhcZOz0RY2c3WVtNMJFUJSU3bSIzhicoGRkrHEJHSCobLCJjNDVYOjwf/EABoBAQADAQEBAAAAAAAAAAAAAAABBAUCAwb/xAAnEQEAAQMCBgEFAQAAAAAAAAAAAQIDEQQUITEyM1FxYRJBgdHwI//aAAwDAQACEQMRAD8AuWiIgIiICIiAiLHYorJrdhq6XCm2eOpaOaaPaGo2msLhqPJqERM4ZFFUAcI3MUgHirB1KT8Rc9sbmJ+ysHUn/iK3srqvuqFvkVQe2NzE/ZWDqT/xE7Y3MT9lYOpP/ETZXTdULfIqg9sbmJ+ysHUn/iJ2xuYn7KwdSf8AiJsrpuqFvkVQe2NzE/ZWDqT/AMRO2NzE/ZWDqT/xE2V03VC3yKoPbG5ifsrB1J/4idsbmJ+ysHUn/iJsrpuqFvkVQe2NzE/ZWDqT/wARO2NzF/ZWDqT/AMRNldN1Qt8iieUOIa/FWXNoxBdGwNrKtkjpRCwtZq2R7RoCTpuaPGpYqtVM0zMSsROYyIiKEiIiAiIgIiICIiAiIgIiICw2O/mRfvq2o905ZlYbHfzIv31bUe6cpp5wirk8+W96PUuVw3vR6lsjLPAeEMU2cVF4zEt9guDp3RNoqgR7TgNNHAukbrrqd3oW/VXFMZlkU0zVwhrhFZRvBhpHtDm41lc0jUEW8EEe0XPav03TOb7OH4i8N3Z8vXb3PCtSKyvav03TOb7OH4i+Ofg42WGUwy5hxRSjdsvo2Ag+rjU3drybe54V2RWErODBcGs26HGlJOSNQ2W3OjB/tEjv8lCsS5D5jWWJ00dtpbvE3Uk26fbcB/UeGuJ9DQV1TqbVXKpzNm5HOGsEX7qoKmkqpKSsppqWpiOkkM0ZY9h8jmkAg+tfhe7yEREF3ODh4FMOfRze/kWwlr3g4eBTDn0c3v5FsJYN7uVe5a9vpgREXm7EREBERAREQEREBERAREQFhsd/Mi/fVtR7pyzKw2O/mRfvq2o905TTzhFXJ58t70epcrhvej1LlfQsZaLgaXyvrcPXyx1M8ktNbZYZKUPdrxbZQ/VjfI3WPXTyuK34q38CbvsXeqi/1CsgsXVREXZw1NPObcNfcIy5V1pyZv8AW22qkpanZgiEsbi1zWyVEcb9CN4Ja5w1G/eqPmGInUxMPj70K6vCj8Bl/wDpKP73CqWq7oY/zmflV1fXEfCRYJxxirBtWyfD93np42nV1K8l9NJv3h0ZOm/yjR3kIVw8nMxrdmJh99XDGKS5UpDK6j2toxuOuy5p8bHaHQ+gjnCo0pjk1i5+CswrbdnTcXRSPFNXgu0aYHkBxP8AVOj/APh08ZXep08XKcxHFxZvTROJ5LkY8wLhnG1vNJf7dHM8N0hqoxsTwelj+cb9+h1adN4KqFm/lhecvLm3jnGus9Q8ikr2s0BPPxcg/ReBr6HAajmcG3iWNxRY7biWwVlju8AnoquMxyN8Y8jmnxOB0IPiIBWfY1FVqfhdu2YuR8vPNFm8eYarcIYuuGHa/V0tJJoyTZ0E0Z3skHoLSPUdRzgrCLZiYmMwzJjE4ldzg4eBTDn0c3v5FsJa94OHgUw59HN7+RbCWFe7lXuWtb6YERF5uxERAREQEREBERAREQEREBYbHfzIv31bUe6csysNjv5kX76tqPdOU084RVyefLe9HqXK4b3o9S5X0LGWO4E3fYu9VF/qFZBVv4E3fYu9VF/qFZBY2r70/wB9mpp+3DWfCj8Bl/8ApKP73CqWq6XCj8Bl/wDpKP73CqWq5oe3Pv8ASpq+5+BcEAggjUHnXKK6rL5ZO3h99yvw7c5ZBLNJQxxzP/WkYNh5/wATXKWLVPBSnMuTNBETrxFVUsHo1lc//vW1lg3afprmPlr25zREq4cM/D0TWWLFkTNJC51uqCB3w0dJH/dpL/iCrgrl8KqmZNkrdJnNBNNUU0jdfETOxn+TyqaLT0dWbXpQ1NOLi7nBw8CmHPo5vfyLYS17wcPAphz6Ob38i2Esy93Kvcr9vpgREXm7EREBERAREQEREBERAREQFhsd/Mi/fVtR7pyzKw2O/mRfvq2o905TTzhFXJ58t70epcrhvej1LlfQsZY7gTd9i71UX+oVkFW/gTd9i71UX+oVkFjavvT/AH2amn7cNZ8KPwGX/wCko/vcKparpcKPwGX/AOko/vcKparmh7c+/wBKmr7n4ERFdVlwuCUzZyhid4n185G/0gf/AItuLW/BnoX0OSthbI3R8wnqD6Q+Z7mn/CWrZCwr05uVT8ta1GKIav4U8zYskrxGToZpqVjfX2RG7/JpVMVZ3hn3tkWH7HhxjzxlTVOrJQP1I2loB9bpNR/U9CrEtLRRi17UdVObi7nBw8CmHPo5vfyLYS17wcPAphz6Ob38i2Esy93Kvcr9vpgREXm7EREBERAREQEREBERAREQFhsd/Mi/fVtR7pyzKw2O/mRfvq2o905TTzhFXJ58t70epcrhvej1LlfQsZY7gTd9i71UX+oVkFXLgTxSiLFlQWERPdRsa7xFzRMSP7A5v96sasbV96f77NTT9uGs+FH4DL/9JR/e4VS1XU4T8b5MjsQNjaXODqR2g8gqoST/AHAqlauaHtz7/Spq+v8AAu+3UVVcrhTW6hj4yrq5WQQM/We9wa0f3kL53ENBLiABzkqyHBgyrraWvjxziOkfT7DD+bKWZujyXDQzOHi3ahoPlLv1SbF67FunMvK3bmurEN/4btUFjw9brNTf+RQ0sdNH6WsaGg/8l9lVPDS00tTUyshgiYXySPdo1jQNSSTzABKqeClp5KmpmjhgiaXySSODWsaN5JJ3ADyqqvCGzkZihkmFcKzOFlB0rKsAg1hB7xvjEQI3nnefI0d3kWrVV6rENK5ci3S19nFjB+OMfV17btCibpT0LXDQtgYTskjxFxLnkeIv08SiCItqmmKYiIZdUzVOZXc4OHgUw59HN7+RbCWveDh4FMOfRze/kWwlh3u5V7lq2+mBERebsREQEREBERAREQEREBERAWGx38yL99W1HunLMrDY7+ZF++raj3TlNPOEVcnny3vR6lsbLXA2DMQWltyxJmRbLA7jnRuoJeLbMWjTR4c+QaA6n9A8y1y3vR6lyt+qJmMROGRTMRzjK6eAr7lDgnD8dksOMMPRwBxkkkkucTpJpCAC97td7joPIAAAAAAFn+UvLzpxhz7Si/iVDUVOdDTM5mqViNVMRiIXnu+O8r7ta6m2XHF+GamjqonRTRPuMWj2uGhHfLUVRlxwfZKkzR5jMgj11EMd8pi0DyauaXf89VXVF1RpPo6apRVqPq50wtHY5eDpgeZlfTXGgrqyMgsncZa54cOYtDQ5rT6QB60xTwmLBTxvjw5Ya64y8wlqnCni9Y75x9RDVVxF1tKJnNUzKNxVEYpxCYZg5l4vxw7i71ctmiDtplDTN4uBp8RLdSXHduLi7TxaKHoisU0xTGIh4zVNU5kREXTldzg4eBTDn0c3v5FsJa94OHgUw59HN7+RbCWDe7lXuWvb6YERF5uxERAREQEREBERAREQEREBYjG0ckuDb3FFG+SR9vqGtYxpc5xMbgAAN5PoWXRTE4lExmHny3CeLNkf+E8Q83/tc/8ACufknizopiD7Ln/hXoKivb+fCptI8vPr5J4s6KYg+y5/4U+SeLOimIPsuf8AhXoKib+fBtI8vPr5J4s6KYg+y5/4U+SeLOimIPsuf+FegqJv58G0jy8+vknizopiD7Ln/hT5J4s6KYg+y5/4V6Com/nwbSPLz6+SeLOimIPsuf8AhT5J4s6KYg+y5/4V6Com/nwbSPLz6+SeLOimIPsuf+FPknizopiD7Ln/AIV6Com/nwbSPKBcHylqqLJ6wUtbSz0tRHHKHxTxuje3+WkO9rgCNynqIqVVX1VTPlbpjERAiIuUiIiAiIgIiIC66qeGlppamplZFDCwySSPOjWtA1JJ8gC7F89zo4bjbaq31O0YKqF8MmydDsuBB0PiOhQR3lHwB0zsPXo/inKPgDpnYevR/FRXkDy781uPXXrnkDy881uPXXqOIlPKPgDpnYevR/FOUfAHTOw9ej+Ki3IHl55rceuvTkDy881uPXXpxEp5R8AdM7D16P4pyj4A6Z2Hr0fxUW5A8vPNbj116cgeXnmtx669OIlPKPgDpnYevR/FOUfAHTOw9ej+Ki3IHl55rceuvTkDy881uPXXpxEp5R8AdM7D16P4pyj4A6Z2Hr0fxUW5A8vPNbj116cgeXnmtx669OIlPKPgDpnYevR/FOUfAHTOw9ej+Ki3IHl55rceuvTkDy881uPXXpxEp5R8AdM7D16P4pyj4A6Z2Hr0fxUW5A8vPNbj116cgeXnmtx669OIlPKPgDpnYevR/FOUfAHTOw9ej+Ki3IHl55rceuvTkDy881uPXXpxEp5R8AdM7D16P4pyj4A6Z2Hr0fxUW5A8vPNbj116cgeXnmtx669OIlPKPgDpnYevR/FOUfAHTOw9ej+Ki3IHl55rceuvTkDy881uPXXpxEp5R8AdM7D16P4pyj4A6Z2Hr0fxUW5A8vPNbj116cgeXnmtx669OIlPKPgDpnYevR/FOUfAHTOw9ej+Ki3IHl55rceuvTkDy881uPXXpxGybVcKG62+K4WyrgrKSYExTQvDmPAJGoI3HeCvqWMwtY6DDdhpbJbGyNo6VpbEJHl7gC4u3k8+8lZNSCIiAvzI0PjcwlwDgQS06EeojmX6RBUjhb2a/ZbW+yXvCmYmO4Kevqn0k9JPiKqma1wYXtexzn7Q3NcCCSO9000Ov18HrAWJ8yMtocV3fOTMiinqKqeFkFFeXhjGxvLN5ftFxJaTu0G8DTdqcl+UI+YOFvrs/d5VLOBD/N9tn+/1v3h6D47zlPnHZYDUYFzyvNVNGNW0l/hjnEp8nGlrtn/AfWFEsG8JjEeGsVyYRzow0LZUwPDJa6kjLXQ66bLnxauD2Eb+MjcRzaNO8i060Fw2cB0mIcsZcXU9O0XfDwEvGtADpKUuAlY4+MNB4weTZIHfHUN70VVS19DDW0VTFU0tRG2WGaF4cyRjhq1zXDcQQQQQqpcLeyX7Li0WW/4TzCx1TU9bWGinpJsRVUzQ7i3SNe1zpC4bmOBBJHNppv1+/gD42q6203nAdfM6VltDa23bTtS2F7iJYx/Ra/ZcPpSNwAWS/KCeDLDf7wN+61CDCcHnAuJ8ycumYovGceZFFPJVzQthor08MDWHZ1O3tEknU+Ic27xnYb8h7oR3GeWa4PpvYP8A2ro4D/gFpPrGr94t4oKzYQw7mFl7wlsMWK+5hX/E+H7zS1r6R1ZWzOBdFCS5kkbnubtN1YQ4c+u4DRb+xhhqlxPQx0lVcr3QCJ+22S13Seik1003uic0uHoOo9CxWB75ZMfCe+ttFOZbFea230VRKGyPa6JzoXyxu07gPbqN36J0KmCDzwzfxDmHgbM/EGFKPMzGlRBbKlrIJ5rzOXlj4mSs2tHbJcA8A7gDoToNdFd/JjGkOYGWlmxRHsNnqYdisjbzRVDDsyt9W0CR5QQfGq5Y0wI7MHNnPu0U0IludLBaK62DQbXZEdLqGgnm227Uf/H6FiOAbjwW3F1dgernAor4zsyg2joBVRs7sAeV8QB/+EeVBdRYPMDE9BgzBV3xTctTTW2lfO5gIDpXAdzG3X9Jzi1o9Lgs4tA8JF7sf5iYPyRo3vNLXSi8YiLCRsUMROywkc224O387XCM+NBVimx3mtecXUlsqMf4poKy7V8EezHc6hkcJqXtLS2MPGjAJWkN3dzoBovQDAeD6bCNJLDFfcSXmWZrBLPebtNWPcW6900POzGTqSdhrQd27cNKOZkMZHwxJ442tYxmLra1rWjQNAfTAADyL0IRLTfCIwXUx4ExRjOxYyxlZ7rb6KW4BlLfqltM8RMLnR8Tt7DQWtPeBuh0O/eDoDg0QY0zVxTdbXd818fW+noKJtQHUd6l23uc/ZA1eXADTXxa839trs+/Adjv93K/7u9Vl/J9/P7FH1XF70ohti+ZLZjW+ifUYJz1xiLgwF0cV9nFXDKdNzSdnuNT+lsv0/VKhOTvCHxZbswW5e5tU0PZRrRbuz2wiKWCpLtlomazuHMc4tAewNADg7e07QtavPXPItxxwpbrSYTPZMtddaWip5ac7W1NHFFHJINPExzH6nmAjLuZB6FKs/COzSxbW5nW7JvLmvFsuNXJDDX3Fh/lY3ygODGnnY1sZ4xzm90QQGkEHWzCoVwlm37L/hRVWLaVoZLNUU12tsjwSyVrI443sPo2mPa4A67LhzahBYSg4N1mgomyTZh5huvegLrrDfHxy7X9EaEAa+I6nTx+NaszNqM5Mv8AMbA9ixVjWsv+E5cR0MtFWiCOJ8wbOzahnc1odthpcdHOcHjut5aQyweTmbmEszrUJbPVCmusTA6stU7gJ4D4yB+mzXme3dv36HVoyOcOCI8wMDz2DsplDVieGroqx0PGdjzxSNe1+zqNeYtOhB0cd4QTBERAREQEREFZfyhHzBwt9dn7vKpZwIf5vts/3+t+8PUT/KEfMHC312fu8qlnAh/m+2z/AH+t+8PQbuUMz2MYySx1x3efJy4a9Xk5vSpmtA8NnH1Fh/LObB9PUtN4xCBHxTdC6OkDgZXuHiDgOLHl2iR3p0DS3ANbKc8K17AdhuHqnbPi0NRTaD+//JbV/KCeDLDf7wN+61C/XAWwBVWHB9fja6QuiqMQCNtFG7nFIzaLZPRxjnE+lrWEc6/P5QTwZYb/AHgb91qESi/BkwJj7EOVFPccOZuXLC1C6sqGCghtcM7Gua/RztpxB38+inWIcms5q+1VFNHwhblPtsIELrSKUP8AQZYpNto9IB9S+/gP+AWk+sav3i3iiGkuBdbqqz5PT2iugEFXQXyupZ4gQQySOTYc3d5C0hbtUUxtfsM5Y4IveKqymio6GB0lZUMp2Na6pnefENwMj3EDU85OpKk1JK+akhmkhfA+RjXOjf3zCRrsn0jmQaPyi/nZZz/RWj7sq68JXDVwyrz5N9w//s0VZUNvdqfv2GTB+1LGd+8CTUlo3bEjW8ysTlCR22ec41/9K0/dgvu4YmBHYyykqLhRQmS64fcbhTBrdXSRAaTxjTedWauAHO6NiDYmD8ZWbEeXdBjiKdlPbKmg7NldI4f7OA0mRryNwLCHNd5C0rVvBYoqnE9wxVnTd4JIqrFdYYrXHKNHU9uhOwxvoLi0B2m48U1w51WrKvGOJrzl5UZF2XjDLie7Qx01UCCKSlfq6r3eNujA7Qc4dNvB0Bv7h600FgsNBY7XCIKG300dNTxj9GNjQ1o9O4c6Cg+Zn88iq/fC3f8AXTL0GXnzmZ/PIqv3wt3/AF0y9BkShWffgOx3+7lf93eqb8EzDmLcSYpvtNhDHc2DqmGhjfNUx26Or49hk0DC17hs6HfqFcjPvwHY7/dyv+7vVZfyffz+xR9Vxe9KITjMDJrPq52KopKfO2S+seO6pJaU2wSjxtL4S7UH9U7j49FrjIPMLC+T+L5sNY5y5psPXeJ/YtXeY3ySz0+uhAex7n7MRGyS6F2yRo4NI3i7ypBw9228ZvWp1Ps9muscfZWn6vHS8Xr6e/8ATpp6EF3YZI5omTQyNkje0OY9p1Dgd4IPjCimaWXmGMyMOmy4lozI1hL6aqhIbPSvI0243EHQ+UEFp5iCFhuDI+tfkFgw121xgtjBHtc/EgkQ/wD1hi78i8wHY/wlU1Fe2lhvtqr57bdqenDmxxzRPIDmhxJ2XN2XDedCXN1JaUFPM3Misd5V1RxFbKme5WekcZYrvbi6Koo9P0pGtO1HoNe7aS3QEkt10W0eDpwl6qsuNHhLMieOR1Q5sNFegAzV53NZUAaN3ncJBpvIDhzuVsSAQQQCDzgqg3DMwBY8FZj001ip4qO332kfUuo4xoyGVrtmTYHM1jtppDRuB2tN2gBK/KKK5PVtwuWUuELjdXvfX1Vjo5ql7++fI6Fhc4+kk6/2qVIgREQF+ZHFkbnBjnkAkNbzn0DVfpfJeq5lrs1bc5GOkZSU8k7mNOhcGNLiBr6kFZOFFbM0s1KWzWqw5VXqkoLfO+qklra2hbLJIWbAAaydwDQHO36nXUc2m/syPrc8Ms8Cx4TdkfUXeGGeaaKoGIKSnd/KPLy0t1froSd+o3aDTdqZZ2y+HOj1z9tF8U7ZbDnR65+2i+KZH4ueKeEziCJ9JY8sbDg8u3dmXO8xVpaP6Ij5nDyuY4ehY7AHBoZJiJ2Lc28QuxjeZXiWSmO0aUv8j3O0dK0cwZssZpu2CNyynbLYc6PXP20XxTtlsOdHrn7aL4pkb1ADWgNaAANAAqu8KK3ZpZp26z2awZV3ykoKGpNZLLW1tC2SSXYcxrQ1k7gGgPfv11JI3DTfLe2Ww50euftovinbLYc6PXP20XxTIh2R9Vnrljgz5LjJCW9QMqZJ45jiClpnN2yCWkavB36793PzbtTOJszM9jG4RcHWRj9O5LsWUrgPWNga/wB66O2Ww50euftovinbLYc6PXP20XxTI17eMNZ+5q5mYZOYWFfzNhWgukNVJSQVEBp42MdtOLwJXPke5oMe1zDaOjW6u1s5jC93GyUUc1swrdsRTSEtENBJTsLNBqC8zSMAB5t20fQtS9sthzo9c/bRfFO2Ww50euftovimRBssabPDDud+Icf3jKqvlosR6trqSmuVGXwtaRxJYXSgPLGt2d+yHbRO7cFaS01UlxtUFVU22qt75mavpKvizLF/RdxbnM19TiPStKdsthzo9c/bRfFO2Ww50euftovimR8uQuRj8BZxYtxJUwRi1xOMGHNHNOkMukkh2RvbsDZhBOhOjzzEE7lxfe7jZKOOa24Vu+IppHFvE299Owx6DncZpYxoebdqfQtSdsthzo9c/bRfFO2Ww50euftovimRoHE+WGet6zOq8e8m9RBWTXZtyig/OFI5rCyRro2E8aC4AMa0ndroToOZXSwRiC8X2lkdecGXjDNRE1hcytmppWSOdrqI3QyvJDdBqXNZ3w0B36ar7ZbDnR65+2i+Kdsthzo9c/bRfFMjNZ+XXG92wXiLB2FMtr5cprjSyUHZ76qjhpuLkbsvezam4wkNc4AOY3f6FofIXCmeWU+Jq67wZSz3mKupBTTU77xS07ho4Oa5rw9/NvBGzv15xpv292y2HOj1z9tF8U7ZbDnR65+2i+KZHN2zF4QdRTPhsuQUVFUkEMnrMR007GnxEsBj19W2FrzDXBsxzjbGs2LM475TtZUyiWppKWbjKicAaCIuaAyFgADe4LjpqBsnulsLtlsOdHrn7aL4p2y2HOj1z9tF8UyN5UlPBSUsNLSwxwQQsbHFHG0NaxoGgaAOYADTRVQseXedGF868b40y/pKAW915mMlBcp3wNu0Up48iMbOyQ0ykNk2m7Lg4AkbbTPe2Ww50euftovinbLYc6PXP20XxTIyNRnViS3RMp7vkZmMy6Fo2orfSR1tMHeQTsfoR6dkepa05J8xM78zY8YZpWhmFsOwsbDFauyRJO+BpLhENnvdoudtyO2XeING4tnXbLYc6PXP20XxTtlsOdHrn7aL4pkb0ijjiiZFExscbGhrWtGgaBzADxBfpYXA2IYMV4UocQ01PJTw1jXOZHI4FzQHFu8jd4lmkBERAXDgHNLXAEEaEHxrlEHT2JS+bQ+zCdiUvm0Pswu5EHT2JS+bQ+zCdiUvm0Pswu5EHT2JS+bQ+zC62R257g1kdK5xGoADSSvqWrstMOWG6S48prhZ6GpjOKqkAPgbq3+RgI2Tpq0gkkEaEE6jeg2X2JS+bQ+zCdiUvm0PswtVZe4qvz7XFhqllfcKyKoubKavqmCd0lLS1DImOcOMjLyTKG7W1+gddSdVIm4rv9vqsOSYnttJZqW508zKxrncY6lq42GQN4xri0scxkjgdNe5A5zuCZ9iUvm0Pswvz2PQ8ZxXE0+3ptbOy3XTy6eRQipxRi6VlVb7VaKapvVDboKyendGGtkkm4wsg7qYcWdI9kyavGp103aHG4nvcOGsb3bFM9ta2ohwnFLJAXNa50nZDg1j3t1GmpDS7eAN41QbL7EpfNofZhOxKXzaH2YUIxZi6+4XlrKatht1bJ+ZKu50csUT4ml9MGmSJ7S5x0Ie0hwI8YI8a6anF2JrbVsiuUFplZX2OoudCadkg4qSBsbnxSauO20iQaPGzzabJ50E97EpfNofZhOxKXzaH2YUEtuJMXXC7W62RuscMl1sf51p5HU8rhTFpia5jhxg40Eyt0ILNnQ994/ntWPb7iKy0T8O2qA3SWxU92khlaHxl03GBkQJkYWguieNvutAW7ig2H2JS+bQ+zCdiUvm0Pswte4hxpiillvbKWgttG+14dhvb4KtrpXhx47bpyWPDddYSNsEgeRyydgvN3uOZVfSOq4m2yOzUVXHSmE7TTM6cHu9rn1jG8jTTQAA6khLXwUMem3DTN15tWtGq5bTUb2hzaenc08xDAQVBeEVDDNk9fBNEyQDiCNpoOh4+NfrF2J79abtf7bZ4bSyKz2GO7xmeJ7tsbUwMOjXDTXiTo79HXvXIJz2JS+bQ+zCdiUvm0PswoozEl7vX5xZhmntwqKCmp5TDWud/LyyxiUR7TSOLAYWjb0dqXHuRs91MRroNQAfHog6exKXzaH2YTsSl82h9mF3Ig6exKXzaH2YTsSl82h9mF3Ig4YxkbQxjWtaOYAaBcoiAiIgIiICIiAiIgKLUWB7dSNuUcNxu7I7pUvq65rKvizNK9rWudtMAczUNaNGFoGm7RSlEEbuGCbDUQWmOkimtLrOHNoJLfJxLoWOAD2DTcWu0GoIOpAPPvX11+GbPXWSns9VTvlpKeeKoYHyuc4yMkEgc5xJLiXA7WpO0HO111KzKII/ecJW25X1l77JuNDXdj9jTSUVU6Hj4QSQx+nkLnEEaOGp0IX5rcGWOsrZ56qB8sU9t/NclKSBCab9mGgajeddQdfToAFIkQQvF2FHOwde2UTa28XaWy1FtoTUSs22tkZpxYcdlu9wYXOcdo7I1J0C+m14Up6izRm6urzWSWw28meSMyU0Lw3jI2FgLe6LW6u1c47LdSdBpK0QR+jwnQUldQVsFXWtqKC3OttO/badmB2wSCNnQnWNh1P6vpOuOpcurFRx2sUFTdaGS20nYMMtNVmN76YHUQvI75oO8E90CSQdSpiiCNVmCrNUyXFxdVRtuNtba52MkAHYzdvRg1GoP8pJ3WuvdHfuGn00GF7fRXyK8QT1gqWUUdE8GXuZY4y4x7YA3lu2/fu59+ug0ziIMRi/D1DimxTWW6PqBRT7PHMhfsF+y4OA2tNRvAO4hfLcMI2+vqrjVVdVWyTXK2i2VLttrdqAF52Ro0aHWSTeN/degaSFEEWdgWz/AJwhroqi5087aWOknMFW6IVcUeuw2UN0Di3UgOGh0JGum5ShjWsYGMaGtaNAANAAuUQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREH/2Q==" 
-            alt="Dembs Development" style={{width:36,height:36,objectFit:"contain",borderRadius:4,flexShrink:0}}/>
+          <div style={{width:36,height:36,background:"#333",borderRadius:4,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+            <span style={{color:"#fff",fontSize:14,fontWeight:800}}>D</span>
+          </div>
           <div>
             <div style={{fontSize:15,fontWeight:800,color:C.sideText,letterSpacing:"-0.02em",lineHeight:1.1}}>PropertyOps</div>
             <div style={{fontSize:9,color:C.sideMuted,letterSpacing:"0.04em",textTransform:"uppercase",marginTop:1}}>Dembs Development</div>
@@ -885,7 +887,7 @@ export default function App() {
                 color:critical.length>0&&l==="critical"?"#fca5a5":C.sideText}}>{n}</span>
             </div>
           ))}
-          {saving&&<div style={{fontSize:10,color:C.sideMuted,marginTop:6}}>Saving…</div>}
+          {saving&&<div style={{fontSize:10,color:C.sideMuted,marginTop:6}}>Saving...</div>}
         </div>
       </div>
 
@@ -894,13 +896,13 @@ export default function App() {
 
         {/* Topbar */}
         <div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,
-          padding:"0 24px",height:48,display:"flex",alignItems:"center",borderBottom:"1px solid #eaeaea",
+          padding:"0 24px",height:48,display:"flex",alignItems:"center",
           justifyContent:"space-between",flexShrink:0,zIndex:10}}>
           <div style={{fontSize:16,fontWeight:700,color:C.text,display:"flex",alignItems:"center",gap:6}}>
             {view==="portfolio"&&selProp?(()=>{
               const p=PROPERTIES.find(pr=>pr.id===selProp);
               return <><span onClick={()=>setSelProp(null)} style={{color:C.muted,cursor:"pointer",fontWeight:400,fontSize:13}}>Portfolio</span>
-                <span style={{color:C.border,margin:"0 4px"}}>›</span><span>{p?.name}</span></>;
+                <span style={{color:C.border,margin:"0 4px"}}>&rsaquo;</span><span>{p?.name}</span></>;
             })():view==="portfolio"?"Portfolio":view==="items"?"All Items":"Inspections"}
           </div>
           <div style={{display:"flex",gap:8}}>
@@ -920,7 +922,7 @@ export default function App() {
         {/* Body */}
         <div style={{flex:1,overflowY:"auto",padding:"24px 28px"}}>
 
-          {/* ── Portfolio ── */}
+          {/* Portfolio */}
           {view==="portfolio"&&!selProp&&<>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:12,marginBottom:24}}>
               {[
@@ -971,7 +973,7 @@ export default function App() {
             })}
           </>}
 
-          {/* ── Property detail ── */}
+          {/* Property detail */}
           {view==="portfolio"&&selProp&&(()=>{
             const prop=PROPERTIES.find(p=>p.id===selProp);
             const pi=items.filter(i=>i.propertyId===selProp);
@@ -982,7 +984,7 @@ export default function App() {
                 <div>
                   <div style={{fontSize:26,fontWeight:800,color:C.text,lineHeight:1.2}}>{prop.name}</div>
                   <div style={{fontSize:13,color:C.muted,marginTop:4}}>{prop.address}</div>
-                  <div style={{fontSize:11,color:C.faint,marginTop:2}}>{prop.owner} · {GROUPS[prop.group]}</div>
+                  <div style={{fontSize:11,color:C.faint,marginTop:2}}>{prop.owner} - {GROUPS[prop.group]}</div>
                 </div>
                 <div style={{display:"flex",gap:20}}>
                   {[[oi.length,"open"],[pi.filter(i=>i.status==="Completed").length,"done"],[pInsp.length,"inspections"]].map(([n,l])=>(
@@ -1015,7 +1017,7 @@ export default function App() {
                 );
               })}
               {oi.length===0&&<div style={{textAlign:"center",padding:"48px 0",color:C.faint,fontSize:13}}>
-                No open items — this property is clear.
+                No open items - this property is clear.
               </div>}
 
               {pInsp.length>0&&<div style={{marginTop:28}}>
@@ -1043,10 +1045,10 @@ export default function App() {
             </>;
           })()}
 
-          {/* ── All items ── */}
+          {/* All items */}
           {view==="items"&&<>
             <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center",marginBottom:16}}>
-              <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search…"
+              <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search..."
                 style={{fontFamily:"var(--font-sans)",fontSize:13,padding:"7px 11px",borderRadius:8,
                   border:`1px solid ${C.border}`,background:C.surface,color:C.text,width:200,outline:"none"}}/>
               {[
@@ -1058,7 +1060,7 @@ export default function App() {
                 <select key={label} value={val} onChange={e=>setter(e.target.value)}
                   style={{fontFamily:"var(--font-sans)",fontSize:13,padding:"7px 10px",borderRadius:8,
                     border:`1px solid ${C.border}`,background:C.surface,color:val==="All"?C.muted:C.text}}>
-                  {opts.map(o=><option key={o} value={o}>{o==="All"?`All ${label === "Status" ? "Statuses" : label === "Priority" ? "Priorities" : label === "Category" ? "Categories" : label + "s"}`:o}</option>)}
+                  {opts.map(o=><option key={o} value={o}>{o==="All"?`All ${label==="Status"?"Statuses":label==="Priority"?"Priorities":label==="Category"?"Categories":label+"s"}`:o}</option>)}
                 </select>
               ))}
               <span style={{fontSize:12,color:C.faint}}>{filtered.length} items</span>
@@ -1071,7 +1073,7 @@ export default function App() {
               </div>}
           </>}
 
-          {/* ── Inspections ── */}
+          {/* Inspections */}
           {view==="inspections"&&<>
             <div style={{fontSize:12,color:C.faint,marginBottom:14}}>{inspections.length} inspections logged</div>
             {inspections.length===0
@@ -1079,7 +1081,7 @@ export default function App() {
                   padding:"48px 24px",textAlign:"center"}}>
                 <div style={{fontSize:15,fontWeight:700,color:C.text,marginBottom:6}}>No inspections yet</div>
                 <div style={{fontSize:13,color:C.muted,marginBottom:20}}>Import your first SnapInspect PDF to get started.</div>
-                <PrimaryBtn onClick={()=>setShowImport(true)}>Import inspection →</PrimaryBtn>
+                <PrimaryBtn onClick={()=>setShowImport(true)}>Import inspection</PrimaryBtn>
               </div>
               :<div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
                 {inspections.map((insp,i)=>{
@@ -1090,7 +1092,7 @@ export default function App() {
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
                       <div>
                         <div style={{fontSize:13,fontWeight:600,color:C.text}}>{prop?.name}</div>
-                        <div style={{fontSize:11,color:C.faint,marginTop:2}}>{insp.date} · {insp.inspector}</div>
+                        <div style={{fontSize:11,color:C.faint,marginTop:2}}>{insp.date} - {insp.inspector}</div>
                       </div>
                       <div style={{display:"flex",gap:6}}>
                         <Chip label={`${ii.length} items`} tc={SCOLOR.Scheduled} bg={SBG.Scheduled} bc={SBDR.Scheduled}/>
@@ -1100,7 +1102,7 @@ export default function App() {
                       </div>
                     </div>
                     <div style={{fontSize:11,color:C.muted,fontStyle:"italic",marginBottom:8,lineHeight:1.5}}>
-                      &ldquo;{insp.notes}&rdquo;
+                      {insp.notes}
                     </div>
                     <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
                       {ii.slice(0,5).map(it=>(
@@ -1109,7 +1111,7 @@ export default function App() {
                             borderRadius:6,padding:"3px 9px",cursor:"pointer",color:C.muted,
                             fontFamily:"var(--font-sans)",maxWidth:220,
                             overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
-                          {it.description.slice(0,45)}{it.description.length>45?"…":""}
+                          {it.description.slice(0,45)}{it.description.length>45?"...":""}
                         </button>
                       ))}
                       {ii.length>5&&<span style={{fontSize:11,color:C.faint,padding:"3px 0"}}>+{ii.length-5} more</span>}
