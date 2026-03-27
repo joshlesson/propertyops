@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const sb = createClient(
   "https://rvpacnokfnvwscxvjsou.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2cGFjbm9rZm52d3NjeHZqc291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNjk4MjEsImV4cCI6MjA4OTg0NTgyMX0.KRYZU6mnQpfXtJjUwVV-QvRf-2Gl72gkQBKc_pq7YOw"
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2cGFjbm9rZm52d3NjeHZqc291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNjk4MjEsImV4cCI6MjA4OTg0NTgyMX0.KRYZU6mnQpfXtJjUwVV-QvRf-2Gl72gkQBKc_pq7Yow"
 );
 
 const TEAM       = ["Kenny Perkins","Josh Lesson","Rob Stout","Spencer Vankirk","Dylan Dembs"];
@@ -107,17 +107,19 @@ function uid()   { return Math.random().toString(36).slice(2,9); }
 function nowISO(){ return new Date().toISOString(); }
 function today() { return new Date().toISOString().slice(0,10); }
 
+// ─── Supabase ─────────────────────────────────────────────────────────────────
+
 async function loadAll() {
   try {
-    const [{ data: insps, error: e1 }, { data: its, error: e2 }] = await Promise.all([
+    const [{ data: insps, error: e1 }, { data: its, error: e2 }, { data: tens, error: e3 }] = await Promise.all([
       sb.from("inspections").select("*").order("date", { ascending: false }),
       sb.from("items").select("*").order("created_at", { ascending: false }),
+      sb.from("tenants").select("*").order("company_name", { ascending: true }),
     ]);
     if (e1) { console.error("inspections error:", e1); return null; }
     if (e2) { console.error("items error:", e2); return null; }
-    const inspections = (insps||[]).map(r=>({
-      id:r.id, propertyId:r.property_id, date:r.date, inspector:r.inspector, notes:r.notes,
-    }));
+    if (e3) { console.error("tenants error:", e3); return null; }
+    const inspections = (insps||[]).map(r=>({ id:r.id, propertyId:r.property_id, date:r.date, inspector:r.inspector, notes:r.notes }));
     const items = (its||[]).map(r=>({
       id:r.id, inspectionId:r.inspection_id, propertyId:r.property_id,
       description:r.description, category:r.category, priority:r.priority,
@@ -125,31 +127,50 @@ async function loadAll() {
       scheduledDate:r.scheduled_date||"", completedDate:r.completed_date||"",
       createdAt:r.created_at, statusHistory:r.status_history||[],
     }));
-    return { inspections, items };
+    const tenants = (tens||[]).map(r=>({
+      id:r.id, propertyId:r.property_id, companyName:r.company_name||"",
+      contactName:r.contact_name||"", email:r.email||"", phone:r.phone||"",
+      leaseStart:r.lease_start||"", leaseEnd:r.lease_end||"",
+    }));
+    return { inspections, items, tenants };
   } catch(e) { console.error("loadAll error:", e); return null; }
 }
 
 async function saveInspection(insp) {
-  const { error } = await sb.from("inspections").upsert({
-    id:insp.id, property_id:insp.propertyId, date:insp.date,
-    inspector:insp.inspector, notes:insp.notes,
-  }, { onConflict:"id" });
+  const { error } = await sb.from("inspections").upsert({ id:insp.id, property_id:insp.propertyId, date:insp.date, inspector:insp.inspector, notes:insp.notes }, { onConflict:"id" });
   if (error) console.error("saveInspection error:", error);
   return error;
 }
 
 async function saveItemToDB(item) {
   const { error } = await sb.from("items").upsert({
-    id:item.id, inspection_id:item.inspectionId||null,
-    property_id:item.propertyId, description:item.description,
-    category:item.category, priority:item.priority, status:item.status,
-    assignee:item.assignee||"", vendor:item.vendor||"", notes:item.notes||"",
+    id:item.id, inspection_id:item.inspectionId||null, property_id:item.propertyId,
+    description:item.description, category:item.category, priority:item.priority,
+    status:item.status, assignee:item.assignee||"", vendor:item.vendor||"", notes:item.notes||"",
     scheduled_date:item.scheduledDate||"", completed_date:item.completedDate||"",
     created_at:item.createdAt, status_history:item.statusHistory,
   }, { onConflict:"id" });
   if (error) console.error("saveItemToDB error:", error);
   return error;
 }
+
+async function saveTenantToDB(tenant) {
+  const { error } = await sb.from("tenants").upsert({
+    id:tenant.id, property_id:tenant.propertyId, company_name:tenant.companyName||"",
+    contact_name:tenant.contactName||"", email:tenant.email||"", phone:tenant.phone||"",
+    lease_start:tenant.leaseStart||null, lease_end:tenant.leaseEnd||null,
+  }, { onConflict:"id" });
+  if (error) console.error("saveTenantToDB error:", error);
+  return error;
+}
+
+async function deleteTenantFromDB(id) {
+  const { error } = await sb.from("tenants").delete().eq("id", id);
+  if (error) console.error("deleteTenant error:", error);
+  return error;
+}
+
+// ─── Primitives ───────────────────────────────────────────────────────────────
 
 function Chip({label,tc,bg,bc}) {
   return <span style={{fontSize:11,fontWeight:500,padding:"2px 9px",borderRadius:99,background:bg,color:tc,border:`1px solid ${bc}`,whiteSpace:"nowrap"}}>{label}</span>;
@@ -202,6 +223,77 @@ function SlideOver({children,title,sub,onClose}) {
   </div>;
 }
 
+// ─── Tenant Form ──────────────────────────────────────────────────────────────
+
+function TenantForm({tenant, propertyId, onSave, onClose}) {
+  const [form, setForm] = useState(tenant || {
+    propertyId: propertyId||PROPERTIES[0].id,
+    companyName:"", contactName:"", email:"", phone:"", leaseStart:"", leaseEnd:""
+  });
+  return (
+    <Overlay onClose={onClose}>
+      <OverlayHeader title={tenant?"Edit Tenant":"Add Tenant"} onClose={onClose}/>
+      <div style={{display:"flex",flexDirection:"column",gap:14}}>
+        {!tenant&&<FSelect label="Property" value={form.propertyId} onChange={v=>setForm(f=>({...f,propertyId:v}))}
+          options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} — ${p.name}`}))}/>}
+        <FInput label="Company name" value={form.companyName} onChange={v=>setForm(f=>({...f,companyName:v}))} placeholder="Acme Corp"/>
+        <FInput label="Contact person" value={form.contactName} onChange={v=>setForm(f=>({...f,contactName:v}))} placeholder="John Smith"/>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+          <FInput label="Email" value={form.email} onChange={v=>setForm(f=>({...f,email:v}))} placeholder="john@acme.com"/>
+          <FInput label="Phone" value={form.phone} onChange={v=>setForm(f=>({...f,phone:v}))} placeholder="(734) 555-0100"/>
+          <FInput label="Lease start" value={form.leaseStart} onChange={v=>setForm(f=>({...f,leaseStart:v}))} type="date"/>
+          <FInput label="Lease end" value={form.leaseEnd} onChange={v=>setForm(f=>({...f,leaseEnd:v}))} type="date"/>
+        </div>
+        <PrimaryBtn full disabled={!form.companyName.trim()} onClick={()=>onSave({...form, id:tenant?.id||"t"+uid()})}>
+          {tenant?"Save changes":"Add tenant"}
+        </PrimaryBtn>
+      </div>
+    </Overlay>
+  );
+}
+
+// ─── Tenants Section (used on property detail page) ───────────────────────────
+
+function TenantsSection({propertyId, tenants, onAdd, onEdit, onDelete}) {
+  const propTenants = tenants.filter(t=>t.propertyId===propertyId);
+  return (
+    <div style={{marginTop:28}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+        <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.09em",textTransform:"uppercase",color:C.faint}}>Tenants</div>
+        <button onClick={()=>onAdd(propertyId)} style={{fontSize:11,background:C.surface,border:`1px solid ${C.border}`,borderRadius:6,padding:"4px 10px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>+ Add tenant</button>
+      </div>
+      {propTenants.length===0
+        ? <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:"20px 18px",textAlign:"center",fontSize:13,color:C.faint}}>No tenants on file for this property.</div>
+        : <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
+            {propTenants.map((t,i)=>(
+              <div key={t.id} style={{padding:"14px 18px",borderBottom:i<propTenants.length-1?`1px solid ${C.border}`:"none"}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                  <div>
+                    <div style={{fontSize:14,fontWeight:700,color:C.text}}>{t.companyName}</div>
+                    {t.contactName&&<div style={{fontSize:12,color:C.muted,marginTop:2}}>{t.contactName}</div>}
+                    <div style={{display:"flex",gap:14,marginTop:6,flexWrap:"wrap"}}>
+                      {t.email&&<a href={`mailto:${t.email}`} style={{fontSize:12,color:"#0070f3",textDecoration:"none"}}>{t.email}</a>}
+                      {t.phone&&<span style={{fontSize:12,color:C.muted}}>{t.phone}</span>}
+                    </div>
+                    {(t.leaseStart||t.leaseEnd)&&<div style={{fontSize:11,color:C.faint,marginTop:4}}>
+                      Lease: {t.leaseStart||"?"} — {t.leaseEnd||"?"}
+                    </div>}
+                  </div>
+                  <div style={{display:"flex",gap:6,flexShrink:0}}>
+                    <button onClick={()=>onEdit(t)} style={{fontSize:11,background:C.bg,border:`1px solid ${C.border}`,borderRadius:6,padding:"4px 10px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>Edit</button>
+                    <button onClick={()=>onDelete(t.id)} style={{fontSize:11,background:"#fff0f0",border:"1px solid #ffcccc",borderRadius:6,padding:"4px 10px",cursor:"pointer",color:"#e00",fontFamily:"var(--font-sans)"}}>Remove</button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+      }
+    </div>
+  );
+}
+
+// ─── AI helpers ───────────────────────────────────────────────────────────────
+
 function parsePDF({pdfBase64,propertyId,inspectionId,overrideDate,overrideInspector},setLoading,onResult) {
   setLoading(true);
   const prompt=`You are reviewing a SnapInspect property inspection report for Dembs Development Inc.
@@ -222,7 +314,7 @@ For each item return:
 Also extract from header: propertyName, inspectorName, inspectionDate (YYYY-MM-DD format)
 Respond ONLY with valid JSON, no markdown:
 {"propertyName":"","inspectorName":"","inspectionDate":"","items":[{"description":"","category":"","priority":"","location":""}]}`;
-  fetch("/api/anthropic",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,messages:[{role:"user",content:[{type:"document",source:{type:"base64",media_type:"application/pdf",data:pdfBase64}},{type:"text",text:prompt}]}]})})
+  fetch("/api/anthropic",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,messages:[{role:"user",content:[{type:"document",source:{type:"base64",media_type:"application/pdf",data:pdfBase64}},{type:"text",text:prompt}]})})})
   .then(r=>r.json()).then(data=>{
     const raw=data.content?.find(b=>b.type==="text")?.text||"{}";
     let parsed={items:[]};
@@ -247,6 +339,8 @@ function genAISummary(prop,propItems,cb,setLoading) {
   fetch("/api/anthropic",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:180,messages:[{role:"user",content:`Write a 2-3 sentence maintenance status summary for ${prop.name}. Open: ${open.length}. Critical: ${open.filter(i=>i.priority==="Critical").length}. Items: ${propItems.slice(0,5).map(i=>i.description).join("; ")}. Plain professional prose, no bullets.`}]})})
   .then(r=>r.json()).then(data=>{cb(data.content?.find(b=>b.type==="text")?.text||"");setLoading(false);}).catch(()=>setLoading(false));
 }
+
+// ─── Quote Modal ──────────────────────────────────────────────────────────────
 
 function QuoteModal({item,onClose}) {
   const prop=PROPERTIES.find(p=>p.id===item.propertyId);
@@ -274,12 +368,10 @@ function QuoteModal({item,onClose}) {
         <div style={{marginBottom:18}}>
           <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:"#9c9a93",marginBottom:10}}>Vendor</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-            <div>
-              <div style={{fontSize:11,color:M,marginBottom:4}}>Company</div>
+            <div><div style={{fontSize:11,color:M,marginBottom:4}}>Company</div>
               {categoryVendors.length>0?<select value={selVendor} onChange={e=>{setSelVendor(e.target.value);setSelEmail("");}} style={I}><option value="">Select vendor...</option>{categoryVendors.map(v=><option key={v.name} value={v.name}>{v.name}</option>)}</select>:<input placeholder="No vendors on file" style={{...I,color:"#aaa"}} disabled/>}
             </div>
-            <div>
-              <div style={{fontSize:11,color:M,marginBottom:4}}>Contact email</div>
+            <div><div style={{fontSize:11,color:M,marginBottom:4}}>Contact email</div>
               {selVendor&&contacts.length>0?<select value={selEmail} onChange={e=>setSelEmail(e.target.value)} style={I}><option value="">Select contact...</option>{contacts.map(c=><option key={c.email} value={c.email}>{c.person} — {c.email}</option>)}</select>:<input placeholder={selVendor?"No contacts on file":"Select vendor first"} style={{...I,color:"#aaa"}} disabled/>}
             </div>
           </div>
@@ -301,12 +393,15 @@ function QuoteModal({item,onClose}) {
   );
 }
 
-function PropRow({prop,items,inspections,isLast,onClick}) {
+// ─── Components ───────────────────────────────────────────────────────────────
+
+function PropRow({prop,items,inspections,tenants,isLast,onClick}) {
   const [hov,setHov]=useState(false);
   const pi=items.filter(it=>it.propertyId===prop.id);
   const oi=pi.filter(it=>it.status!=="Completed");
   const cr=oi.filter(it=>it.priority==="Critical").length;
   const ins=inspections.filter(it=>it.propertyId===prop.id).length;
+  const ten=tenants.filter(t=>t.propertyId===prop.id).length;
   return (
     <div onClick={onClick} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)} style={{display:"flex",alignItems:"center",gap:16,padding:"11px 18px",background:hov?C.bg:C.surface,cursor:"pointer",borderBottom:isLast?"none":"1px solid #eaeaea",transition:"background 0.1s"}}>
       <div style={{flex:1,minWidth:0}}>
@@ -315,7 +410,7 @@ function PropRow({prop,items,inspections,isLast,onClick}) {
       </div>
       <div style={{display:"flex",gap:14,alignItems:"center",flexShrink:0}}>
         {cr>0&&<Chip label={`${cr} critical`} tc={PCOLOR.Critical} bg={PBG.Critical} bc={PBDR.Critical}/>}
-        {[[oi.length,"open",oi.length>0?C.text:C.faint],[pi.filter(it=>it.status==="Completed").length,"done",C.faint],[ins,"insp.",C.faint]].map(([n,l,cl])=>(
+        {[[oi.length,"open",oi.length>0?C.text:C.faint],[pi.filter(it=>it.status==="Completed").length,"done",C.faint],[ins,"insp.",C.faint],[ten,"tenants",C.faint]].map(([n,l,cl])=>(
           <div key={l} style={{textAlign:"right",minWidth:28}}>
             <div style={{fontSize:16,fontWeight:700,color:cl,lineHeight:1}}>{n}</div>
             <div style={{fontSize:10,color:C.faint,marginTop:2}}>{l}</div>
@@ -375,9 +470,7 @@ function ItemDetail({item,inspections,onUpdate,onAdvance,onClose}) {
         <div style={{marginBottom:20}}>
           {item.statusHistory.map((h,i)=>(
             <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:i<item.statusHistory.length-1?`1px solid ${C.border}`:"none"}}>
-              <Dot color={SCOLOR[h.status]} size={8}/>
-              <span style={{fontSize:14,color:C.text,fontWeight:600,flex:1}}>{h.status}</span>
-              <span style={{fontSize:13,color:C.faint}}>{h.date}</span>
+              <Dot color={SCOLOR[h.status]} size={8}/><span style={{fontSize:14,color:C.text,fontWeight:600,flex:1}}>{h.status}</span><span style={{fontSize:13,color:C.faint}}>{h.date}</span>
             </div>
           ))}
         </div>
@@ -497,46 +590,46 @@ function AddItemForm({selectedPropertyId,onSubmit,onClose}) {
   );
 }
 
+// ─── App ──────────────────────────────────────────────────────────────────────
+
 export default function App() {
   const [loaded,setLoaded]=useState(false);
-  const [dbError,setDbError]=useState(false);
   const [saveError,setSaveError]=useState("");
   const [saving,setSaving]=useState(false);
   const [inspections,setInspections]=useState([]);
   const [items,setItems]=useState([]);
+  const [tenants,setTenants]=useState([]);
   const [view,setView]=useState("portfolio");
   const [selProp,setSelProp]=useState(null);
   const [selItem,setSelItem]=useState(null);
   const [showImport,setShowImport]=useState(false);
   const [showAdd,setShowAdd]=useState(false);
+  const [tenantForm,setTenantForm]=useState(null); // null | {mode:"add",propertyId} | {mode:"edit",tenant}
   const [fStatus,setFStatus]=useState("All");
   const [fPriority,setFPriority]=useState("All");
   const [fCategory,setFCategory]=useState("All");
   const [fAssignee,setFAssignee]=useState("All");
   const [search,setSearch]=useState("");
+  const [tenantSearch,setTenantSearch]=useState("");
 
   useEffect(()=>{
     loadAll().then(result=>{
-      if(result===null){setDbError(true);setLoaded(true);return;}
-      setInspections(result.inspections);setItems(result.items);setLoaded(true);
+      if(result===null){setSaveError("Could not connect to database.");setLoaded(true);return;}
+      setInspections(result.inspections);setItems(result.items);setTenants(result.tenants);setLoaded(true);
     });
   },[]);
 
   async function updateItem(id,changes) {
     const updated=items.map(i=>i.id===id?{...i,...changes}:i);
-    setItems(updated);
-    if(selItem?.id===id) setSelItem(p=>({...p,...changes}));
+    setItems(updated);if(selItem?.id===id)setSelItem(p=>({...p,...changes}));
     setSaving(true);setSaveError("");
     const err=await saveItemToDB(updated.find(i=>i.id===id));
-    if(err) setSaveError("Save failed: "+err.message);
-    setSaving(false);
+    if(err)setSaveError("Save failed: "+err.message);setSaving(false);
   }
   async function advance(item) {
     const next=STATUS_NEXT[item.status];if(!next)return;
-    const d=today();
-    const h=[...item.statusHistory,{status:next,date:d}];
-    const ch={status:next,statusHistory:h};
-    if(next==="Completed") ch.completedDate=d;
+    const d=today();const h=[...item.statusHistory,{status:next,date:d}];
+    const ch={status:next,statusHistory:h};if(next==="Completed")ch.completedDate=d;
     await updateItem(item.id,ch);
   }
   async function addInspectionAndItems(insp,newItems) {
@@ -552,26 +645,45 @@ export default function App() {
     if(err){setSaveError("Save failed: "+err.message);setSaving(false);return;}
     setItems(prev=>[item,...prev]);setSaving(false);
   }
+  async function saveTenant(tenant) {
+    setSaving(true);setSaveError("");
+    const err=await saveTenantToDB(tenant);
+    if(err){setSaveError("Save failed: "+err.message);setSaving(false);return;}
+    setTenants(prev=>{const exists=prev.find(t=>t.id===tenant.id);return exists?prev.map(t=>t.id===tenant.id?tenant:t):[...prev,tenant];});
+    setTenantForm(null);setSaving(false);
+  }
+  async function deleteTenant(id) {
+    if(!confirm("Remove this tenant?"))return;
+    const err=await deleteTenantFromDB(id);
+    if(!err)setTenants(prev=>prev.filter(t=>t.id!==id));
+  }
 
   const openItems=items.filter(i=>i.status!=="Completed");
   const critical=items.filter(i=>i.priority==="Critical"&&i.status!=="Completed");
   const filtered=useMemo(()=>items.filter(it=>{
-    if(fStatus!=="All"&&it.status!==fStatus) return false;
-    if(fPriority!=="All"&&it.priority!==fPriority) return false;
-    if(fCategory!=="All"&&it.category!==fCategory) return false;
-    if(fAssignee!=="All"&&it.assignee!==fAssignee) return false;
-    if(selProp&&it.propertyId!==selProp) return false;
-    if(search&&!it.description.toLowerCase().includes(search.toLowerCase())) return false;
+    if(fStatus!=="All"&&it.status!==fStatus)return false;
+    if(fPriority!=="All"&&it.priority!==fPriority)return false;
+    if(fCategory!=="All"&&it.category!==fCategory)return false;
+    if(fAssignee!=="All"&&it.assignee!==fAssignee)return false;
+    if(selProp&&it.propertyId!==selProp)return false;
+    if(search&&!it.description.toLowerCase().includes(search.toLowerCase()))return false;
     return true;
   }),[items,fStatus,fPriority,fCategory,fAssignee,selProp,search]);
 
-  const NAV=[{id:"portfolio",label:"Portfolio"},{id:"items",label:"All Items"},{id:"inspections",label:"Inspections"}];
+  const filteredTenants=useMemo(()=>tenants.filter(t=>{
+    if(!tenantSearch)return true;
+    const q=tenantSearch.toLowerCase();
+    return t.companyName?.toLowerCase().includes(q)||t.contactName?.toLowerCase().includes(q)||t.email?.toLowerCase().includes(q);
+  }),[tenants,tenantSearch]);
+
+  const NAV=[{id:"portfolio",label:"Portfolio"},{id:"items",label:"All Items"},{id:"tenants",label:"Tenants"},{id:"inspections",label:"Inspections"}];
 
   if(!loaded) return <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:C.bg,fontFamily:"var(--font-sans)",color:C.faint,fontSize:13}}>Loading...</div>;
 
   return (
     <div style={{display:"flex",height:"100vh",width:"100vw",background:C.bg,fontFamily:"var(--font-sans)",overflow:"hidden",position:"relative"}}>
 
+      {/* Sidebar */}
       <div style={{width:220,background:"#000",display:"flex",flexDirection:"column",flexShrink:0,borderRight:"1px solid #1a1a1a"}}>
         <div style={{padding:"20px 20px 16px",display:"flex",alignItems:"center",gap:10}}>
           <div style={{width:36,height:36,background:"#222",borderRadius:6,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",border:"1px solid #333"}}><span style={{color:"#fff",fontSize:15,fontWeight:800}}>D</span></div>
@@ -584,7 +696,7 @@ export default function App() {
           ))}
         </nav>
         <div style={{padding:"16px 20px",borderTop:"1px solid rgba(255,255,255,0.08)"}}>
-          {[["48","properties"],[openItems.length,"open items"],[critical.length,"critical"]].map(([n,l])=>(
+          {[["48","properties"],[openItems.length,"open items"],[critical.length,"critical"],[tenants.length,"tenants"]].map(([n,l])=>(
             <div key={l} style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
               <span style={{fontSize:12,color:C.sideMuted}}>{l}</span>
               <span style={{fontSize:12,fontWeight:700,color:critical.length>0&&l==="critical"?"#fca5a5":C.sideText}}>{n}</span>
@@ -595,19 +707,25 @@ export default function App() {
         </div>
       </div>
 
+      {/* Main */}
       <div style={{flex:1,minWidth:0,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+
+        {/* Topbar */}
         <div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,padding:"0 24px",height:48,display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0,zIndex:10}}>
           <div style={{fontSize:16,fontWeight:700,color:C.text,display:"flex",alignItems:"center",gap:6}}>
-            {view==="portfolio"&&selProp?(()=>{const p=PROPERTIES.find(pr=>pr.id===selProp);return <><span onClick={()=>setSelProp(null)} style={{color:C.muted,cursor:"pointer",fontWeight:400,fontSize:13}}>Portfolio</span><span style={{color:C.border,margin:"0 4px"}}>&rsaquo;</span><span>{p?.name}</span></>;})():view==="portfolio"?"Portfolio":view==="items"?"All Items":"Inspections"}
+            {view==="portfolio"&&selProp?(()=>{const p=PROPERTIES.find(pr=>pr.id===selProp);return<><span onClick={()=>setSelProp(null)} style={{color:C.muted,cursor:"pointer",fontWeight:400,fontSize:13}}>Portfolio</span><span style={{color:C.border,margin:"0 4px"}}>&rsaquo;</span><span>{p?.name}</span></>;})():view==="portfolio"?"Portfolio":view==="items"?"All Items":view==="tenants"?"Tenants":"Inspections"}
           </div>
           <div style={{display:"flex",gap:8}}>
-            <button onClick={()=>setShowAdd(true)} style={{fontSize:13,fontWeight:500,background:"transparent",border:`1px solid ${C.border}`,borderRadius:7,padding:"6px 14px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>+ Add item</button>
+            {view==="tenants"&&<button onClick={()=>setTenantForm({mode:"add",propertyId:null})} style={{fontSize:13,fontWeight:500,background:"transparent",border:`1px solid ${C.border}`,borderRadius:7,padding:"6px 14px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>+ Add tenant</button>}
+            {view!=="tenants"&&<button onClick={()=>setShowAdd(true)} style={{fontSize:13,fontWeight:500,background:"transparent",border:`1px solid ${C.border}`,borderRadius:7,padding:"6px 14px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>+ Add item</button>}
             <button onClick={()=>setShowImport(true)} style={{fontSize:13,fontWeight:600,background:C.text,border:"none",borderRadius:7,padding:"7px 16px",cursor:"pointer",color:"#fff",fontFamily:"var(--font-sans)"}}>+ Import inspection</button>
           </div>
         </div>
 
+        {/* Body */}
         <div style={{flex:1,overflowY:"auto",padding:"24px 28px"}}>
 
+          {/* Portfolio */}
           {view==="portfolio"&&!selProp&&<>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:12,marginBottom:24}}>
               {[{l:"Open Items",v:openItems.length,s:"across portfolio",red:false},{l:"Critical",v:critical.length,s:"immediate action",red:critical.length>0},{l:"Scheduled",v:items.filter(i=>i.status==="Scheduled").length,s:"confirmed with vendors"},{l:"Completed",v:items.filter(i=>i.status==="Completed").length,s:"all time"}].map(k=>(
@@ -620,19 +738,20 @@ export default function App() {
             </div>
             <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 18px",marginBottom:24,display:"flex",gap:24,flexWrap:"wrap",alignItems:"center"}}>
               <span style={{fontSize:10,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:C.faint}}>Status</span>
-              {STATUSES.map(s=>{const n=items.filter(i=>i.status===s).length;return <div key={s} style={{display:"flex",alignItems:"center",gap:6}}><Dot color={SCOLOR[s]} size={7}/><span style={{fontSize:13,color:C.muted}}>{s}</span><span style={{fontSize:14,fontWeight:700,color:C.text}}>{n}</span></div>;})}
+              {STATUSES.map(s=>{const n=items.filter(i=>i.status===s).length;return<div key={s} style={{display:"flex",alignItems:"center",gap:6}}><Dot color={SCOLOR[s]} size={7}/><span style={{fontSize:13,color:C.muted}}>{s}</span><span style={{fontSize:14,fontWeight:700,color:C.text}}>{n}</span></div>;})}
             </div>
             {Object.entries(GROUPS).map(([gkey,gname])=>{
               const gps=PROPERTIES.filter(p=>p.group===gkey);if(!gps.length)return null;
-              return (<div key={gkey} style={{marginBottom:20}}>
+              return(<div key={gkey} style={{marginBottom:20}}>
                 <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.06em",textTransform:"uppercase",color:C.faint,marginBottom:8}}>{gname}</div>
                 <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
-                  {gps.map((prop,i)=><PropRow key={prop.id} prop={prop} items={items} inspections={inspections} isLast={i===gps.length-1} onClick={()=>{setSelProp(prop.id);setView("portfolio");}}/>)}
+                  {gps.map((prop,i)=><PropRow key={prop.id} prop={prop} items={items} inspections={inspections} tenants={tenants} isLast={i===gps.length-1} onClick={()=>{setSelProp(prop.id);setView("portfolio");}}/>)}
                 </div>
               </div>);
             })}
           </>}
 
+          {/* Property detail */}
           {view==="portfolio"&&selProp&&(()=>{
             const prop=PROPERTIES.find(p=>p.id===selProp);
             const pi=items.filter(i=>i.propertyId===selProp);
@@ -646,7 +765,7 @@ export default function App() {
                   <div style={{fontSize:11,color:C.faint,marginTop:2}}>{prop.owner} · {GROUPS[prop.group]}</div>
                 </div>
                 <div style={{display:"flex",gap:20}}>
-                  {[[oi.length,"open"],[pi.filter(i=>i.status==="Completed").length,"done"],[pInsp.length,"inspections"]].map(([n,l])=>(
+                  {[[oi.length,"open"],[pi.filter(i=>i.status==="Completed").length,"done"],[pInsp.length,"inspections"],[tenants.filter(t=>t.propertyId===selProp).length,"tenants"]].map(([n,l])=>(
                     <div key={l} style={{textAlign:"right"}}><div style={{fontSize:28,fontWeight:800,color:C.text}}>{n}</div><div style={{fontSize:11,color:C.faint}}>{l}</div></div>
                   ))}
                 </div>
@@ -654,12 +773,22 @@ export default function App() {
               <AISummaryCard prop={prop} propItems={pi}/>
               {PRIORITIES.map(p=>{
                 const grp=oi.filter(i=>i.priority===p);if(!grp.length)return null;
-                return (<div key={p} style={{marginBottom:20}}>
+                return(<div key={p} style={{marginBottom:20}}>
                   <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:8}}><Dot color={PCOLOR[p]} size={7}/><span style={{fontSize:10,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:PCOLOR[p]}}>{p}</span><span style={{fontSize:11,color:C.faint}}>({grp.length})</span></div>
                   <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>{grp.map(it=><ItemRow key={it.id} item={it} onClick={()=>setSelItem(it)} onAdvance={()=>advance(it)}/>)}</div>
                 </div>);
               })}
               {oi.length===0&&<div style={{textAlign:"center",padding:"48px 0",color:C.faint,fontSize:13}}>No open items — this property is clear.</div>}
+
+              {/* Tenants on property page */}
+              <TenantsSection
+                propertyId={selProp}
+                tenants={tenants}
+                onAdd={(pid)=>setTenantForm({mode:"add",propertyId:pid})}
+                onEdit={(t)=>setTenantForm({mode:"edit",tenant:t})}
+                onDelete={deleteTenant}
+              />
+
               {pInsp.length>0&&<div style={{marginTop:28}}>
                 <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.09em",textTransform:"uppercase",color:C.faint,marginBottom:10}}>Inspection history</div>
                 <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
@@ -674,6 +803,7 @@ export default function App() {
             </>;
           })()}
 
+          {/* All Items */}
           {view==="items"&&<>
             <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center",marginBottom:16}}>
               <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search..." style={{fontFamily:"var(--font-sans)",fontSize:13,padding:"7px 11px",borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:C.text,width:200,outline:"none"}}/>
@@ -688,6 +818,42 @@ export default function App() {
             <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>{filtered.map(it=><ItemRow key={it.id} item={it} showProperty onClick={()=>setSelItem(it)} onAdvance={()=>advance(it)}/>)}</div>}
           </>}
 
+          {/* Tenants view */}
+          {view==="tenants"&&<>
+            <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:16}}>
+              <input value={tenantSearch} onChange={e=>setTenantSearch(e.target.value)} placeholder="Search tenants..." style={{fontFamily:"var(--font-sans)",fontSize:13,padding:"7px 11px",borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:C.text,width:240,outline:"none"}}/>
+              <span style={{fontSize:12,color:C.faint}}>{filteredTenants.length} tenants</span>
+            </div>
+            {filteredTenants.length===0?
+            <div style={{textAlign:"center",padding:"60px 0",color:C.faint,fontSize:13}}>{tenants.length===0?"No tenants on file yet. Add your first tenant using the button above.":"No tenants match your search."}</div>:
+            <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
+              {filteredTenants.map((t,i)=>{
+                const prop=PROPERTIES.find(p=>p.id===t.propertyId);
+                return(
+                  <div key={t.id} style={{padding:"14px 18px",borderBottom:i<filteredTenants.length-1?`1px solid ${C.border}`:"none"}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                      <div>
+                        <div style={{fontSize:14,fontWeight:700,color:C.text}}>{t.companyName}</div>
+                        {t.contactName&&<div style={{fontSize:12,color:C.muted,marginTop:1}}>{t.contactName}</div>}
+                        <div style={{fontSize:11,color:C.faint,marginTop:2}}>{GROUPS[prop?.group]} · {prop?.name}</div>
+                        <div style={{display:"flex",gap:14,marginTop:6,flexWrap:"wrap"}}>
+                          {t.email&&<a href={`mailto:${t.email}`} style={{fontSize:12,color:"#0070f3",textDecoration:"none"}}>{t.email}</a>}
+                          {t.phone&&<span style={{fontSize:12,color:C.muted}}>{t.phone}</span>}
+                        </div>
+                        {(t.leaseStart||t.leaseEnd)&&<div style={{fontSize:11,color:C.faint,marginTop:4}}>Lease: {t.leaseStart||"?"} — {t.leaseEnd||"?"}</div>}
+                      </div>
+                      <div style={{display:"flex",gap:6,flexShrink:0}}>
+                        <button onClick={()=>setTenantForm({mode:"edit",tenant:t})} style={{fontSize:11,background:C.bg,border:`1px solid ${C.border}`,borderRadius:6,padding:"4px 10px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>Edit</button>
+                        <button onClick={()=>deleteTenant(t.id)} style={{fontSize:11,background:"#fff0f0",border:"1px solid #ffcccc",borderRadius:6,padding:"4px 10px",cursor:"pointer",color:"#e00",fontFamily:"var(--font-sans)"}}>Remove</button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>}
+          </>}
+
+          {/* Inspections */}
           {view==="inspections"&&<>
             <div style={{fontSize:12,color:C.faint,marginBottom:14}}>{inspections.length} inspections logged</div>
             {inspections.length===0?
@@ -717,9 +883,16 @@ export default function App() {
         </div>
       </div>
 
+      {/* Overlays */}
       {selItem&&<ItemDetail item={selItem} inspections={inspections} onUpdate={ch=>updateItem(selItem.id,ch)} onAdvance={()=>advance(selItem)} onClose={()=>setSelItem(null)}/>}
       {showImport&&<ImportForm selectedPropertyId={selProp} onSubmit={(insp,its)=>{addInspectionAndItems(insp,its);setShowImport(false);}} onClose={()=>setShowImport(false)}/>}
       {showAdd&&<AddItemForm selectedPropertyId={selProp} onSubmit={it=>{addItem(it);setShowAdd(false);}} onClose={()=>setShowAdd(false)}/>}
+      {tenantForm&&<TenantForm
+        tenant={tenantForm.mode==="edit"?tenantForm.tenant:null}
+        propertyId={tenantForm.mode==="add"?tenantForm.propertyId:null}
+        onSave={saveTenant}
+        onClose={()=>setTenantForm(null)}
+      />}
     </div>
   );
 }
