@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const sb = createClient(
   "https://rvpacnokfnvwscxvjsou.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2cGFjbm9rZm52d3NjeHZqc291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNjk4MjEsImV4cCI6MjA4OTg0NTgyMX0.KRYZU6mnQpfXtJjUwVV-QvRf-2Gl72gkQBKc_pq7YOw"
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2cGFjbm9rZm52d3NjeHZqc291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNjk4MjEsImV4cCI6MjA4OTg0NTgyMX0.KRYZU6mnQpfXtJjUwVV-QvRf-2Gl72gkQBKc_pq7Yow"
 );
 
 const TEAM       = ["Kenny Perkins","Josh Lesson","Rob Stout","Spencer Vankirk","Dylan Dembs"];
@@ -107,27 +107,25 @@ function uid()   { return Math.random().toString(36).slice(2,9); }
 function nowISO(){ return new Date().toISOString(); }
 function today() { return new Date().toISOString().slice(0,10); }
 
-// ─── Supabase ─────────────────────────────────────────────────────────────────
-
 async function loadAll() {
   try {
-    const [{ data: insps, error: e1 }, { data: its, error: e2 }, { data: tens, error: e3 }] = await Promise.all([
+    const [r1, r2, r3] = await Promise.all([
       sb.from("inspections").select("*").order("date", { ascending: false }),
       sb.from("items").select("*").order("created_at", { ascending: false }),
       sb.from("tenants").select("*").order("company_name", { ascending: true }),
     ]);
-    if (e1) { console.error("inspections error:", e1); return null; }
-    if (e2) { console.error("items error:", e2); return null; }
-    if (e3) { console.error("tenants error:", e3); } // non-fatal
-    const inspections = (insps||[]).map(r=>({ id:r.id, propertyId:r.property_id, date:r.date, inspector:r.inspector, notes:r.notes }));
-    const items = (its||[]).map(r=>({
+    if (r1.error) { console.error("inspections error:", r1.error); return null; }
+    if (r2.error) { console.error("items error:", r2.error); return null; }
+    if (r3.error) { console.error("tenants error:", r3.error); }
+    const inspections = (r1.data||[]).map(r=>({ id:r.id, propertyId:r.property_id, date:r.date, inspector:r.inspector, notes:r.notes }));
+    const items = (r2.data||[]).map(r=>({
       id:r.id, inspectionId:r.inspection_id, propertyId:r.property_id,
       description:r.description, category:r.category, priority:r.priority,
       status:r.status, assignee:r.assignee||"", vendor:r.vendor||"", notes:r.notes||"",
       scheduledDate:r.scheduled_date||"", completedDate:r.completed_date||"",
       createdAt:r.created_at, statusHistory:r.status_history||[],
     }));
-    const tenants = (tens||[]).map(r=>({
+    const tenants = (r3.data||[]).map(r=>({
       id:r.id, propertyId:r.property_id, companyName:r.company_name||"",
       contactName:r.contact_name||"", email:r.email||"", phone:r.phone||"",
       leaseStart:r.lease_start||"", leaseEnd:r.lease_end||"",
@@ -137,7 +135,9 @@ async function loadAll() {
 }
 
 async function saveInspection(insp) {
-  const { error } = await sb.from("inspections").upsert({ id:insp.id, property_id:insp.propertyId, date:insp.date, inspector:insp.inspector, notes:insp.notes }, { onConflict:"id" });
+  const { error } = await sb.from("inspections").upsert({
+    id:insp.id, property_id:insp.propertyId, date:insp.date, inspector:insp.inspector, notes:insp.notes,
+  }, { onConflict:"id" });
   if (error) console.error("saveInspection error:", error);
   return error;
 }
@@ -169,8 +169,6 @@ async function deleteTenantFromDB(id) {
   if (error) console.error("deleteTenant error:", error);
   return error;
 }
-
-// ─── Primitives ───────────────────────────────────────────────────────────────
 
 function Chip({label,tc,bg,bc}) {
   return <span style={{fontSize:11,fontWeight:500,padding:"2px 9px",borderRadius:99,background:bg,color:tc,border:`1px solid ${bc}`,whiteSpace:"nowrap"}}>{label}</span>;
@@ -223,8 +221,6 @@ function SlideOver({children,title,sub,onClose}) {
   </div>;
 }
 
-// ─── Tenant Form ──────────────────────────────────────────────────────────────
-
 function TenantForm({tenant, propertyId, onSave, onClose}) {
   const [form, setForm] = useState(tenant || {
     propertyId: propertyId||PROPERTIES[0].id,
@@ -235,7 +231,7 @@ function TenantForm({tenant, propertyId, onSave, onClose}) {
       <OverlayHeader title={tenant?"Edit Tenant":"Add Tenant"} onClose={onClose}/>
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
         {!tenant&&<FSelect label="Property" value={form.propertyId} onChange={v=>setForm(f=>({...f,propertyId:v}))}
-          options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} — ${p.name}`}))}/>}
+          options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} - ${p.name}`}))}/>}
         <FInput label="Company name" value={form.companyName} onChange={v=>setForm(f=>({...f,companyName:v}))} placeholder="Acme Corp"/>
         <FInput label="Contact person" value={form.contactName} onChange={v=>setForm(f=>({...f,contactName:v}))} placeholder="John Smith"/>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
@@ -244,15 +240,13 @@ function TenantForm({tenant, propertyId, onSave, onClose}) {
           <FInput label="Lease start" value={form.leaseStart} onChange={v=>setForm(f=>({...f,leaseStart:v}))} type="date"/>
           <FInput label="Lease end" value={form.leaseEnd} onChange={v=>setForm(f=>({...f,leaseEnd:v}))} type="date"/>
         </div>
-        <PrimaryBtn full disabled={!form.companyName.trim()} onClick={()=>onSave({...form, id:tenant?.id||"t"+uid()})}>
+        <PrimaryBtn full disabled={!form.companyName.trim()} onClick={()=>onSave({...form,id:tenant?.id||"t"+uid()})}>
           {tenant?"Save changes":"Add tenant"}
         </PrimaryBtn>
       </div>
     </Overlay>
   );
 }
-
-// ─── Tenants Section (used on property detail page) ───────────────────────────
 
 function TenantsSection({propertyId, tenants, onAdd, onEdit, onDelete}) {
   const propTenants = tenants.filter(t=>t.propertyId===propertyId);
@@ -275,9 +269,7 @@ function TenantsSection({propertyId, tenants, onAdd, onEdit, onDelete}) {
                       {t.email&&<a href={`mailto:${t.email}`} style={{fontSize:12,color:"#0070f3",textDecoration:"none"}}>{t.email}</a>}
                       {t.phone&&<span style={{fontSize:12,color:C.muted}}>{t.phone}</span>}
                     </div>
-                    {(t.leaseStart||t.leaseEnd)&&<div style={{fontSize:11,color:C.faint,marginTop:4}}>
-                      Lease: {t.leaseStart||"?"} — {t.leaseEnd||"?"}
-                    </div>}
+                    {(t.leaseStart||t.leaseEnd)&&<div style={{fontSize:11,color:C.faint,marginTop:4}}>Lease: {t.leaseStart||"?"} - {t.leaseEnd||"?"}</div>}
                   </div>
                   <div style={{display:"flex",gap:6,flexShrink:0}}>
                     <button onClick={()=>onEdit(t)} style={{fontSize:11,background:C.bg,border:`1px solid ${C.border}`,borderRadius:6,padding:"4px 10px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>Edit</button>
@@ -286,13 +278,10 @@ function TenantsSection({propertyId, tenants, onAdd, onEdit, onDelete}) {
                 </div>
               </div>
             ))}
-          </div>
-      }
+          </div>}
     </div>
   );
 }
-
-// ─── AI helpers ───────────────────────────────────────────────────────────────
 
 function parsePDF({pdfBase64,propertyId,inspectionId,overrideDate,overrideInspector},setLoading,onResult) {
   setLoading(true);
@@ -340,8 +329,6 @@ function genAISummary(prop,propItems,cb,setLoading) {
   .then(r=>r.json()).then(data=>{cb(data.content?.find(b=>b.type==="text")?.text||"");setLoading(false);}).catch(()=>setLoading(false));
 }
 
-// ─── Quote Modal ──────────────────────────────────────────────────────────────
-
 function QuoteModal({item,onClose}) {
   const prop=PROPERTIES.find(p=>p.id===item.propertyId);
   const categoryVendors=(VENDORS[item.category]||[]).filter(v=>v.name!=="TBD");
@@ -357,7 +344,7 @@ function QuoteModal({item,onClose}) {
     <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"absolute",inset:0,zIndex:300,background:"rgba(0,0,0,0.35)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"52px 16px",overflowY:"auto"}}>
       <div style={{background:"#fff",borderRadius:12,border:`1px solid ${B}`,width:"100%",maxWidth:580,padding:"26px 26px 22px",boxShadow:"0 12px 40px rgba(0,0,0,0.15)"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18}}>
-          <div><div style={{fontSize:16,fontWeight:700,color:T}}>Request Vendor Quote</div><div style={{fontSize:12,color:M,marginTop:3}}>{prop?.name} · {item.category}</div></div>
+          <div><div style={{fontSize:16,fontWeight:700,color:T}}>Request Vendor Quote</div><div style={{fontSize:12,color:M,marginTop:3}}>{prop?.name} - {item.category}</div></div>
           <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",fontSize:22,color:M,padding:0}}>x</button>
         </div>
         <div style={{background:"#f5f4f1",borderRadius:8,padding:"12px 14px",marginBottom:18}}>
@@ -372,7 +359,7 @@ function QuoteModal({item,onClose}) {
               {categoryVendors.length>0?<select value={selVendor} onChange={e=>{setSelVendor(e.target.value);setSelEmail("");}} style={I}><option value="">Select vendor...</option>{categoryVendors.map(v=><option key={v.name} value={v.name}>{v.name}</option>)}</select>:<input placeholder="No vendors on file" style={{...I,color:"#aaa"}} disabled/>}
             </div>
             <div><div style={{fontSize:11,color:M,marginBottom:4}}>Contact email</div>
-              {selVendor&&contacts.length>0?<select value={selEmail} onChange={e=>setSelEmail(e.target.value)} style={I}><option value="">Select contact...</option>{contacts.map(c=><option key={c.email} value={c.email}>{c.person} — {c.email}</option>)}</select>:<input placeholder={selVendor?"No contacts on file":"Select vendor first"} style={{...I,color:"#aaa"}} disabled/>}
+              {selVendor&&contacts.length>0?<select value={selEmail} onChange={e=>setSelEmail(e.target.value)} style={I}><option value="">Select contact...</option>{contacts.map(c=><option key={c.email} value={c.email}>{c.person} - {c.email}</option>)}</select>:<input placeholder={selVendor?"No contacts on file":"Select vendor first"} style={{...I,color:"#aaa"}} disabled/>}
             </div>
           </div>
         </div>
@@ -392,8 +379,6 @@ function QuoteModal({item,onClose}) {
     </div>
   );
 }
-
-// ─── Components ───────────────────────────────────────────────────────────────
 
 function PropRow({prop,items,inspections,tenants,isLast,onClick}) {
   const [hov,setHov]=useState(false);
@@ -453,12 +438,12 @@ function ItemDetail({item,inspections,onUpdate,onAdvance,onClose}) {
   const next=STATUS_NEXT[item.status];
   function save(){onUpdate(form);setEditing(false);}
   return (
-    <SlideOver onClose={onClose} sub={`${GROUPS[prop?.group]} · ${prop?.name}`} title={item.description}>
+    <SlideOver onClose={onClose} sub={`${GROUPS[prop?.group]} - ${prop?.name}`} title={item.description}>
       <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:18}}><PPill p={item.priority}/><SPill s={item.status}/><Chip label={item.category} tc={C.muted} bg={C.bg} bc={C.border}/></div>
       {next&&<button onClick={onAdvance} style={{width:"100%",marginBottom:20,padding:"10px 16px",background:SBG[next],color:SCOLOR[next],border:`1px solid ${SBDR[next]}`,borderRadius:8,cursor:"pointer",fontFamily:"var(--font-sans)",fontSize:13,fontWeight:600}}>Mark as {next}</button>}
       {!editing?<>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:1,marginBottom:20,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
-          {[["Assignee",item.assignee||"Unassigned"],["Vendor",item.vendor||"—"],["Created",item.createdAt?.slice(0,10)||""],["Scheduled",item.scheduledDate||"—"],["Completed",item.completedDate||"—"],["Inspection",insp?.date||"Manual"]].map(([label,val],i)=>(
+          {[["Assignee",item.assignee||"Unassigned"],["Vendor",item.vendor||"-"],["Created",item.createdAt?.slice(0,10)||""],["Scheduled",item.scheduledDate||"-"],["Completed",item.completedDate||"-"],["Inspection",insp?.date||"Manual"]].map(([label,val],i)=>(
             <div key={label} style={{padding:"11px 14px",background:i%2===0?C.bg:C.surface}}>
               <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:C.faint,marginBottom:4}}>{label}</div>
               <div style={{fontSize:14,color:C.text,fontWeight:600}}>{val}</div>
@@ -526,7 +511,7 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}) {
     r.onload=e=>{
       const base64=e.target.result.split(",")[1];
       const sizeInMB=(base64.length*0.75)/(1024*1024);
-      if(sizeInMB>4){alert(`PDF is ${sizeInMB.toFixed(1)}MB — compress at smallpdf.com first.`);return;}
+      if(sizeInMB>4){alert(`PDF is ${sizeInMB.toFixed(1)}MB - compress at smallpdf.com first.`);return;}
       setPdfBase64(base64);
     };
     r.readAsDataURL(file);
@@ -535,7 +520,7 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}) {
   if(preview) return (
     <Overlay onClose={onClose}>
       <OverlayHeader title="Review extracted items" sub={`${preview.items.length} items from ${fileName}`} onClose={onClose}/>
-      {preview.detectedProperty&&<div style={{fontSize:12,color:C.muted,background:C.bg,padding:"8px 12px",borderRadius:8,border:`1px solid ${C.border}`,marginBottom:14}}>PDF property: <strong style={{color:C.text}}>{preview.detectedProperty}</strong> → {prop?.name}</div>}
+      {preview.detectedProperty&&<div style={{fontSize:12,color:C.muted,background:C.bg,padding:"8px 12px",borderRadius:8,border:`1px solid ${C.border}`,marginBottom:14}}>PDF property: <strong style={{color:C.text}}>{preview.detectedProperty}</strong> - {prop?.name}</div>}
       <div style={{maxHeight:420,overflowY:"auto",marginBottom:16,border:`1px solid ${C.border}`,borderRadius:10}}>
         {preview.items.map((item,i)=>(
           <div key={i} style={{padding:"11px 16px",background:i%2===0?C.surface:C.bg,borderBottom:i<preview.items.length-1?`1px solid ${C.border}`:"none"}}>
@@ -545,7 +530,7 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}) {
         ))}
       </div>
       <div style={{display:"flex",gap:8}}>
-        <PrimaryBtn onClick={()=>{onSubmit({id:"i"+uid(),propertyId,date:overrideDate||preview.date,inspector:overrideInspector||preview.inspector||"SnapInspect",notes:`SnapInspect PDF: ${fileName}`},preview.items);}}>Confirm & add {preview.items.length} items</PrimaryBtn>
+        <PrimaryBtn onClick={()=>{onSubmit({id:"i"+uid(),propertyId,date:overrideDate||preview.date,inspector:overrideInspector||preview.inspector||"SnapInspect",notes:`SnapInspect PDF: ${fileName}`},preview.items);}}>Confirm and add {preview.items.length} items</PrimaryBtn>
         <GhostBtn onClick={()=>setPreview(null)}>Back</GhostBtn>
       </div>
     </Overlay>
@@ -558,7 +543,7 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}) {
           <input id="pdf-upload-input" type="file" accept="application/pdf" style={{display:"none"}} onChange={e=>handleFile(e.target.files[0])}/>
           {pdfBase64?<><div style={{fontSize:13,fontWeight:600,color:C.text}}>{fileName}</div><div style={{fontSize:11,color:C.faint,marginTop:2}}>Click to change</div></>:<><div style={{fontSize:13,fontWeight:600,color:C.text}}>Drop SnapInspect PDF here</div><div style={{fontSize:11,color:C.faint,marginTop:3}}>or click to browse</div></>}
         </div>
-        <FSelect label="Property" value={propertyId} onChange={setPropertyId} options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} — ${p.name}`}))}/>
+        <FSelect label="Property" value={propertyId} onChange={setPropertyId} options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} - ${p.name}`}))}/>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
           <FSelect label="Inspector (optional)" value={overrideInspector} onChange={setOverrideInspector} options={[{v:"",l:"Auto-detect from PDF"},...TEAM.map(t=>({v:t,l:t}))]}/>
           <FInput label="Date (optional)" value={overrideDate} onChange={setOverrideDate} type="date"/>
@@ -575,7 +560,7 @@ function AddItemForm({selectedPropertyId,onSubmit,onClose}) {
     <Overlay onClose={onClose}>
       <OverlayHeader title="Add repair item" onClose={onClose}/>
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
-        <FSelect label="Property" value={form.propertyId} onChange={v=>setForm(f=>({...f,propertyId:v}))} options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} — ${p.name}`}))}/>
+        <FSelect label="Property" value={form.propertyId} onChange={v=>setForm(f=>({...f,propertyId:v}))} options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} - ${p.name}`}))}/>
         <FInput label="Description" value={form.description} onChange={v=>setForm(f=>({...f,description:v}))} placeholder="Describe the repair task clearly..." rows={2}/>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
           <FSelect label="Category" value={form.category} onChange={v=>setForm(f=>({...f,category:v}))} options={CATEGORIES}/>
@@ -590,8 +575,6 @@ function AddItemForm({selectedPropertyId,onSubmit,onClose}) {
   );
 }
 
-// ─── App ──────────────────────────────────────────────────────────────────────
-
 export default function App() {
   const [loaded,setLoaded]=useState(false);
   const [saveError,setSaveError]=useState("");
@@ -604,7 +587,7 @@ export default function App() {
   const [selItem,setSelItem]=useState(null);
   const [showImport,setShowImport]=useState(false);
   const [showAdd,setShowAdd]=useState(false);
-  const [tenantForm,setTenantForm]=useState(null); // null | {mode:"add",propertyId} | {mode:"edit",tenant}
+  const [tenantForm,setTenantForm]=useState(null);
   const [fStatus,setFStatus]=useState("All");
   const [fPriority,setFPriority]=useState("All");
   const [fCategory,setFCategory]=useState("All");
@@ -624,7 +607,8 @@ export default function App() {
     setItems(updated);if(selItem?.id===id)setSelItem(p=>({...p,...changes}));
     setSaving(true);setSaveError("");
     const err=await saveItemToDB(updated.find(i=>i.id===id));
-    if(err)setSaveError("Save failed: "+err.message);setSaving(false);
+    if(err)setSaveError("Save failed: "+err.message);
+    setSaving(false);
   }
   async function advance(item) {
     const next=STATUS_NEXT[item.status];if(!next)return;
@@ -653,7 +637,7 @@ export default function App() {
     setTenantForm(null);setSaving(false);
   }
   async function deleteTenant(id) {
-    if(!confirm("Remove this tenant?"))return;
+    if(!window.confirm("Remove this tenant?"))return;
     const err=await deleteTenantFromDB(id);
     if(!err)setTenants(prev=>prev.filter(t=>t.id!==id));
   }
@@ -682,8 +666,6 @@ export default function App() {
 
   return (
     <div style={{display:"flex",height:"100vh",width:"100vw",background:C.bg,fontFamily:"var(--font-sans)",overflow:"hidden",position:"relative"}}>
-
-      {/* Sidebar */}
       <div style={{width:220,background:"#000",display:"flex",flexDirection:"column",flexShrink:0,borderRight:"1px solid #1a1a1a"}}>
         <div style={{padding:"20px 20px 16px",display:"flex",alignItems:"center",gap:10}}>
           <div style={{width:36,height:36,background:"#222",borderRadius:6,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",border:"1px solid #333"}}><span style={{color:"#fff",fontSize:15,fontWeight:800}}>D</span></div>
@@ -707,10 +689,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* Main */}
       <div style={{flex:1,minWidth:0,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-
-        {/* Topbar */}
         <div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,padding:"0 24px",height:48,display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0,zIndex:10}}>
           <div style={{fontSize:16,fontWeight:700,color:C.text,display:"flex",alignItems:"center",gap:6}}>
             {view==="portfolio"&&selProp?(()=>{const p=PROPERTIES.find(pr=>pr.id===selProp);return<><span onClick={()=>setSelProp(null)} style={{color:C.muted,cursor:"pointer",fontWeight:400,fontSize:13}}>Portfolio</span><span style={{color:C.border,margin:"0 4px"}}>&rsaquo;</span><span>{p?.name}</span></>;})():view==="portfolio"?"Portfolio":view==="items"?"All Items":view==="tenants"?"Tenants":"Inspections"}
@@ -722,10 +701,8 @@ export default function App() {
           </div>
         </div>
 
-        {/* Body */}
         <div style={{flex:1,overflowY:"auto",padding:"24px 28px"}}>
 
-          {/* Portfolio */}
           {view==="portfolio"&&!selProp&&<>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:12,marginBottom:24}}>
               {[{l:"Open Items",v:openItems.length,s:"across portfolio",red:false},{l:"Critical",v:critical.length,s:"immediate action",red:critical.length>0},{l:"Scheduled",v:items.filter(i=>i.status==="Scheduled").length,s:"confirmed with vendors"},{l:"Completed",v:items.filter(i=>i.status==="Completed").length,s:"all time"}].map(k=>(
@@ -751,7 +728,6 @@ export default function App() {
             })}
           </>}
 
-          {/* Property detail */}
           {view==="portfolio"&&selProp&&(()=>{
             const prop=PROPERTIES.find(p=>p.id===selProp);
             const pi=items.filter(i=>i.propertyId===selProp);
@@ -762,7 +738,7 @@ export default function App() {
                 <div>
                   <div style={{fontSize:26,fontWeight:800,color:C.text,lineHeight:1.2}}>{prop.name}</div>
                   <div style={{fontSize:13,color:C.muted,marginTop:4}}>{prop.address}</div>
-                  <div style={{fontSize:11,color:C.faint,marginTop:2}}>{prop.owner} · {GROUPS[prop.group]}</div>
+                  <div style={{fontSize:11,color:C.faint,marginTop:2}}>{prop.owner} - {GROUPS[prop.group]}</div>
                 </div>
                 <div style={{display:"flex",gap:20}}>
                   {[[oi.length,"open"],[pi.filter(i=>i.status==="Completed").length,"done"],[pInsp.length,"inspections"],[tenants.filter(t=>t.propertyId===selProp).length,"tenants"]].map(([n,l])=>(
@@ -778,17 +754,8 @@ export default function App() {
                   <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>{grp.map(it=><ItemRow key={it.id} item={it} onClick={()=>setSelItem(it)} onAdvance={()=>advance(it)}/>)}</div>
                 </div>);
               })}
-              {oi.length===0&&<div style={{textAlign:"center",padding:"48px 0",color:C.faint,fontSize:13}}>No open items — this property is clear.</div>}
-
-              {/* Tenants on property page */}
-              <TenantsSection
-                propertyId={selProp}
-                tenants={tenants}
-                onAdd={(pid)=>setTenantForm({mode:"add",propertyId:pid})}
-                onEdit={(t)=>setTenantForm({mode:"edit",tenant:t})}
-                onDelete={deleteTenant}
-              />
-
+              {oi.length===0&&<div style={{textAlign:"center",padding:"48px 0",color:C.faint,fontSize:13}}>No open items - this property is clear.</div>}
+              <TenantsSection propertyId={selProp} tenants={tenants} onAdd={(pid)=>setTenantForm({mode:"add",propertyId:pid})} onEdit={(t)=>setTenantForm({mode:"edit",tenant:t})} onDelete={deleteTenant}/>
               {pInsp.length>0&&<div style={{marginTop:28}}>
                 <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.09em",textTransform:"uppercase",color:C.faint,marginBottom:10}}>Inspection history</div>
                 <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
@@ -803,7 +770,6 @@ export default function App() {
             </>;
           })()}
 
-          {/* All Items */}
           {view==="items"&&<>
             <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center",marginBottom:16}}>
               <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search..." style={{fontFamily:"var(--font-sans)",fontSize:13,padding:"7px 11px",borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:C.text,width:200,outline:"none"}}/>
@@ -818,7 +784,6 @@ export default function App() {
             <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>{filtered.map(it=><ItemRow key={it.id} item={it} showProperty onClick={()=>setSelItem(it)} onAdvance={()=>advance(it)}/>)}</div>}
           </>}
 
-          {/* Tenants view */}
           {view==="tenants"&&<>
             <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:16}}>
               <input value={tenantSearch} onChange={e=>setTenantSearch(e.target.value)} placeholder="Search tenants..." style={{fontFamily:"var(--font-sans)",fontSize:13,padding:"7px 11px",borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:C.text,width:240,outline:"none"}}/>
@@ -835,12 +800,12 @@ export default function App() {
                       <div>
                         <div style={{fontSize:14,fontWeight:700,color:C.text}}>{t.companyName}</div>
                         {t.contactName&&<div style={{fontSize:12,color:C.muted,marginTop:1}}>{t.contactName}</div>}
-                        <div style={{fontSize:11,color:C.faint,marginTop:2}}>{GROUPS[prop?.group]} · {prop?.name}</div>
+                        <div style={{fontSize:11,color:C.faint,marginTop:2}}>{GROUPS[prop?.group]} - {prop?.name}</div>
                         <div style={{display:"flex",gap:14,marginTop:6,flexWrap:"wrap"}}>
                           {t.email&&<a href={`mailto:${t.email}`} style={{fontSize:12,color:"#0070f3",textDecoration:"none"}}>{t.email}</a>}
                           {t.phone&&<span style={{fontSize:12,color:C.muted}}>{t.phone}</span>}
                         </div>
-                        {(t.leaseStart||t.leaseEnd)&&<div style={{fontSize:11,color:C.faint,marginTop:4}}>Lease: {t.leaseStart||"?"} — {t.leaseEnd||"?"}</div>}
+                        {(t.leaseStart||t.leaseEnd)&&<div style={{fontSize:11,color:C.faint,marginTop:4}}>Lease: {t.leaseStart||"?"} - {t.leaseEnd||"?"}</div>}
                       </div>
                       <div style={{display:"flex",gap:6,flexShrink:0}}>
                         <button onClick={()=>setTenantForm({mode:"edit",tenant:t})} style={{fontSize:11,background:C.bg,border:`1px solid ${C.border}`,borderRadius:6,padding:"4px 10px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>Edit</button>
@@ -853,7 +818,6 @@ export default function App() {
             </div>}
           </>}
 
-          {/* Inspections */}
           {view==="inspections"&&<>
             <div style={{fontSize:12,color:C.faint,marginBottom:14}}>{inspections.length} inspections logged</div>
             {inspections.length===0?
@@ -868,7 +832,7 @@ export default function App() {
                 const ii=items.filter(it=>it.inspectionId===insp.id);
                 return(<div key={insp.id} style={{padding:"14px 20px",borderBottom:i<inspections.length-1?`1px solid ${C.border}`:"none"}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
-                    <div><div style={{fontSize:13,fontWeight:600,color:C.text}}>{prop?.name}</div><div style={{fontSize:11,color:C.faint,marginTop:2}}>{insp.date} · {insp.inspector}</div></div>
+                    <div><div style={{fontSize:13,fontWeight:600,color:C.text}}>{prop?.name}</div><div style={{fontSize:11,color:C.faint,marginTop:2}}>{insp.date} - {insp.inspector}</div></div>
                     <div style={{display:"flex",gap:6}}><Chip label={`${ii.length} items`} tc={SCOLOR.Scheduled} bg={SBG.Scheduled} bc={SBDR.Scheduled}/>{ii.filter(it=>it.status==="Completed").length>0&&<Chip label={`${ii.filter(it=>it.status==="Completed").length} done`} tc={SCOLOR.Completed} bg={SBG.Completed} bc={SBDR.Completed}/>}</div>
                   </div>
                   <div style={{fontSize:11,color:C.muted,fontStyle:"italic",marginBottom:8,lineHeight:1.5}}>{insp.notes}</div>
@@ -883,16 +847,10 @@ export default function App() {
         </div>
       </div>
 
-      {/* Overlays */}
       {selItem&&<ItemDetail item={selItem} inspections={inspections} onUpdate={ch=>updateItem(selItem.id,ch)} onAdvance={()=>advance(selItem)} onClose={()=>setSelItem(null)}/>}
       {showImport&&<ImportForm selectedPropertyId={selProp} onSubmit={(insp,its)=>{addInspectionAndItems(insp,its);setShowImport(false);}} onClose={()=>setShowImport(false)}/>}
       {showAdd&&<AddItemForm selectedPropertyId={selProp} onSubmit={it=>{addItem(it);setShowAdd(false);}} onClose={()=>setShowAdd(false)}/>}
-      {tenantForm&&<TenantForm
-        tenant={tenantForm.mode==="edit"?tenantForm.tenant:null}
-        propertyId={tenantForm.mode==="add"?tenantForm.propertyId:null}
-        onSave={saveTenant}
-        onClose={()=>setTenantForm(null)}
-      />}
+      {tenantForm&&<TenantForm tenant={tenantForm.mode==="edit"?tenantForm.tenant:null} propertyId={tenantForm.mode==="add"?tenantForm.propertyId:null} onSave={saveTenant} onClose={()=>setTenantForm(null)}/>}
     </div>
   );
 }
