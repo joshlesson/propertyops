@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const sb = createClient(
   "https://rvpacnokfnvwscxvjsou.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2cGFjbm9rZm52d3NjeHZqc291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNjk4MjEsImV4cCI6MjA4OTg0NTgyMX0.KRYZU6mnQpfXtJjUwVV-QvRf-2Gl72gkQBKc_pq7YOw"
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2cGFjbm9rZm52d3NjeHZqc291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNjk4MjEsImV4cCI6MjA4OTg0NTgyMX0.KRYZU6mnQpfXtJjUwVV-QvRf-2Gl72gkQBKc_pq7Yow"
 );
 
 const TEAM       = ["Kenny Perkins","Josh Lesson","Rob Stout","Spencer Vankirk","Dylan Dembs"];
@@ -285,9 +285,8 @@ function TenantsSection({propertyId, tenants, onAdd, onEdit, onDelete}) {
   const propTenants = tenants.filter(t=>t.propertyId===propertyId);
   return (
     <div style={{marginTop:28}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+      <div style={{marginBottom:10}}>
         <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.09em",textTransform:"uppercase",color:C.faint}}>Tenants</div>
-        <button onClick={()=>onAdd(propertyId)} style={{fontSize:11,background:C.surface,border:`1px solid ${C.border}`,borderRadius:6,padding:"4px 10px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>+ Add tenant</button>
       </div>
       {propTenants.length===0
         ? <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:"20px 18px",textAlign:"center",fontSize:13,color:C.faint}}>No tenants on file for this property.</div>
@@ -438,7 +437,7 @@ function PropRow({prop,items,inspections,tenants,isLast,onClick}) {
       </div>
       <div style={{display:"flex",gap:14,alignItems:"center",flexShrink:0}}>
         {cr>0&&<Chip label={`${cr} critical`} tc={PCOLOR.Critical} bg={PBG.Critical} bc={PBDR.Critical}/>}
-        {[[oi.length,"open",oi.length>0?C.text:C.faint],[pi.filter(it=>it.status==="Completed").length,"done",C.faint],[ins,"insp.",C.faint],[ten,"tenants",C.faint]].map(([n,l,cl])=>(
+        {[[oi.length,"open",oi.length>0?C.text:C.faint],[pi.filter(it=>it.status==="Completed").length,"done",C.faint],[ins,"insp.",C.faint]].map(([n,l,cl])=>(
           <div key={l} style={{textAlign:"right",minWidth:28}}>
             <div style={{fontSize:16,fontWeight:700,color:cl,lineHeight:1}}>{n}</div>
             <div style={{fontSize:10,color:C.faint,marginTop:2}}>{l}</div>
@@ -740,7 +739,7 @@ export default function App() {
             {view==="portfolio"&&selProp?(()=>{const p=PROPERTIES.find(pr=>pr.id===selProp);return<><span onClick={()=>setSelProp(null)} style={{color:C.muted,cursor:"pointer",fontWeight:400,fontSize:13}}>Portfolio</span><span style={{color:C.border,margin:"0 4px"}}>&rsaquo;</span><span>{p?.name}</span></>;})():view==="portfolio"?"Portfolio":view==="items"?"All Items":view==="tenants"?"Tenants":"Inspections"}
           </div>
           <div style={{display:"flex",gap:8}}>
-            {view==="tenants"&&<button onClick={()=>setTenantForm({mode:"add",propertyId:null})} style={{fontSize:13,fontWeight:500,background:"transparent",border:`1px solid ${C.border}`,borderRadius:7,padding:"6px 14px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>+ Add tenant</button>}
+            {view==="tenants"&&<button onClick={()=>setTenantForm({mode:"add",propertyId:selProp})} style={{fontSize:13,fontWeight:500,background:"transparent",border:`1px solid ${C.border}`,borderRadius:7,padding:"6px 14px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>+ Add tenant</button>}
             {view!=="tenants"&&<button onClick={()=>setShowAdd(true)} style={{fontSize:13,fontWeight:500,background:"transparent",border:`1px solid ${C.border}`,borderRadius:7,padding:"6px 14px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>+ Add item</button>}
             <button onClick={()=>setShowImport(true)} style={{fontSize:13,fontWeight:600,background:C.text,border:"none",borderRadius:7,padding:"7px 16px",cursor:"pointer",color:"#fff",fontFamily:"var(--font-sans)"}}>+ Import inspection</button>
           </div>
@@ -903,4 +902,3 @@ export default function App() {
     </div>
   );
 }
-
