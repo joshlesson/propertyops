@@ -11,31 +11,30 @@ const sb = createClient(
 const TEAM       = ["Kenny Perkins","Josh Lesson","Rob Stout","Spencer Vankirk","Dylan Dembs"];
 const CATEGORIES = ["Signage","Structural","Concrete / Hardscape","Painting / Finishes","Dock / Loading","Roofing","HVAC","Plumbing","Electrical","Landscaping","Safety","Other"];
 const PRIORITIES = ["Critical","High","Medium","Low"];
-
 const CONTACT_EMAIL = "management@dembsroth.com";
 
 const VENDORS = {
-  "Roofing":             [{name:"Lutz Roofing",              email:"btomayko@lutzroofing.com"}],
-  "Masonry":             [{name:"Custom Masonry",             email:"jimcustommasonry@gmail.com"}],
-  "Concrete / Hardscape":[{name:"Custom Masonry",             email:"jimcustommasonry@gmail.com"},
-                          {name:"S&J Asphalt",                email:"jeff_sandjasphalt@yahoo.com"}],
-  "Painting / Finishes": [{name:"Ray's Paint",                email:"bitnerpaintman@yahoo.com"}],
-  "Asphalt":             [{name:"S&J Asphalt",                email:"jeff_sandjasphalt@yahoo.com"}],
-  "Striping":            [{name:"TBD",                        email:""}],
-  "Dock / Loading":      [{name:"West Metro Door",            email:"office@westmetrodoor.com"},
-                          {name:"Raynor Overhead Door",       email:"clwikentiew@ameritech.net"}],
-  "Signage":             [{name:"TBD",                        email:""}],
-  "HVAC":                [{name:"AFM Heating & Cooling",      email:"kevin@afmheatcool.com"}],
-  "Electrical":          [{name:"DMS Electric",               email:"dmselectric@comcast.net"}],
-  "Plumbing":            [{name:"JLM Plumbing",               email:"jlmplumbingllc@gmail.com"}],
-  "Landscaping":         [{name:"Excell Landscape",           email:"rob-excell@comcast.net"}],
-  "Structural":          [{name:"Inter-Office Construction",  email:"patcarneyioc@aol.com"}],
-  "Safety":              [{name:"TBD",                        email:""}],
-  "Other":               [{name:"Inter-Office Construction",  email:"patcarneyioc@aol.com"}],
+  "Roofing":             [{name:"Lutz Roofing",             contacts:[{person:"Brandon Tomayko",   email:"btomayko@lutzroofing.com"}]}],
+  "Masonry":             [{name:"Custom Masonry",            contacts:[{person:"Jim Borchardt",     email:"jimcustommasonry@gmail.com"}]}],
+  "Concrete / Hardscape":[{name:"Custom Masonry",            contacts:[{person:"Jim Borchardt",     email:"jimcustommasonry@gmail.com"}]},
+                          {name:"S&J Asphalt",               contacts:[{person:"Jeffrey Gossett",   email:"jeff_sandjasphalt@yahoo.com"}]}],
+  "Painting / Finishes": [{name:"Ray's Paint",               contacts:[{person:"Rich Sawulski",     email:"bitnerpaintman@yahoo.com"}]}],
+  "Asphalt":             [{name:"S&J Asphalt",               contacts:[{person:"Jeffrey Gossett",   email:"jeff_sandjasphalt@yahoo.com"}]}],
+  "Striping":            [{name:"TBD",                       contacts:[]}],
+  "Dock / Loading":      [{name:"West Metro Door",           contacts:[{person:"Paul Toner",        email:"office@westmetrodoor.com"}]},
+                          {name:"Raynor Overhead Door",      contacts:[{person:"Charles Wikentiew", email:"clwikentiew@ameritech.net"}]}],
+  "Signage":             [{name:"TBD",                       contacts:[]}],
+  "HVAC":                [{name:"AFM Heating & Cooling",     contacts:[{person:"Kevin Champagne",   email:"kevin@afmheatcool.com"}]}],
+  "Electrical":          [{name:"DMS Electric",              contacts:[{person:"Matt Stabnick",     email:"dmselectric@comcast.net"}]}],
+  "Plumbing":            [{name:"JLM Plumbing",              contacts:[{person:"Jim Marsalese",     email:"jlmplumbingllc@gmail.com"}]}],
+  "Landscaping":         [{name:"Excell Landscape",          contacts:[{person:"Rob Simon",         email:"rob-excell@comcast.net"}]}],
+  "Structural":          [{name:"Inter-Office Construction", contacts:[{person:"Pat Carney",        email:"patcarneyioc@aol.com"}]}],
+  "Safety":              [{name:"TBD",                       contacts:[]}],
+  "Other":               [{name:"Inter-Office Construction", contacts:[{person:"Pat Carney",        email:"patcarneyioc@aol.com"}]}],
 };
 
-const STATUSES   = ["Not Started","PO Issued","Scheduled","In Progress","Completed"];
-const STATUS_NEXT= {"Not Started":"PO Issued","PO Issued":"Scheduled","Scheduled":"In Progress","In Progress":"Completed"};
+const STATUSES    = ["Not Started","PO Issued","Scheduled","In Progress","Completed"];
+const STATUS_NEXT = {"Not Started":"PO Issued","PO Issued":"Scheduled","Scheduled":"In Progress","In Progress":"Completed"};
 
 const PROPERTIES = [
   {id:"2925",   name:"2925 Boardwalk",            address:"2925 Boardwalk, Ann Arbor, MI 48104",               owner:"2925 Jagar, L.L.C.",                group:"2925"  },
@@ -101,16 +100,16 @@ const C = {
   text:"#000000", muted:"#666666", faint:"#999999",
   sidebar:"#000000", sideText:"#ffffff", sideMuted:"#888888",
 };
-const PCOLOR={Critical:"#e00","High":"#f5a623",Medium:"#0070f3",Low:"#50c878"};
-const PBG   ={Critical:"#fff0f0",High:"#fff8ee",Medium:"#f0f7ff",Low:"#f0fff4"};
-const PBDR  ={Critical:"#ffcccc",High:"#fde68a",Medium:"#bfdbfe",Low:"#bbf7d0"};
-const SCOLOR={"Not Started":"#666666","PO Issued":"#7c3aed","Scheduled":"#0070f3","In Progress":"#f5a623","Completed":"#0070f3"};
-const SBG   ={"Not Started":"#fafafa","PO Issued":"#f5f3ff","Scheduled":"#f0f7ff","In Progress":"#fff8ee","Completed":"#f0fff4"};
-const SBDR  ={"Not Started":"#eaeaea","PO Issued":"#ddd6fe","Scheduled":"#bfdbfe","In Progress":"#fde68a","Completed":"#bbf7d0"};
+const PCOLOR = {Critical:"#e00",High:"#f5a623",Medium:"#0070f3",Low:"#50c878"};
+const PBG    = {Critical:"#fff0f0",High:"#fff8ee",Medium:"#f0f7ff",Low:"#f0fff4"};
+const PBDR   = {Critical:"#ffcccc",High:"#fde68a",Medium:"#bfdbfe",Low:"#bbf7d0"};
+const SCOLOR = {"Not Started":"#666666","PO Issued":"#7c3aed","Scheduled":"#0070f3","In Progress":"#f5a623","Completed":"#16a34a"};
+const SBG    = {"Not Started":"#fafafa","PO Issued":"#f5f3ff","Scheduled":"#f0f7ff","In Progress":"#fff8ee","Completed":"#f0fff4"};
+const SBDR   = {"Not Started":"#eaeaea","PO Issued":"#ddd6fe","Scheduled":"#bfdbfe","In Progress":"#fde68a","Completed":"#bbf7d0"};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function uid() { return Math.random().toString(36).slice(2,9); }
+function uid()   { return Math.random().toString(36).slice(2,9); }
 function today() { return new Date().toISOString().slice(0,10); }
 
 // ─── Supabase data layer ──────────────────────────────────────────────────────
@@ -135,7 +134,10 @@ async function loadAll() {
       createdAt: r.created_at, statusHistory: r.status_history || [],
     }));
     return { inspections, items };
-  } catch(e) { console.error("loadAll error", e); return { inspections:[], items:[] }; }
+  } catch(e) {
+    console.error("loadAll error", e);
+    return { inspections:[], items:[] };
+  }
 }
 
 async function saveInspection(insp) {
@@ -148,15 +150,24 @@ async function saveInspection(insp) {
 
 async function saveItemToDB(item) {
   const { error } = await sb.from("items").upsert({
-    id: item.id, inspection_id: item.inspectionId || null,
-    property_id: item.propertyId, description: item.description,
-    category: item.category, priority: item.priority, status: item.status,
-    assignee: item.assignee, vendor: item.vendor, notes: item.notes,
-    scheduled_date: item.scheduledDate || "", completed_date: item.completedDate || "",
-    created_at: item.createdAt, status_history: item.statusHistory,
+    id: item.id,
+    inspection_id: item.inspectionId || null,
+    property_id: item.propertyId,
+    description: item.description,
+    category: item.category,
+    priority: item.priority,
+    status: item.status,
+    assignee: item.assignee || "",
+    vendor: item.vendor || "",
+    notes: item.notes || "",
+    scheduled_date: item.scheduledDate || "",
+    completed_date: item.completedDate || "",
+    created_at: item.createdAt,
+    status_history: item.statusHistory,
     updated_at: new Date().toISOString(),
   });
   if (error) console.error("saveItemToDB error:", error);
+  return error;
 }
 
 // ─── Primitives ───────────────────────────────────────────────────────────────
@@ -193,8 +204,7 @@ function GhostBtn({children,onClick}) {
 function FInput({label,value,onChange,type="text",placeholder,rows}) {
   const s={fontFamily:"var(--font-sans)",fontSize:13,width:"100%",borderRadius:8,
     border:`1px solid ${C.border}`,background:C.surface,color:C.text,
-    padding:"8px 11px",boxSizing:"border-box",outline:"none",
-    resize:rows?"vertical":"none"};
+    padding:"8px 11px",boxSizing:"border-box",outline:"none",resize:rows?"vertical":"none"};
   return <div>
     {label&&<ULabel>{label}</ULabel>}
     {rows
@@ -299,9 +309,7 @@ Respond ONLY with valid JSON, no markdown, no explanation:
       ]}]
     })
   }).then(r=>r.json()).then(data=>{
-    console.log("API response:", JSON.stringify(data).slice(0,300));
     const raw=data.content?.find(b=>b.type==="text")?.text||"{}";
-    console.log("Raw text:", raw.slice(0,300));
     let parsed={items:[]};
     try { parsed=JSON.parse(raw.replace(/```json|```/g,"").trim()); }
     catch(e) { console.error("Parse error:", e, raw); }
@@ -310,8 +318,7 @@ Respond ONLY with valid JSON, no markdown, no explanation:
       id:"r"+uid(),inspectionId,propertyId,
       description:item.description+(item.location?` (${item.location})`:""),
       category:item.category,priority:item.priority,
-      status:"Not Started",assignee:"",vendor:"",
-      notes:item.photoNote||"",
+      status:"Not Started",assignee:"",vendor:"",notes:item.photoNote||"",
       createdAt:now,scheduledDate:"",completedDate:"",
       statusHistory:[{status:"Not Started",date:now}],
     }));
@@ -339,36 +346,19 @@ function genAISummary(prop,propItems,cb,setLoading) {
   }).catch(()=>setLoading(false));
 }
 
-// ─── Quote Request ────────────────────────────────────────────────────────────
+// ─── Quote Modal ──────────────────────────────────────────────────────────────
 
-function QuoteModal({item, onClose}) {
+function QuoteModal({item,onClose}) {
   const prop = PROPERTIES.find(p=>p.id===item.propertyId);
-  const categoryVendors = VENDORS[item.category] || [];
-  const [vendorName, setVendorName] = useState(categoryVendors[0]?.name!=="TBD" ? categoryVendors[0]?.name : "");
-  const [vendorEmail, setVendorEmail] = useState(categoryVendors[0]?.name!=="TBD" ? categoryVendors[0]?.email : "");
+  const categoryVendors = (VENDORS[item.category]||[]).filter(v=>v.name!=="TBD");
+  const [selectedVendorName, setSelectedVendorName] = useState("");
+  const [selectedEmail,      setSelectedEmail]      = useState("");
+
+  const selectedVendor  = categoryVendors.find(v=>v.name===selectedVendorName);
+  const contactOptions  = selectedVendor?.contacts || [];
 
   const subject = `Quote Request - ${item.description.slice(0,60)} - ${prop?.name}`;
-  const body = `Hello,
-
-We are requesting a quote for the following repair at one of our properties.
-
-PROPERTY: ${prop?.name}
-ADDRESS: ${prop?.address}
-
-SCOPE OF WORK: ${item.description}
-
-PRIORITY: ${item.priority}
-
-Please reply to this email with your quote at your earliest convenience. For questions, contact us at ${CONTACT_EMAIL}.
-
-Thank you,
-Dembs Development Inc.
-${CONTACT_EMAIL}`;
-
-  function openEmail() {
-    const mailto = `mailto:${vendorEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.open(mailto);
-  }
+  const body    = `Hello,\n\nWe are requesting a quote for the following repair at one of our properties.\n\nPROPERTY: ${prop?.name}\nADDRESS: ${prop?.address}\n\nSCOPE OF WORK: ${item.description}\n\nPRIORITY: ${item.priority}\n\nPlease reply to this email with your quote at your earliest convenience. For questions, contact us at ${CONTACT_EMAIL}.\n\nThank you,\nDembs Development Inc.\n${CONTACT_EMAIL}`;
 
   const TEXT="#1a1a1a"; const MUTED="#555550"; const BORDER="#d0cec8";
   const INPUT={fontFamily:"var(--font-sans)",fontSize:13,width:"100%",borderRadius:7,
@@ -380,18 +370,20 @@ ${CONTACT_EMAIL}`;
         display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"52px 16px",overflowY:"auto"}}>
       <div style={{background:"#fff",borderRadius:12,border:`1px solid ${BORDER}`,
         width:"100%",maxWidth:580,padding:"26px 26px 22px",boxShadow:"0 12px 40px rgba(0,0,0,0.15)"}}>
+
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18}}>
           <div>
             <div style={{fontSize:16,fontWeight:700,color:TEXT}}>Request Vendor Quote</div>
-            <div style={{fontSize:12,color:MUTED,marginTop:3}}>{prop?.name} - {item.category}</div>
+            <div style={{fontSize:12,color:MUTED,marginTop:3}}>{prop?.name} · {item.category}</div>
           </div>
           <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",fontSize:22,color:MUTED,padding:0}}>x</button>
         </div>
 
+        {/* Scope of work */}
         <div style={{background:"#f5f4f1",borderRadius:8,padding:"12px 14px",marginBottom:18}}>
           <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:"#9c9a93",marginBottom:6}}>Scope of Work</div>
           <div style={{fontSize:14,color:TEXT,lineHeight:1.5}}>{item.description}</div>
-          <div style={{marginTop:8,display:"flex",gap:8}}>
+          <div style={{marginTop:8}}>
             <span style={{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:99,
               background:item.priority==="Critical"?"#fef2f2":item.priority==="High"?"#fefce8":"#eff6ff",
               color:item.priority==="Critical"?"#b91c1c":item.priority==="High"?"#b45309":"#1d4ed8",
@@ -401,52 +393,56 @@ ${CONTACT_EMAIL}`;
           </div>
         </div>
 
-        <div style={{marginBottom:14}}>
-          <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:"#9c9a93",marginBottom:8}}>Vendor</div>
-          {categoryVendors.length>0 && categoryVendors[0].name!=="TBD" && (
-            <div style={{marginBottom:10}}>
-              <select value={vendorName} onChange={e=>{
-                const v=categoryVendors.find(v=>v.name===e.target.value);
-                setVendorName(e.target.value);
-                setVendorEmail(v?.email||"");
-              }} style={INPUT}>
-                {categoryVendors.map(v=><option key={v.name} value={v.name}>{v.name}</option>)}
-              </select>
-            </div>
-          )}
+        {/* Two dropdowns */}
+        <div style={{marginBottom:18}}>
+          <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:"#9c9a93",marginBottom:10}}>Vendor</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
             <div>
-              <div style={{fontSize:11,color:MUTED,marginBottom:4}}>Vendor name</div>
-              <input value={vendorName} onChange={e=>setVendorName(e.target.value)}
-                placeholder="Enter vendor name" style={INPUT}/>
+              <div style={{fontSize:11,color:MUTED,marginBottom:4}}>Company</div>
+              {categoryVendors.length>0 ? (
+                <select value={selectedVendorName} onChange={e=>{setSelectedVendorName(e.target.value);setSelectedEmail("");}} style={INPUT}>
+                  <option value="">Select vendor...</option>
+                  {categoryVendors.map(v=><option key={v.name} value={v.name}>{v.name}</option>)}
+                </select>
+              ) : (
+                <input placeholder="No vendors on file" style={{...INPUT,color:"#aaa"}} disabled/>
+              )}
             </div>
             <div>
-              <div style={{fontSize:11,color:MUTED,marginBottom:4}}>Vendor email</div>
-              <input value={vendorEmail} onChange={e=>setVendorEmail(e.target.value)}
-                placeholder="vendor@example.com" style={INPUT}/>
+              <div style={{fontSize:11,color:MUTED,marginBottom:4}}>Contact email</div>
+              {selectedVendorName && contactOptions.length>0 ? (
+                <select value={selectedEmail} onChange={e=>setSelectedEmail(e.target.value)} style={INPUT}>
+                  <option value="">Select contact...</option>
+                  {contactOptions.map(c=><option key={c.email} value={c.email}>{c.person} — {c.email}</option>)}
+                </select>
+              ) : (
+                <input placeholder={selectedVendorName?"No contacts on file":"Select vendor first"}
+                  style={{...INPUT,color:"#aaa"}} disabled/>
+              )}
             </div>
           </div>
         </div>
 
+        {/* Email preview */}
         <div style={{marginBottom:18}}>
           <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:"#9c9a93",marginBottom:8}}>Email Preview</div>
           <div style={{background:"#f5f4f1",borderRadius:8,padding:"12px 14px",fontSize:12,color:MUTED,lineHeight:1.7,maxHeight:180,overflowY:"auto"}}>
-            <div><strong style={{color:TEXT}}>To:</strong> {vendorEmail||"(vendor email)"}</div>
+            <div><strong style={{color:TEXT}}>To:</strong> {selectedEmail||"(select a vendor email above)"}</div>
             <div><strong style={{color:TEXT}}>Subject:</strong> {subject}</div>
             <div style={{marginTop:8,whiteSpace:"pre-wrap"}}>{body}</div>
           </div>
         </div>
 
         <div style={{display:"flex",gap:8}}>
-          <button onClick={openEmail} disabled={!vendorEmail}
+          <button onClick={()=>{const m=`mailto:${selectedEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;window.open(m);}}
+            disabled={!selectedEmail}
             style={{flex:1,fontSize:13,fontWeight:600,borderRadius:8,padding:"10px",
-              background:vendorEmail?"#1a1a1a":"#d1d0cb",color:vendorEmail?"#fff":"#9c9a93",
-              border:"none",cursor:vendorEmail?"pointer":"not-allowed"}}>
+              background:selectedEmail?"#1a1a1a":"#d1d0cb",color:selectedEmail?"#fff":"#9c9a93",
+              border:"none",cursor:selectedEmail?"pointer":"not-allowed"}}>
             Open in Email Client
           </button>
-          <button onClick={onClose}
-            style={{fontSize:13,borderRadius:8,padding:"10px 16px",
-              background:"transparent",color:MUTED,border:`1px solid ${BORDER}`,cursor:"pointer"}}>
+          <button onClick={onClose} style={{fontSize:13,borderRadius:8,padding:"10px 16px",
+            background:"transparent",color:MUTED,border:`1px solid ${BORDER}`,cursor:"pointer"}}>
             Cancel
           </button>
         </div>
@@ -469,18 +465,16 @@ function PropRow({prop,items,inspections,isLast,onClick}) {
         background:hov?C.bg:C.surface,cursor:"pointer",
         borderBottom:isLast?"none":"1px solid #eaeaea",transition:"background 0.1s"}}>
       <div style={{flex:1,minWidth:0}}>
-        <div style={{fontSize:15,fontWeight:600,color:C.text,
-          overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{prop.name}</div>
-        <div style={{fontSize:12,color:C.muted,marginTop:1,
-          overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{prop.owner}</div>
+        <div style={{fontSize:15,fontWeight:600,color:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{prop.name}</div>
+        <div style={{fontSize:12,color:C.muted,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{prop.owner}</div>
       </div>
       <div style={{display:"flex",gap:14,alignItems:"center",flexShrink:0}}>
         {cr>0&&<Chip label={`${cr} critical`} tc={PCOLOR.Critical} bg={PBG.Critical} bc={PBDR.Critical}/>}
         {[[oi.length,"open",oi.length>0?C.text:C.faint],
           [pi.filter(it=>it.status==="Completed").length,"done",C.faint],
-          [ins,"insp.",C.faint]].map(([n,l,c])=>(
+          [ins,"insp.",C.faint]].map(([n,l,cl])=>(
           <div key={l} style={{textAlign:"right",minWidth:28}}>
-            <div style={{fontSize:16,fontWeight:700,color:c,lineHeight:1}}>{n}</div>
+            <div style={{fontSize:16,fontWeight:700,color:cl,lineHeight:1}}>{n}</div>
             <div style={{fontSize:10,color:C.faint,marginTop:2}}>{l}</div>
           </div>
         ))}
@@ -499,22 +493,17 @@ function ItemRow({item,showProperty,onClick,onAdvance}) {
         background:hov?C.bg:C.surface,borderBottom:`1px solid ${C.border}`,
         cursor:"pointer",transition:"background 0.1s"}}>
       <div style={{flex:1,minWidth:0}}>
-        <div style={{fontSize:14,fontWeight:600,color:C.text,marginBottom:3,
-          overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.description}</div>
+        <div style={{fontSize:14,fontWeight:600,color:C.text,marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.description}</div>
         <div style={{display:"flex",gap:5,alignItems:"center",flexWrap:"wrap"}}>
           {showProperty&&<>
             <span style={{fontSize:12,color:C.muted}}>{GROUPS[prop?.group]}</span>
             <span style={{color:C.border,fontSize:11}}>·</span>
           </>}
           <span style={{fontSize:11,color:C.muted}}>{item.category}</span>
-          {item.assignee&&<>
-            <span style={{color:C.border,fontSize:11}}>·</span>
-            <span style={{fontSize:11,color:C.muted}}>{item.assignee.split(" ")[0]}</span>
-          </>}
-          {item.scheduledDate&&<>
-            <span style={{color:C.border,fontSize:11}}>·</span>
-            <span style={{fontSize:11,color:C.muted}}>{item.scheduledDate}</span>
-          </>}
+          {item.assignee&&<><span style={{color:C.border,fontSize:11}}>·</span>
+            <span style={{fontSize:11,color:C.muted}}>{item.assignee.split(" ")[0]}</span></>}
+          {item.scheduledDate&&<><span style={{color:C.border,fontSize:11}}>·</span>
+            <span style={{fontSize:11,color:C.muted}}>{item.scheduledDate}</span></>}
         </div>
       </div>
       <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0}}>
@@ -538,44 +527,34 @@ function ItemDetail({item,inspections,onUpdate,onAdvance,onClose}) {
   const insp=inspections.find(i=>i.id===item.inspectionId);
   const next=STATUS_NEXT[item.status];
   function save(){onUpdate(form);setEditing(false);}
-
   return (
-    <SlideOver onClose={onClose}
-      sub={`${GROUPS[prop?.group]} - ${prop?.name}`}
-      title={item.description}>
-
+    <SlideOver onClose={onClose} sub={`${GROUPS[prop?.group]} · ${prop?.name}`} title={item.description}>
       <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:18}}>
         <PPill p={item.priority}/><SPill s={item.status}/>
         <Chip label={item.category} tc={C.muted} bg={C.bg} bc={C.border}/>
       </div>
-
       {next&&<button onClick={onAdvance} style={{width:"100%",marginBottom:20,padding:"10px 16px",
         background:SBG[next],color:SCOLOR[next],border:`1px solid ${SBDR[next]}`,
         borderRadius:8,cursor:"pointer",fontFamily:"var(--font-sans)",fontSize:13,fontWeight:600}}>
         Mark as {next}
       </button>}
-
       {!editing ? <>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:1,marginBottom:20,
           border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
-          {[["Assignee",item.assignee||"Unassigned"],["Vendor",item.vendor||"-"],
-            ["Created",item.createdAt],["Scheduled",item.scheduledDate||"-"],
-            ["Completed",item.completedDate||"-"],["Inspection",insp?.date||"Manual"]
+          {[["Assignee",item.assignee||"Unassigned"],["Vendor",item.vendor||"—"],
+            ["Created",item.createdAt],["Scheduled",item.scheduledDate||"—"],
+            ["Completed",item.completedDate||"—"],["Inspection",insp?.date||"Manual"]
           ].map(([label,val],i)=>(
             <div key={label} style={{padding:"11px 14px",background:i%2===0?C.bg:C.surface}}>
-              <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",
-                color:C.faint,marginBottom:4}}>{label}</div>
+              <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:C.faint,marginBottom:4}}>{label}</div>
               <div style={{fontSize:14,color:C.text,fontWeight:600}}>{val}</div>
             </div>
           ))}
         </div>
-
-        {item.notes&&<div style={{background:C.bg,borderRadius:8,padding:"12px 14px",marginBottom:20,
-          borderLeft:`3px solid ${C.borderMid}`}}>
+        {item.notes&&<div style={{background:C.bg,borderRadius:8,padding:"12px 14px",marginBottom:20,borderLeft:`3px solid ${C.borderMid}`}}>
           <ULabel>Notes</ULabel>
           <div style={{fontSize:14,color:C.text,lineHeight:1.7}}>{item.notes}</div>
         </div>}
-
         <ULabel>Status history</ULabel>
         <div style={{marginBottom:20}}>
           {item.statusHistory.map((h,i)=>(
@@ -621,8 +600,7 @@ function AISummaryCard({prop,propItems}) {
   const [text,setText]=useState("");
   const [loading,setLoading]=useState(false);
   return (
-    <div style={{background:C.bg,border:`1px solid ${C.border}`,borderRadius:10,
-      padding:"14px 18px",marginBottom:24}}>
+    <div style={{background:C.bg,border:`1px solid ${C.border}`,borderRadius:10,padding:"14px 18px",marginBottom:24}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:text?10:0}}>
         <ULabel>AI Status Summary</ULabel>
         <button onClick={()=>genAISummary(prop,propItems,setText,setLoading)} disabled={loading}
@@ -652,11 +630,8 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}) {
     const r=new FileReader();
     r.onload=e=>{
       const base64=e.target.result.split(",")[1];
-      const sizeInMB = (base64.length * 0.75) / (1024 * 1024);
-      if(sizeInMB > 4) {
-        alert(`This PDF is ${sizeInMB.toFixed(1)}MB which may be too large. Try compressing it at smallpdf.com first, then re-upload.`);
-        return;
-      }
+      const sizeInMB=(base64.length*0.75)/(1024*1024);
+      if(sizeInMB>4){alert(`This PDF is ${sizeInMB.toFixed(1)}MB which may be too large. Try compressing at smallpdf.com first.`);return;}
       setPdfBase64(base64);
     };
     r.readAsDataURL(file);
@@ -666,14 +641,12 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}) {
 
   if(preview) return (
     <Overlay onClose={onClose}>
-      <OverlayHeader title="Review extracted items"
-        sub={`${preview.items.length} items from ${fileName}`} onClose={onClose}/>
+      <OverlayHeader title="Review extracted items" sub={`${preview.items.length} items from ${fileName}`} onClose={onClose}/>
       {preview.detectedProperty&&<div style={{fontSize:12,color:C.muted,background:C.bg,
         padding:"8px 12px",borderRadius:8,border:`1px solid ${C.border}`,marginBottom:14}}>
-        PDF property: <strong style={{color:C.text}}>{preview.detectedProperty}</strong> - {prop?.name}
+        PDF property: <strong style={{color:C.text}}>{preview.detectedProperty}</strong> → {prop?.name}
       </div>}
-      <div style={{maxHeight:420,overflowY:"auto",marginBottom:16,
-        border:`1px solid ${C.border}`,borderRadius:10}}>
+      <div style={{maxHeight:420,overflowY:"auto",marginBottom:16,border:`1px solid ${C.border}`,borderRadius:10}}>
         {preview.items.map((item,i)=>(
           <div key={i} style={{padding:"11px 16px",background:i%2===0?C.surface:C.bg,
             borderBottom:i<preview.items.length-1?`1px solid ${C.border}`:"none"}}>
@@ -681,7 +654,6 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}) {
             <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
               <PPill p={item.priority}/>
               <Chip label={item.category} tc={C.muted} bg={C.bg} bc={C.border}/>
-              {item.notes&&<span style={{fontSize:11,color:C.muted,fontStyle:"italic"}}>{item.notes}</span>}
             </div>
           </div>
         ))}
@@ -691,9 +663,8 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}) {
           onSubmit({id:"i"+uid(),propertyId,
             date:overrideDate||preview.date,
             inspector:overrideInspector||preview.inspector||"SnapInspect",
-            notes:`SnapInspect PDF: ${fileName}`},
-            preview.items);
-        }}>Confirm and add {preview.items.length} items</PrimaryBtn>
+            notes:`SnapInspect PDF: ${fileName}`},preview.items);
+        }}>Confirm & add {preview.items.length} items</PrimaryBtn>
         <GhostBtn onClick={()=>setPreview(null)}>Back</GhostBtn>
       </div>
     </Overlay>
@@ -701,8 +672,7 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}) {
 
   return (
     <Overlay onClose={onClose}>
-      <OverlayHeader title="Import SnapInspect report"
-        sub="Notes and photos extracted automatically" onClose={onClose}/>
+      <OverlayHeader title="Import SnapInspect report" sub="Notes and photos extracted automatically" onClose={onClose}/>
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
         <div onDragOver={e=>{e.preventDefault();setDragOver(true);}}
           onDragLeave={()=>setDragOver(false)}
@@ -724,7 +694,7 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}) {
           </>}
         </div>
         <FSelect label="Property" value={propertyId} onChange={setPropertyId}
-          options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} - ${p.name}`}))}/>
+          options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} — ${p.name}`}))}/>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
           <FSelect label="Inspector (optional)" value={overrideInspector} onChange={setOverrideInspector}
             options={[{v:"",l:"Auto-detect from PDF"},...TEAM.map(t=>({v:t,l:t}))]}/>
@@ -749,9 +719,8 @@ function AddItemForm({onSubmit,onClose}) {
       <OverlayHeader title="Add repair item" onClose={onClose}/>
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
         <FSelect label="Property" value={form.propertyId} onChange={v=>setForm(f=>({...f,propertyId:v}))}
-          options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} - ${p.name}`}))}/>
-        <FInput label="Description" value={form.description}
-          onChange={v=>setForm(f=>({...f,description:v}))}
+          options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} — ${p.name}`}))}/>
+        <FInput label="Description" value={form.description} onChange={v=>setForm(f=>({...f,description:v}))}
           placeholder="Describe the repair task clearly..." rows={2}/>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
           <FSelect label="Category" value={form.category} onChange={v=>setForm(f=>({...f,category:v}))} options={CATEGORIES}/>
@@ -803,9 +772,11 @@ export default function App() {
     setItems(updated);
     if(selItem?.id===id) setSelItem(p=>({...p,...changes}));
     setSaving(true);
-    await saveItemToDB(updated.find(i=>i.id===id));
+    const err = await saveItemToDB(updated.find(i=>i.id===id));
+    if(err) console.error("updateItem save failed:", err);
     setSaving(false);
   }
+
   async function advance(item) {
     const next=STATUS_NEXT[item.status]; if(!next)return;
     const now=today();
@@ -814,18 +785,21 @@ export default function App() {
     if(next==="Completed") ch.completedDate=now;
     await updateItem(item.id,ch);
   }
+
   async function addInspectionAndItems(insp,newItems) {
     setSaving(true);
     await saveInspection(insp);
-    await Promise.all(newItems.map(saveItemToDB));
+    for(const item of newItems){ await saveItemToDB(item); }
     setInspections(prev=>[insp,...prev]);
     setItems(prev=>[...newItems,...prev]);
     setSaving(false);
   }
+
   async function addItem(item) {
     setSaving(true);
-    await saveItemToDB(item);
-    setItems(prev=>[item,...prev]);
+    const err = await saveItemToDB(item);
+    if(!err) setItems(prev=>[item,...prev]);
+    else alert("Failed to save item. Please check your connection and try again.");
     setSaving(false);
   }
 
@@ -858,8 +832,10 @@ export default function App() {
       {/* Sidebar */}
       <div style={{width:220,background:"#000",display:"flex",flexDirection:"column",flexShrink:0,borderRight:"1px solid #1a1a1a"}}>
         <div style={{padding:"20px 20px 16px",display:"flex",alignItems:"center",gap:10}}>
-          <div style={{width:36,height:36,background:"#333",borderRadius:4,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <span style={{color:"#fff",fontSize:14,fontWeight:800}}>D</span>
+          <div style={{width:36,height:36,background:"#222",borderRadius:6,flexShrink:0,
+            display:"flex",alignItems:"center",justifyContent:"center",
+            border:"1px solid #333"}}>
+            <span style={{color:"#fff",fontSize:15,fontWeight:800}}>D</span>
           </div>
           <div>
             <div style={{fontSize:15,fontWeight:800,color:C.sideText,letterSpacing:"-0.02em",lineHeight:1.1}}>PropertyOps</div>
@@ -926,15 +902,13 @@ export default function App() {
           {view==="portfolio"&&!selProp&&<>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:12,marginBottom:24}}>
               {[
-                {l:"Open Items",  v:openItems.length,              s:"across portfolio",      red:false},
-                {l:"Critical",    v:critical.length,               s:"immediate action",      red:critical.length>0},
-                {l:"Scheduled",   v:items.filter(i=>i.status==="Scheduled").length, s:"confirmed with vendors"},
-                {l:"Completed",   v:items.filter(i=>i.status==="Completed").length, s:"all time"},
+                {l:"Open Items", v:openItems.length,                                      s:"across portfolio", red:false},
+                {l:"Critical",   v:critical.length,                                       s:"immediate action", red:critical.length>0},
+                {l:"Scheduled",  v:items.filter(i=>i.status==="Scheduled").length,        s:"confirmed with vendors"},
+                {l:"Completed",  v:items.filter(i=>i.status==="Completed").length,        s:"all time"},
               ].map(k=>(
-                <div key={k.l} style={{background:C.surface,border:`1px solid ${k.red?PBDR.Critical:C.border}`,
-                  borderRadius:10,padding:"16px 18px"}}>
-                  <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.06em",textTransform:"uppercase",
-                    color:k.red?PCOLOR.Critical:C.faint,marginBottom:8}}>{k.l}</div>
+                <div key={k.l} style={{background:C.surface,border:`1px solid ${k.red?PBDR.Critical:C.border}`,borderRadius:10,padding:"16px 18px"}}>
+                  <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.06em",textTransform:"uppercase",color:k.red?PCOLOR.Critical:C.faint,marginBottom:8}}>{k.l}</div>
                   <div style={{fontSize:36,fontWeight:800,color:k.red?PCOLOR.Critical:C.text,lineHeight:1,marginBottom:6}}>{k.v}</div>
                   <div style={{fontSize:12,color:C.muted}}>{k.s}</div>
                 </div>
@@ -959,8 +933,7 @@ export default function App() {
               if(!gps.length) return null;
               return (
                 <div key={gkey} style={{marginBottom:20}}>
-                  <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.06em",textTransform:"uppercase",
-                    color:C.faint,marginBottom:8}}>{gname}</div>
+                  <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.06em",textTransform:"uppercase",color:C.faint,marginBottom:8}}>{gname}</div>
                   <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
                     {gps.map((prop,i)=>(
                       <PropRow key={prop.id} prop={prop} items={items} inspections={inspections}
@@ -984,7 +957,7 @@ export default function App() {
                 <div>
                   <div style={{fontSize:26,fontWeight:800,color:C.text,lineHeight:1.2}}>{prop.name}</div>
                   <div style={{fontSize:13,color:C.muted,marginTop:4}}>{prop.address}</div>
-                  <div style={{fontSize:11,color:C.faint,marginTop:2}}>{prop.owner} - {GROUPS[prop.group]}</div>
+                  <div style={{fontSize:11,color:C.faint,marginTop:2}}>{prop.owner} · {GROUPS[prop.group]}</div>
                 </div>
                 <div style={{display:"flex",gap:20}}>
                   {[[oi.length,"open"],[pi.filter(i=>i.status==="Completed").length,"done"],[pInsp.length,"inspections"]].map(([n,l])=>(
@@ -1005,24 +978,21 @@ export default function App() {
                   <div key={p} style={{marginBottom:20}}>
                     <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:8}}>
                       <Dot color={PCOLOR[p]} size={7}/>
-                      <span style={{fontSize:10,fontWeight:700,letterSpacing:"0.08em",
-                        textTransform:"uppercase",color:PCOLOR[p]}}>{p}</span>
+                      <span style={{fontSize:10,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:PCOLOR[p]}}>{p}</span>
                       <span style={{fontSize:11,color:C.faint}}>({grp.length})</span>
                     </div>
                     <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
-                      {grp.map(it=><ItemRow key={it.id} item={it}
-                        onClick={()=>setSelItem(it)} onAdvance={()=>advance(it)}/>)}
+                      {grp.map(it=><ItemRow key={it.id} item={it} onClick={()=>setSelItem(it)} onAdvance={()=>advance(it)}/>)}
                     </div>
                   </div>
                 );
               })}
               {oi.length===0&&<div style={{textAlign:"center",padding:"48px 0",color:C.faint,fontSize:13}}>
-                No open items - this property is clear.
+                No open items — this property is clear.
               </div>}
 
               {pInsp.length>0&&<div style={{marginTop:28}}>
-                <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.09em",textTransform:"uppercase",
-                  color:C.faint,marginBottom:10}}>Inspection history</div>
+                <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.09em",textTransform:"uppercase",color:C.faint,marginBottom:10}}>Inspection history</div>
                 <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
                   {pInsp.map((insp,i)=>{
                     const ii=items.filter(it=>it.inspectionId===insp.id);
@@ -1054,7 +1024,7 @@ export default function App() {
               {[
                 [["All",...STATUSES],   fStatus,   setFStatus,   "Status"  ],
                 [["All",...PRIORITIES], fPriority, setFPriority, "Priority"],
-                [["All",...CATEGORIES],fCategory, setFCategory, "Category"],
+                [["All",...CATEGORIES], fCategory, setFCategory, "Category"],
                 [["All",...TEAM],       fAssignee, setFAssignee, "Assignee"],
               ].map(([opts,val,setter,label])=>(
                 <select key={label} value={val} onChange={e=>setter(e.target.value)}
@@ -1077,8 +1047,7 @@ export default function App() {
           {view==="inspections"&&<>
             <div style={{fontSize:12,color:C.faint,marginBottom:14}}>{inspections.length} inspections logged</div>
             {inspections.length===0
-              ?<div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,
-                  padding:"48px 24px",textAlign:"center"}}>
+              ?<div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:"48px 24px",textAlign:"center"}}>
                 <div style={{fontSize:15,fontWeight:700,color:C.text,marginBottom:6}}>No inspections yet</div>
                 <div style={{fontSize:13,color:C.muted,marginBottom:20}}>Import your first SnapInspect PDF to get started.</div>
                 <PrimaryBtn onClick={()=>setShowImport(true)}>Import inspection</PrimaryBtn>
@@ -1092,7 +1061,7 @@ export default function App() {
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
                       <div>
                         <div style={{fontSize:13,fontWeight:600,color:C.text}}>{prop?.name}</div>
-                        <div style={{fontSize:11,color:C.faint,marginTop:2}}>{insp.date} - {insp.inspector}</div>
+                        <div style={{fontSize:11,color:C.faint,marginTop:2}}>{insp.date} · {insp.inspector}</div>
                       </div>
                       <div style={{display:"flex",gap:6}}>
                         <Chip label={`${ii.length} items`} tc={SCOLOR.Scheduled} bg={SBG.Scheduled} bc={SBDR.Scheduled}/>
@@ -1101,9 +1070,7 @@ export default function App() {
                             tc={SCOLOR.Completed} bg={SBG.Completed} bc={SBDR.Completed}/>}
                       </div>
                     </div>
-                    <div style={{fontSize:11,color:C.muted,fontStyle:"italic",marginBottom:8,lineHeight:1.5}}>
-                      {insp.notes}
-                    </div>
+                    <div style={{fontSize:11,color:C.muted,fontStyle:"italic",marginBottom:8,lineHeight:1.5}}>{insp.notes}</div>
                     <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
                       {ii.slice(0,5).map(it=>(
                         <button key={it.id} onClick={()=>setSelItem(it)}
