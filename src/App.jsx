@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const sb = createClient(
   "https://rvpacnokfnvwscxvjsou.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2cGFjbm9rZm52d3NjeHZqc291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNjk4MjEsImV4cCI6MjA4OTg0NTgyMX0.KRYZU6mnQpfXtJjUwVV-QvRf-2Gl72gkQBKc_pq7YOw"
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2cGFjbm9rZm52d3NjeHZqc291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNjk4MjEsImV4cCI6MjA4OTg0NTgyMX0.KRYZU6mnQpfXtJjUwVV-QvRf-2Gl72gkQBKc_pq7Yow"
 );
 
 const TEAM       = ["Kenny Perkins","Josh Lesson","Rob Stout","Spencer Vankirk","Dylan Dembs"];
@@ -127,8 +127,8 @@ async function loadAll() {
     }));
     const tenants = (r3.data||[]).map(r=>({
       id:r.id, propertyId:r.property_id, companyName:r.company_name||"",
-      contactName:r.contact_name||"", email:r.email||"", phone:r.phone||"",
-      leaseStart:r.lease_start||"", leaseEnd:r.lease_end||"",
+      leaseEnd:r.lease_end||"",
+      contacts:r.contacts||[],
     }));
     return { inspections, items, tenants };
   } catch(e) { console.error("loadAll error:", e); return null; }
@@ -157,8 +157,8 @@ async function saveItemToDB(item) {
 async function saveTenantToDB(tenant) {
   const { error } = await sb.from("tenants").upsert({
     id:tenant.id, property_id:tenant.propertyId, company_name:tenant.companyName||"",
-    contact_name:tenant.contactName||"", email:tenant.email||"", phone:tenant.phone||"",
-    lease_start:tenant.leaseStart||null, lease_end:tenant.leaseEnd||null,
+    lease_end:tenant.leaseEnd||null,
+    contacts:tenant.contacts||[],
   }, { onConflict:"id" });
   if (error) console.error("saveTenantToDB error:", error);
   return error;
@@ -197,7 +197,7 @@ function FSelect({label,value,onChange,options}) {
 
 function Overlay({children,onClose}) {
   return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"absolute",inset:0,zIndex:200,background:"rgba(0,0,0,0.3)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"48px 16px",overflowY:"auto"}}>
-    <div style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,width:"100%",maxWidth:560,padding:"24px 24px 20px",boxShadow:"0 12px 40px rgba(0,0,0,0.15)"}}>{children}</div>
+    <div style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,width:"100%",maxWidth:580,padding:"24px 24px 20px",boxShadow:"0 12px 40px rgba(0,0,0,0.15)"}}>{children}</div>
   </div>;
 }
 function OverlayHeader({title,sub,onClose}) {
@@ -221,25 +221,56 @@ function SlideOver({children,title,sub,onClose}) {
   </div>;
 }
 
+// ─── Tenant Form ──────────────────────────────────────────────────────────────
+
 function TenantForm({tenant, propertyId, onSave, onClose}) {
   const [form, setForm] = useState(tenant || {
     propertyId: propertyId||PROPERTIES[0].id,
-    companyName:"", contactName:"", email:"", phone:"", leaseStart:"", leaseEnd:""
+    companyName:"", leaseEnd:"", contacts:[{name:"",email:"",phone:""}]
   });
+
+  function updateContact(i, field, val) {
+    const updated = form.contacts.map((c,idx)=>idx===i?{...c,[field]:val}:c);
+    setForm(f=>({...f,contacts:updated}));
+  }
+  function addContact() {
+    setForm(f=>({...f,contacts:[...f.contacts,{name:"",email:"",phone:""}]}));
+  }
+  function removeContact(i) {
+    setForm(f=>({...f,contacts:f.contacts.filter((_,idx)=>idx!==i)}));
+  }
+
   return (
     <Overlay onClose={onClose}>
       <OverlayHeader title={tenant?"Edit Tenant":"Add Tenant"} onClose={onClose}/>
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
         {!tenant&&<FSelect label="Property" value={form.propertyId} onChange={v=>setForm(f=>({...f,propertyId:v}))}
           options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} - ${p.name}`}))}/>}
-        <FInput label="Company name" value={form.companyName} onChange={v=>setForm(f=>({...f,companyName:v}))} placeholder="Acme Corp"/>
-        <FInput label="Contact person" value={form.contactName} onChange={v=>setForm(f=>({...f,contactName:v}))} placeholder="John Smith"/>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-          <FInput label="Email" value={form.email} onChange={v=>setForm(f=>({...f,email:v}))} placeholder="john@acme.com"/>
-          <FInput label="Phone" value={form.phone} onChange={v=>setForm(f=>({...f,phone:v}))} placeholder="(734) 555-0100"/>
-          <FInput label="Lease start" value={form.leaseStart} onChange={v=>setForm(f=>({...f,leaseStart:v}))} type="date"/>
-          <FInput label="Lease end" value={form.leaseEnd} onChange={v=>setForm(f=>({...f,leaseEnd:v}))} type="date"/>
+          <FInput label="Company name" value={form.companyName} onChange={v=>setForm(f=>({...f,companyName:v}))} placeholder="Acme Corp"/>
+          <FInput label="Lease end date" value={form.leaseEnd} onChange={v=>setForm(f=>({...f,leaseEnd:v}))} type="date"/>
         </div>
+
+        {/* Contacts */}
+        <div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+            <ULabel>Contacts</ULabel>
+            <button onClick={addContact} style={{fontSize:11,background:C.bg,border:`1px solid ${C.border}`,borderRadius:6,padding:"3px 10px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>+ Add contact</button>
+          </div>
+          {form.contacts.map((c,i)=>(
+            <div key={i} style={{background:C.bg,border:`1px solid ${C.border}`,borderRadius:8,padding:"12px",marginBottom:8}}>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
+                <FInput label="Name" value={c.name} onChange={v=>updateContact(i,"name",v)} placeholder="John Smith"/>
+                <FInput label="Phone" value={c.phone} onChange={v=>updateContact(i,"phone",v)} placeholder="(734) 555-0100"/>
+              </div>
+              <div style={{display:"flex",gap:8,alignItems:"flex-end"}}>
+                <div style={{flex:1}}><FInput label="Email" value={c.email} onChange={v=>updateContact(i,"email",v)} placeholder="john@acme.com"/></div>
+                {form.contacts.length>1&&<button onClick={()=>removeContact(i)} style={{fontSize:11,background:"#fff0f0",border:"1px solid #ffcccc",borderRadius:6,padding:"8px 10px",cursor:"pointer",color:"#e00",fontFamily:"var(--font-sans)",flexShrink:0,marginBottom:0}}>Remove</button>}
+              </div>
+            </div>
+          ))}
+        </div>
+
         <PrimaryBtn full disabled={!form.companyName.trim()} onClick={()=>onSave({...form,id:tenant?.id||"t"+uid()})}>
           {tenant?"Save changes":"Add tenant"}
         </PrimaryBtn>
@@ -247,6 +278,8 @@ function TenantForm({tenant, propertyId, onSave, onClose}) {
     </Overlay>
   );
 }
+
+// ─── Tenants Section ──────────────────────────────────────────────────────────
 
 function TenantsSection({propertyId, tenants, onAdd, onEdit, onDelete}) {
   const propTenants = tenants.filter(t=>t.propertyId===propertyId);
@@ -262,16 +295,20 @@ function TenantsSection({propertyId, tenants, onAdd, onEdit, onDelete}) {
             {propTenants.map((t,i)=>(
               <div key={t.id} style={{padding:"14px 18px",borderBottom:i<propTenants.length-1?`1px solid ${C.border}`:"none"}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                  <div>
+                  <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:14,fontWeight:700,color:C.text}}>{t.companyName}</div>
-                    {t.contactName&&<div style={{fontSize:12,color:C.muted,marginTop:2}}>{t.contactName}</div>}
-                    <div style={{display:"flex",gap:14,marginTop:6,flexWrap:"wrap"}}>
-                      {t.email&&<a href={`mailto:${t.email}`} style={{fontSize:12,color:"#0070f3",textDecoration:"none"}}>{t.email}</a>}
-                      {t.phone&&<span style={{fontSize:12,color:C.muted}}>{t.phone}</span>}
-                    </div>
-                    {(t.leaseStart||t.leaseEnd)&&<div style={{fontSize:11,color:C.faint,marginTop:4}}>Lease: {t.leaseStart||"?"} - {t.leaseEnd||"?"}</div>}
+                    {t.leaseEnd&&<div style={{fontSize:11,color:C.faint,marginTop:2}}>Lease ends: {t.leaseEnd}</div>}
+                    {(t.contacts||[]).length>0&&<div style={{marginTop:8,display:"flex",flexDirection:"column",gap:4}}>
+                      {t.contacts.map((c,ci)=>(
+                        <div key={ci} style={{display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
+                          {c.name&&<span style={{fontSize:12,fontWeight:500,color:C.text}}>{c.name}</span>}
+                          {c.email&&<a href={`mailto:${c.email}`} style={{fontSize:12,color:"#0070f3",textDecoration:"none"}}>{c.email}</a>}
+                          {c.phone&&<span style={{fontSize:12,color:C.muted}}>{c.phone}</span>}
+                        </div>
+                      ))}
+                    </div>}
                   </div>
-                  <div style={{display:"flex",gap:6,flexShrink:0}}>
+                  <div style={{display:"flex",gap:6,flexShrink:0,marginLeft:12}}>
                     <button onClick={()=>onEdit(t)} style={{fontSize:11,background:C.bg,border:`1px solid ${C.border}`,borderRadius:6,padding:"4px 10px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>Edit</button>
                     <button onClick={()=>onDelete(t.id)} style={{fontSize:11,background:"#fff0f0",border:"1px solid #ffcccc",borderRadius:6,padding:"4px 10px",cursor:"pointer",color:"#e00",fontFamily:"var(--font-sans)"}}>Remove</button>
                   </div>
@@ -282,6 +319,8 @@ function TenantsSection({propertyId, tenants, onAdd, onEdit, onDelete}) {
     </div>
   );
 }
+
+// ─── AI helpers ───────────────────────────────────────────────────────────────
 
 function parsePDF({pdfBase64,propertyId,inspectionId,overrideDate,overrideInspector},setLoading,onResult) {
   setLoading(true);
@@ -328,6 +367,8 @@ function genAISummary(prop,propItems,cb,setLoading) {
   fetch("/api/anthropic",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:180,messages:[{role:"user",content:`Write a 2-3 sentence maintenance status summary for ${prop.name}. Open: ${open.length}. Critical: ${open.filter(i=>i.priority==="Critical").length}. Items: ${propItems.slice(0,5).map(i=>i.description).join("; ")}. Plain professional prose, no bullets.`}]})})
   .then(r=>r.json()).then(data=>{cb(data.content?.find(b=>b.type==="text")?.text||"");setLoading(false);}).catch(()=>setLoading(false));
 }
+
+// ─── Quote Modal ──────────────────────────────────────────────────────────────
 
 function QuoteModal({item,onClose}) {
   const prop=PROPERTIES.find(p=>p.id===item.propertyId);
@@ -379,6 +420,8 @@ function QuoteModal({item,onClose}) {
     </div>
   );
 }
+
+// ─── Components ───────────────────────────────────────────────────────────────
 
 function PropRow({prop,items,inspections,tenants,isLast,onClick}) {
   const [hov,setHov]=useState(false);
@@ -575,6 +618,8 @@ function AddItemForm({selectedPropertyId,onSubmit,onClose}) {
   );
 }
 
+// ─── App ──────────────────────────────────────────────────────────────────────
+
 export default function App() {
   const [loaded,setLoaded]=useState(false);
   const [saveError,setSaveError]=useState("");
@@ -657,7 +702,7 @@ export default function App() {
   const filteredTenants=useMemo(()=>tenants.filter(t=>{
     if(!tenantSearch)return true;
     const q=tenantSearch.toLowerCase();
-    return t.companyName?.toLowerCase().includes(q)||t.contactName?.toLowerCase().includes(q)||t.email?.toLowerCase().includes(q);
+    return t.companyName?.toLowerCase().includes(q)||(t.contacts||[]).some(c=>c.name?.toLowerCase().includes(q)||c.email?.toLowerCase().includes(q));
   }),[tenants,tenantSearch]);
 
   const NAV=[{id:"portfolio",label:"Portfolio"},{id:"items",label:"All Items"},{id:"tenants",label:"Tenants"},{id:"inspections",label:"Inspections"}];
@@ -797,17 +842,21 @@ export default function App() {
                 return(
                   <div key={t.id} style={{padding:"14px 18px",borderBottom:i<filteredTenants.length-1?`1px solid ${C.border}`:"none"}}>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                      <div>
+                      <div style={{flex:1,minWidth:0}}>
                         <div style={{fontSize:14,fontWeight:700,color:C.text}}>{t.companyName}</div>
-                        {t.contactName&&<div style={{fontSize:12,color:C.muted,marginTop:1}}>{t.contactName}</div>}
                         <div style={{fontSize:11,color:C.faint,marginTop:2}}>{GROUPS[prop?.group]} - {prop?.name}</div>
-                        <div style={{display:"flex",gap:14,marginTop:6,flexWrap:"wrap"}}>
-                          {t.email&&<a href={`mailto:${t.email}`} style={{fontSize:12,color:"#0070f3",textDecoration:"none"}}>{t.email}</a>}
-                          {t.phone&&<span style={{fontSize:12,color:C.muted}}>{t.phone}</span>}
-                        </div>
-                        {(t.leaseStart||t.leaseEnd)&&<div style={{fontSize:11,color:C.faint,marginTop:4}}>Lease: {t.leaseStart||"?"} - {t.leaseEnd||"?"}</div>}
+                        {t.leaseEnd&&<div style={{fontSize:11,color:C.faint,marginTop:2}}>Lease ends: {t.leaseEnd}</div>}
+                        {(t.contacts||[]).length>0&&<div style={{marginTop:8,display:"flex",flexDirection:"column",gap:4}}>
+                          {t.contacts.map((c,ci)=>(
+                            <div key={ci} style={{display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
+                              {c.name&&<span style={{fontSize:12,fontWeight:500,color:C.text}}>{c.name}</span>}
+                              {c.email&&<a href={`mailto:${c.email}`} style={{fontSize:12,color:"#0070f3",textDecoration:"none"}}>{c.email}</a>}
+                              {c.phone&&<span style={{fontSize:12,color:C.muted}}>{c.phone}</span>}
+                            </div>
+                          ))}
+                        </div>}
                       </div>
-                      <div style={{display:"flex",gap:6,flexShrink:0}}>
+                      <div style={{display:"flex",gap:6,flexShrink:0,marginLeft:12}}>
                         <button onClick={()=>setTenantForm({mode:"edit",tenant:t})} style={{fontSize:11,background:C.bg,border:`1px solid ${C.border}`,borderRadius:6,padding:"4px 10px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>Edit</button>
                         <button onClick={()=>deleteTenant(t.id)} style={{fontSize:11,background:"#fff0f0",border:"1px solid #ffcccc",borderRadius:6,padding:"4px 10px",cursor:"pointer",color:"#e00",fontFamily:"var(--font-sans)"}}>Remove</button>
                       </div>
@@ -854,4 +903,3 @@ export default function App() {
     </div>
   );
 }
-
