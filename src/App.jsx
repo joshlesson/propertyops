@@ -2,11 +2,9 @@ import { useState, useMemo, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 
 const sb = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
+  "https://rvpacnokfnvwscxvjsou.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2cGFjbm9rZm52d3NjeHZqc291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNjk4MjEsImV4cCI6MjA4OTg0NTgyMX0.KRYZU6mnQpfXtJjUwVV-QvRf-2Gl72gkQBKc_pq7Yow"
 );
-
-// ─── Constants ────────────────────────────────────────────────────────────────
 
 const TEAM       = ["Kenny Perkins","Josh Lesson","Rob Stout","Spencer Vankirk","Dylan Dembs"];
 const CATEGORIES = ["Signage","Structural","Concrete / Hardscape","Painting / Finishes","Dock / Loading","Roofing","HVAC","Plumbing","Electrical","Landscaping","Safety","Other"];
@@ -93,8 +91,6 @@ const GROUPS = {
   "FLIVGR":"Livonia Group","FNEWBR":"Newburgh",
 };
 
-// ─── Theme ────────────────────────────────────────────────────────────────────
-
 const C = {
   bg:"#fafafa", surface:"#ffffff", border:"#eaeaea", borderMid:"#d4d4d4",
   text:"#000000", muted:"#666666", faint:"#999999",
@@ -107,13 +103,9 @@ const SCOLOR = {"Not Started":"#666666","PO Issued":"#7c3aed","Scheduled":"#0070
 const SBG    = {"Not Started":"#fafafa","PO Issued":"#f5f3ff","Scheduled":"#f0f7ff","In Progress":"#fff8ee","Completed":"#f0fff4"};
 const SBDR   = {"Not Started":"#eaeaea","PO Issued":"#ddd6fe","Scheduled":"#bfdbfe","In Progress":"#fde68a","Completed":"#bbf7d0"};
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 function uid()   { return Math.random().toString(36).slice(2,9); }
 function nowISO(){ return new Date().toISOString(); }
 function today() { return new Date().toISOString().slice(0,10); }
-
-// ─── Supabase data layer ──────────────────────────────────────────────────────
 
 async function loadAll() {
   try {
@@ -121,62 +113,46 @@ async function loadAll() {
       sb.from("inspections").select("*").order("date", { ascending: false }),
       sb.from("items").select("*").order("created_at", { ascending: false }),
     ]);
-    if (e1) { console.error("inspections load error:", e1); return null; }
-    if (e2) { console.error("items load error:", e2); return null; }
-    const inspections = (insps || []).map(r => ({
-      id: r.id, propertyId: r.property_id, date: r.date,
-      inspector: r.inspector, notes: r.notes,
+    if (e1) { console.error("inspections error:", e1); return null; }
+    if (e2) { console.error("items error:", e2); return null; }
+    const inspections = (insps||[]).map(r=>({
+      id:r.id, propertyId:r.property_id, date:r.date, inspector:r.inspector, notes:r.notes,
     }));
-    const items = (its || []).map(r => ({
-      id: r.id, inspectionId: r.inspection_id, propertyId: r.property_id,
-      description: r.description, category: r.category, priority: r.priority,
-      status: r.status, assignee: r.assignee || "", vendor: r.vendor || "",
-      notes: r.notes || "",
-      scheduledDate: r.scheduled_date || "", completedDate: r.completed_date || "",
-      createdAt: r.created_at, statusHistory: r.status_history || [],
+    const items = (its||[]).map(r=>({
+      id:r.id, inspectionId:r.inspection_id, propertyId:r.property_id,
+      description:r.description, category:r.category, priority:r.priority,
+      status:r.status, assignee:r.assignee||"", vendor:r.vendor||"", notes:r.notes||"",
+      scheduledDate:r.scheduled_date||"", completedDate:r.completed_date||"",
+      createdAt:r.created_at, statusHistory:r.status_history||[],
     }));
     return { inspections, items };
-  } catch(e) {
-    console.error("loadAll exception:", e);
-    return null;
-  }
+  } catch(e) { console.error("loadAll error:", e); return null; }
 }
 
 async function saveInspection(insp) {
   const { error } = await sb.from("inspections").upsert({
-    id: insp.id, property_id: insp.propertyId, date: insp.date,
-    inspector: insp.inspector, notes: insp.notes,
-  }, { onConflict: "id" });
+    id:insp.id, property_id:insp.propertyId, date:insp.date,
+    inspector:insp.inspector, notes:insp.notes,
+  }, { onConflict:"id" });
   if (error) console.error("saveInspection error:", error);
   return error;
 }
 
 async function saveItemToDB(item) {
   const { error } = await sb.from("items").upsert({
-    id: item.id,
-    inspection_id: item.inspectionId || null,
-    property_id: item.propertyId,
-    description: item.description,
-    category: item.category,
-    priority: item.priority,
-    status: item.status,
-    assignee: item.assignee || "",
-    vendor: item.vendor || "",
-    notes: item.notes || "",
-    scheduled_date: item.scheduledDate || "",
-    completed_date: item.completedDate || "",
-    created_at: item.createdAt,
-    status_history: item.statusHistory,
-  }, { onConflict: "id" });
+    id:item.id, inspection_id:item.inspectionId||null,
+    property_id:item.propertyId, description:item.description,
+    category:item.category, priority:item.priority, status:item.status,
+    assignee:item.assignee||"", vendor:item.vendor||"", notes:item.notes||"",
+    scheduled_date:item.scheduledDate||"", completed_date:item.completedDate||"",
+    created_at:item.createdAt, status_history:item.statusHistory,
+  }, { onConflict:"id" });
   if (error) console.error("saveItemToDB error:", error);
   return error;
 }
 
-// ─── Primitives ───────────────────────────────────────────────────────────────
-
 function Chip({label,tc,bg,bc}) {
-  return <span style={{fontSize:11,fontWeight:500,padding:"2px 9px",borderRadius:99,
-    background:bg,color:tc,border:`1px solid ${bc}`,whiteSpace:"nowrap"}}>{label}</span>;
+  return <span style={{fontSize:11,fontWeight:500,padding:"2px 9px",borderRadius:99,background:bg,color:tc,border:`1px solid ${bc}`,whiteSpace:"nowrap"}}>{label}</span>;
 }
 function PPill({p}) { return <Chip label={p} tc={PCOLOR[p]} bg={PBG[p]} bc={PBDR[p]}/>; }
 function SPill({s}) { return <Chip label={s} tc={SCOLOR[s]} bg={SBG[s]} bc={SBDR[s]}/>; }
@@ -184,94 +160,47 @@ function Dot({color,size=7}) {
   return <span style={{display:"inline-block",width:size,height:size,borderRadius:"50%",background:color,flexShrink:0}}/>;
 }
 function ULabel({children}) {
-  return <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",
-    color:C.faint,marginBottom:5}}>{children}</div>;
+  return <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:C.faint,marginBottom:5}}>{children}</div>;
 }
 function PrimaryBtn({children,onClick,disabled,full}) {
-  return <button onClick={disabled?undefined:onClick} style={{
-    fontFamily:"var(--font-sans)",fontSize:13,fontWeight:600,borderRadius:8,
-    padding:"9px 20px",background:disabled?"#d1d0cb":C.text,
-    color:disabled?"#9c9a93":"#fff",border:"none",
-    cursor:disabled?"not-allowed":"pointer",width:full?"100%":"auto"}}>
-    {children}
-  </button>;
+  return <button onClick={disabled?undefined:onClick} style={{fontFamily:"var(--font-sans)",fontSize:13,fontWeight:600,borderRadius:8,padding:"9px 20px",background:disabled?"#d1d0cb":C.text,color:disabled?"#9c9a93":"#fff",border:"none",cursor:disabled?"not-allowed":"pointer",width:full?"100%":"auto"}}>{children}</button>;
 }
 function GhostBtn({children,onClick}) {
-  return <button onClick={onClick} style={{fontFamily:"var(--font-sans)",fontSize:13,
-    borderRadius:8,padding:"9px 16px",background:"transparent",
-    color:C.muted,border:`1px solid ${C.border}`,cursor:"pointer"}}>
-    {children}
-  </button>;
+  return <button onClick={onClick} style={{fontFamily:"var(--font-sans)",fontSize:13,borderRadius:8,padding:"9px 16px",background:"transparent",color:C.muted,border:`1px solid ${C.border}`,cursor:"pointer"}}>{children}</button>;
 }
 function FInput({label,value,onChange,type="text",placeholder,rows}) {
-  const s={fontFamily:"var(--font-sans)",fontSize:13,width:"100%",borderRadius:8,
-    border:`1px solid ${C.border}`,background:C.surface,color:C.text,
-    padding:"8px 11px",boxSizing:"border-box",outline:"none",resize:rows?"vertical":"none"};
-  return <div>
-    {label&&<ULabel>{label}</ULabel>}
-    {rows
-      ? <textarea value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} rows={rows} style={s}/>
-      : <input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} style={s}/>}
-  </div>;
+  const s={fontFamily:"var(--font-sans)",fontSize:13,width:"100%",borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:C.text,padding:"8px 11px",boxSizing:"border-box",outline:"none",resize:rows?"vertical":"none"};
+  return <div>{label&&<ULabel>{label}</ULabel>}{rows?<textarea value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} rows={rows} style={s}/>:<input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} style={s}/>}</div>;
 }
 function FSelect({label,value,onChange,options}) {
-  return <div>
-    {label&&<ULabel>{label}</ULabel>}
-    <select value={value} onChange={e=>onChange(e.target.value)} style={{
-      fontFamily:"var(--font-sans)",fontSize:13,width:"100%",borderRadius:8,
-      border:`1px solid ${C.border}`,background:C.surface,color:C.text,padding:"8px 11px"}}>
-      {options.map(o=><option key={o.v??o} value={o.v??o}>{o.l??o}</option>)}
-    </select>
-  </div>;
+  return <div>{label&&<ULabel>{label}</ULabel>}<select value={value} onChange={e=>onChange(e.target.value)} style={{fontFamily:"var(--font-sans)",fontSize:13,width:"100%",borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:C.text,padding:"8px 11px"}}>{options.map(o=><option key={o.v??o} value={o.v??o}>{o.l??o}</option>)}</select></div>;
 }
 
-// ─── Overlay primitives ───────────────────────────────────────────────────────
-
 function Overlay({children,onClose}) {
-  return <div onClick={e=>e.target===e.currentTarget&&onClose()}
-    style={{position:"absolute",inset:0,zIndex:200,background:"rgba(0,0,0,0.3)",
-      display:"flex",alignItems:"flex-start",justifyContent:"center",
-      padding:"48px 16px",overflowY:"auto"}}>
-    <div style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,
-      width:"100%",maxWidth:560,padding:"24px 24px 20px",
-      boxShadow:"0 12px 40px rgba(0,0,0,0.15)"}}>
-      {children}
-    </div>
+  return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"absolute",inset:0,zIndex:200,background:"rgba(0,0,0,0.3)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"48px 16px",overflowY:"auto"}}>
+    <div style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,width:"100%",maxWidth:560,padding:"24px 24px 20px",boxShadow:"0 12px 40px rgba(0,0,0,0.15)"}}>{children}</div>
   </div>;
 }
 function OverlayHeader({title,sub,onClose}) {
   return <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20}}>
-    <div>
-      {sub&&<div style={{fontSize:11,color:C.faint,marginBottom:4}}>{sub}</div>}
-      <div style={{fontSize:16,fontWeight:700,color:C.text}}>{title}</div>
-    </div>
-    <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",
-      fontSize:22,color:C.faint,padding:0,marginLeft:12,lineHeight:1}}>x</button>
+    <div>{sub&&<div style={{fontSize:11,color:C.faint,marginBottom:4}}>{sub}</div>}<div style={{fontSize:16,fontWeight:700,color:C.text}}>{title}</div></div>
+    <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",fontSize:22,color:C.faint,padding:0,marginLeft:12,lineHeight:1}}>x</button>
   </div>;
 }
 function SlideOver({children,title,sub,onClose}) {
-  return <div style={{position:"absolute",inset:0,zIndex:200,display:"flex"}}
-    onClick={e=>e.target===e.currentTarget&&onClose()}>
+  return <div style={{position:"absolute",inset:0,zIndex:200,display:"flex"}} onClick={e=>e.target===e.currentTarget&&onClose()}>
     <div style={{flex:1,background:"rgba(0,0,0,0.2)",cursor:"pointer"}} onClick={onClose}/>
-    <div style={{width:500,background:C.surface,overflowY:"auto",
-      borderLeft:`1px solid ${C.border}`,display:"flex",flexDirection:"column",
-      boxShadow:"-4px 0 24px rgba(0,0,0,0.1)"}}>
+    <div style={{width:500,background:C.surface,overflowY:"auto",borderLeft:`1px solid ${C.border}`,display:"flex",flexDirection:"column",boxShadow:"-4px 0 24px rgba(0,0,0,0.1)"}}>
       <div style={{padding:"20px 24px 16px",borderBottom:`1px solid ${C.border}`,flexShrink:0}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-          <div style={{paddingRight:12}}>
-            {sub&&<div style={{fontSize:11,color:C.faint,marginBottom:4}}>{sub}</div>}
-            <div style={{fontSize:15,fontWeight:700,color:C.text,lineHeight:1.35}}>{title}</div>
-          </div>
-          <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",
-            fontSize:22,color:C.faint,lineHeight:1,padding:0,flexShrink:0}}>x</button>
+          <div style={{paddingRight:12}}>{sub&&<div style={{fontSize:11,color:C.faint,marginBottom:4}}>{sub}</div>}<div style={{fontSize:15,fontWeight:700,color:C.text,lineHeight:1.35}}>{title}</div></div>
+          <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",fontSize:22,color:C.faint,lineHeight:1,padding:0,flexShrink:0}}>x</button>
         </div>
       </div>
       <div style={{padding:"20px 24px",flex:1}}>{children}</div>
     </div>
   </div>;
 }
-
-// ─── AI helpers ───────────────────────────────────────────────────────────────
 
 function parsePDF({pdfBase64,propertyId,inspectionId,overrideDate,overrideInspector},setLoading,onResult) {
   setLoading(true);
@@ -293,36 +222,21 @@ For each item return:
 Also extract from header: propertyName, inspectorName, inspectionDate (YYYY-MM-DD format)
 Respond ONLY with valid JSON, no markdown:
 {"propertyName":"","inspectorName":"","inspectionDate":"","items":[{"description":"","category":"","priority":"","location":""}]}`;
-
-  fetch("/api/anthropic",{
-    method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,
-      messages:[{role:"user",content:[
-        {type:"document",source:{type:"base64",media_type:"application/pdf",data:pdfBase64}},
-        {type:"text",text:prompt}
-      ]}]
-    })
-  }).then(r=>r.json()).then(data=>{
+  fetch("/api/anthropic",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,messages:[{role:"user",content:[{type:"document",source:{type:"base64",media_type:"application/pdf",data:pdfBase64}},{type:"text",text:prompt}]}]})})
+  .then(r=>r.json()).then(data=>{
     const raw=data.content?.find(b=>b.type==="text")?.text||"{}";
     let parsed={items:[]};
-    try { parsed=JSON.parse(raw.replace(/```json|```/g,"").trim()); }
-    catch(e) { console.error("Parse error:", e, raw); }
-    const ts=nowISO();
-    const dateOnly=today();
+    try { parsed=JSON.parse(raw.replace(/```json|```/g,"").trim()); } catch(e) { console.error("Parse error:",e); }
+    const ts=nowISO(); const dateOnly=today();
     const newItems=(parsed.items||[]).map(item=>({
-      id:"r"+uid(), inspectionId, propertyId,
+      id:"r"+uid(),inspectionId,propertyId,
       description:item.description+(item.location?` (${item.location})`:""),
-      category:item.category, priority:item.priority,
-      status:"Not Started", assignee:"", vendor:"", notes:"",
-      createdAt:ts, scheduledDate:"", completedDate:"",
+      category:item.category,priority:item.priority,
+      status:"Not Started",assignee:"",vendor:"",notes:"",
+      createdAt:ts,scheduledDate:"",completedDate:"",
       statusHistory:[{status:"Not Started",date:dateOnly}],
     }));
-    onResult({
-      items:newItems,
-      date:overrideDate||parsed.inspectionDate||dateOnly,
-      inspector:overrideInspector||parsed.inspectorName||"",
-      detectedProperty:parsed.propertyName,
-    });
+    onResult({items:newItems,date:overrideDate||parsed.inspectionDate||dateOnly,inspector:overrideInspector||parsed.inspectorName||"",detectedProperty:parsed.propertyName});
     setLoading(false);
   }).catch(e=>{setLoading(false);console.error("Fetch error:",e);alert("Failed to parse PDF.");});
 }
@@ -330,106 +244,62 @@ Respond ONLY with valid JSON, no markdown:
 function genAISummary(prop,propItems,cb,setLoading) {
   setLoading(true);
   const open=propItems.filter(i=>i.status!=="Completed");
-  fetch("/api/anthropic",{
-    method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:180,
-      messages:[{role:"user",content:`Write a 2-3 sentence maintenance status summary for ${prop.name}. Open: ${open.length}. Critical: ${open.filter(i=>i.priority==="Critical").length}. Items: ${propItems.slice(0,5).map(i=>i.description).join("; ")}. Plain professional prose, no bullets.`}]
-    })
-  }).then(r=>r.json()).then(data=>{
-    cb(data.content?.find(b=>b.type==="text")?.text||"");
-    setLoading(false);
-  }).catch(()=>setLoading(false));
+  fetch("/api/anthropic",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:180,messages:[{role:"user",content:`Write a 2-3 sentence maintenance status summary for ${prop.name}. Open: ${open.length}. Critical: ${open.filter(i=>i.priority==="Critical").length}. Items: ${propItems.slice(0,5).map(i=>i.description).join("; ")}. Plain professional prose, no bullets.`}]})})
+  .then(r=>r.json()).then(data=>{cb(data.content?.find(b=>b.type==="text")?.text||"");setLoading(false);}).catch(()=>setLoading(false));
 }
 
-// ─── Quote Modal ──────────────────────────────────────────────────────────────
-
 function QuoteModal({item,onClose}) {
-  const prop = PROPERTIES.find(p=>p.id===item.propertyId);
-  const categoryVendors = (VENDORS[item.category]||[]).filter(v=>v.name!=="TBD");
-  const [selectedVendorName, setSelectedVendorName] = useState("");
-  const [selectedEmail, setSelectedEmail] = useState("");
-  const selectedVendor = categoryVendors.find(v=>v.name===selectedVendorName);
-  const contactOptions = selectedVendor?.contacts || [];
-  const subject = `Quote Request - ${item.description.slice(0,60)} - ${prop?.name}`;
-  const body = `Hello,\n\nWe are requesting a quote for the following repair at one of our properties.\n\nPROPERTY: ${prop?.name}\nADDRESS: ${prop?.address}\n\nSCOPE OF WORK: ${item.description}\n\nPRIORITY: ${item.priority}\n\nPlease reply with your quote at your earliest convenience. For questions contact us at ${CONTACT_EMAIL}.\n\nThank you,\nDembs Development Inc.\n${CONTACT_EMAIL}`;
-  const TEXT="#1a1a1a"; const MUTED="#555550"; const BORDER="#d0cec8";
-  const INPUT={fontFamily:"var(--font-sans)",fontSize:13,width:"100%",borderRadius:7,
-    border:`1px solid ${BORDER}`,background:"#fff",color:TEXT,padding:"8px 10px",boxSizing:"border-box"};
+  const prop=PROPERTIES.find(p=>p.id===item.propertyId);
+  const categoryVendors=(VENDORS[item.category]||[]).filter(v=>v.name!=="TBD");
+  const [selVendor,setSelVendor]=useState("");
+  const [selEmail,setSelEmail]=useState("");
+  const vendor=categoryVendors.find(v=>v.name===selVendor);
+  const contacts=vendor?.contacts||[];
+  const subject=`Quote Request - ${item.description.slice(0,60)} - ${prop?.name}`;
+  const body=`Hello,\n\nWe are requesting a quote for the following repair at one of our properties.\n\nPROPERTY: ${prop?.name}\nADDRESS: ${prop?.address}\n\nSCOPE OF WORK: ${item.description}\n\nPRIORITY: ${item.priority}\n\nPlease reply with your quote at your earliest convenience. For questions contact us at ${CONTACT_EMAIL}.\n\nThank you,\nDembs Development Inc.\n${CONTACT_EMAIL}`;
+  const T="#1a1a1a";const M="#555550";const B="#d0cec8";
+  const I={fontFamily:"var(--font-sans)",fontSize:13,width:"100%",borderRadius:7,border:`1px solid ${B}`,background:"#fff",color:T,padding:"8px 10px",boxSizing:"border-box"};
   return (
-    <div onClick={e=>e.target===e.currentTarget&&onClose()}
-      style={{position:"absolute",inset:0,zIndex:300,background:"rgba(0,0,0,0.35)",
-        display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"52px 16px",overflowY:"auto"}}>
-      <div style={{background:"#fff",borderRadius:12,border:`1px solid ${BORDER}`,
-        width:"100%",maxWidth:580,padding:"26px 26px 22px",boxShadow:"0 12px 40px rgba(0,0,0,0.15)"}}>
+    <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"absolute",inset:0,zIndex:300,background:"rgba(0,0,0,0.35)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"52px 16px",overflowY:"auto"}}>
+      <div style={{background:"#fff",borderRadius:12,border:`1px solid ${B}`,width:"100%",maxWidth:580,padding:"26px 26px 22px",boxShadow:"0 12px 40px rgba(0,0,0,0.15)"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18}}>
-          <div>
-            <div style={{fontSize:16,fontWeight:700,color:TEXT}}>Request Vendor Quote</div>
-            <div style={{fontSize:12,color:MUTED,marginTop:3}}>{prop?.name} · {item.category}</div>
-          </div>
-          <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",fontSize:22,color:MUTED,padding:0}}>x</button>
+          <div><div style={{fontSize:16,fontWeight:700,color:T}}>Request Vendor Quote</div><div style={{fontSize:12,color:M,marginTop:3}}>{prop?.name} · {item.category}</div></div>
+          <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",fontSize:22,color:M,padding:0}}>x</button>
         </div>
         <div style={{background:"#f5f4f1",borderRadius:8,padding:"12px 14px",marginBottom:18}}>
           <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:"#9c9a93",marginBottom:6}}>Scope of Work</div>
-          <div style={{fontSize:14,color:TEXT,lineHeight:1.5}}>{item.description}</div>
-          <div style={{marginTop:8}}>
-            <span style={{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:99,
-              background:item.priority==="Critical"?"#fef2f2":item.priority==="High"?"#fefce8":"#eff6ff",
-              color:item.priority==="Critical"?"#b91c1c":item.priority==="High"?"#b45309":"#1d4ed8",
-              border:`1px solid ${item.priority==="Critical"?"#fecaca":item.priority==="High"?"#fde68a":"#bfdbfe"}`}}>
-              {item.priority} Priority
-            </span>
-          </div>
+          <div style={{fontSize:14,color:T,lineHeight:1.5}}>{item.description}</div>
+          <div style={{marginTop:8}}><span style={{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:99,background:item.priority==="Critical"?"#fef2f2":item.priority==="High"?"#fefce8":"#eff6ff",color:item.priority==="Critical"?"#b91c1c":item.priority==="High"?"#b45309":"#1d4ed8",border:`1px solid ${item.priority==="Critical"?"#fecaca":item.priority==="High"?"#fde68a":"#bfdbfe"}`}}>{item.priority} Priority</span></div>
         </div>
         <div style={{marginBottom:18}}>
           <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:"#9c9a93",marginBottom:10}}>Vendor</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
             <div>
-              <div style={{fontSize:11,color:MUTED,marginBottom:4}}>Company</div>
-              {categoryVendors.length>0 ? (
-                <select value={selectedVendorName} onChange={e=>{setSelectedVendorName(e.target.value);setSelectedEmail("");}} style={INPUT}>
-                  <option value="">Select vendor...</option>
-                  {categoryVendors.map(v=><option key={v.name} value={v.name}>{v.name}</option>)}
-                </select>
-              ) : <input placeholder="No vendors on file" style={{...INPUT,color:"#aaa"}} disabled/>}
+              <div style={{fontSize:11,color:M,marginBottom:4}}>Company</div>
+              {categoryVendors.length>0?<select value={selVendor} onChange={e=>{setSelVendor(e.target.value);setSelEmail("");}} style={I}><option value="">Select vendor...</option>{categoryVendors.map(v=><option key={v.name} value={v.name}>{v.name}</option>)}</select>:<input placeholder="No vendors on file" style={{...I,color:"#aaa"}} disabled/>}
             </div>
             <div>
-              <div style={{fontSize:11,color:MUTED,marginBottom:4}}>Contact email</div>
-              {selectedVendorName && contactOptions.length>0 ? (
-                <select value={selectedEmail} onChange={e=>setSelectedEmail(e.target.value)} style={INPUT}>
-                  <option value="">Select contact...</option>
-                  {contactOptions.map(c=><option key={c.email} value={c.email}>{c.person} — {c.email}</option>)}
-                </select>
-              ) : <input placeholder={selectedVendorName?"No contacts on file":"Select vendor first"} style={{...INPUT,color:"#aaa"}} disabled/>}
+              <div style={{fontSize:11,color:M,marginBottom:4}}>Contact email</div>
+              {selVendor&&contacts.length>0?<select value={selEmail} onChange={e=>setSelEmail(e.target.value)} style={I}><option value="">Select contact...</option>{contacts.map(c=><option key={c.email} value={c.email}>{c.person} — {c.email}</option>)}</select>:<input placeholder={selVendor?"No contacts on file":"Select vendor first"} style={{...I,color:"#aaa"}} disabled/>}
             </div>
           </div>
         </div>
         <div style={{marginBottom:18}}>
           <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:"#9c9a93",marginBottom:8}}>Email Preview</div>
-          <div style={{background:"#f5f4f1",borderRadius:8,padding:"12px 14px",fontSize:12,color:MUTED,lineHeight:1.7,maxHeight:180,overflowY:"auto"}}>
-            <div><strong style={{color:TEXT}}>To:</strong> {selectedEmail||"(select a vendor email above)"}</div>
-            <div><strong style={{color:TEXT}}>Subject:</strong> {subject}</div>
+          <div style={{background:"#f5f4f1",borderRadius:8,padding:"12px 14px",fontSize:12,color:M,lineHeight:1.7,maxHeight:180,overflowY:"auto"}}>
+            <div><strong style={{color:T}}>To:</strong> {selEmail||"(select a vendor email above)"}</div>
+            <div><strong style={{color:T}}>Subject:</strong> {subject}</div>
             <div style={{marginTop:8,whiteSpace:"pre-wrap"}}>{body}</div>
           </div>
         </div>
         <div style={{display:"flex",gap:8}}>
-          <button onClick={()=>window.open(`mailto:${selectedEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`)}
-            disabled={!selectedEmail}
-            style={{flex:1,fontSize:13,fontWeight:600,borderRadius:8,padding:"10px",
-              background:selectedEmail?"#1a1a1a":"#d1d0cb",color:selectedEmail?"#fff":"#9c9a93",
-              border:"none",cursor:selectedEmail?"pointer":"not-allowed"}}>
-            Open in Email Client
-          </button>
-          <button onClick={onClose} style={{fontSize:13,borderRadius:8,padding:"10px 16px",
-            background:"transparent",color:MUTED,border:`1px solid ${BORDER}`,cursor:"pointer"}}>
-            Cancel
-          </button>
+          <button onClick={()=>window.open(`mailto:${selEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`)} disabled={!selEmail} style={{flex:1,fontSize:13,fontWeight:600,borderRadius:8,padding:"10px",background:selEmail?"#1a1a1a":"#d1d0cb",color:selEmail?"#fff":"#9c9a93",border:"none",cursor:selEmail?"pointer":"not-allowed"}}>Open in Email Client</button>
+          <button onClick={onClose} style={{fontSize:13,borderRadius:8,padding:"10px 16px",background:"transparent",color:M,border:`1px solid ${B}`,cursor:"pointer"}}>Cancel</button>
         </div>
       </div>
     </div>
   );
 }
-
-// ─── Components ───────────────────────────────────────────────────────────────
 
 function PropRow({prop,items,inspections,isLast,onClick}) {
   const [hov,setHov]=useState(false);
@@ -438,19 +308,14 @@ function PropRow({prop,items,inspections,isLast,onClick}) {
   const cr=oi.filter(it=>it.priority==="Critical").length;
   const ins=inspections.filter(it=>it.propertyId===prop.id).length;
   return (
-    <div onClick={onClick} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
-      style={{display:"flex",alignItems:"center",gap:16,padding:"11px 18px",
-        background:hov?C.bg:C.surface,cursor:"pointer",
-        borderBottom:isLast?"none":"1px solid #eaeaea",transition:"background 0.1s"}}>
+    <div onClick={onClick} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)} style={{display:"flex",alignItems:"center",gap:16,padding:"11px 18px",background:hov?C.bg:C.surface,cursor:"pointer",borderBottom:isLast?"none":"1px solid #eaeaea",transition:"background 0.1s"}}>
       <div style={{flex:1,minWidth:0}}>
         <div style={{fontSize:15,fontWeight:600,color:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{prop.name}</div>
         <div style={{fontSize:12,color:C.muted,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{prop.owner}</div>
       </div>
       <div style={{display:"flex",gap:14,alignItems:"center",flexShrink:0}}>
         {cr>0&&<Chip label={`${cr} critical`} tc={PCOLOR.Critical} bg={PBG.Critical} bc={PBDR.Critical}/>}
-        {[[oi.length,"open",oi.length>0?C.text:C.faint],
-          [pi.filter(it=>it.status==="Completed").length,"done",C.faint],
-          [ins,"insp.",C.faint]].map(([n,l,cl])=>(
+        {[[oi.length,"open",oi.length>0?C.text:C.faint],[pi.filter(it=>it.status==="Completed").length,"done",C.faint],[ins,"insp.",C.faint]].map(([n,l,cl])=>(
           <div key={l} style={{textAlign:"right",minWidth:28}}>
             <div style={{fontSize:16,fontWeight:700,color:cl,lineHeight:1}}>{n}</div>
             <div style={{fontSize:10,color:C.faint,marginTop:2}}>{l}</div>
@@ -466,10 +331,7 @@ function ItemRow({item,showProperty,onClick,onAdvance}) {
   const prop=PROPERTIES.find(p=>p.id===item.propertyId);
   const next=STATUS_NEXT[item.status];
   return (
-    <div onClick={onClick} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
-      style={{display:"flex",alignItems:"center",gap:14,padding:"11px 18px",
-        background:hov?C.bg:C.surface,borderBottom:`1px solid ${C.border}`,
-        cursor:"pointer",transition:"background 0.1s"}}>
+    <div onClick={onClick} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)} style={{display:"flex",alignItems:"center",gap:14,padding:"11px 18px",background:hov?C.bg:C.surface,borderBottom:`1px solid ${C.border}`,cursor:"pointer",transition:"background 0.1s"}}>
       <div style={{flex:1,minWidth:0}}>
         <div style={{fontSize:14,fontWeight:600,color:C.text,marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.description}</div>
         <div style={{display:"flex",gap:5,alignItems:"center",flexWrap:"wrap"}}>
@@ -480,13 +342,8 @@ function ItemRow({item,showProperty,onClick,onAdvance}) {
         </div>
       </div>
       <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0}}>
-        <PPill p={item.priority}/>
-        <SPill s={item.status}/>
-        {next&&<button onClick={e=>{e.stopPropagation();onAdvance();}} style={{
-          fontSize:11,background:"none",border:`1px solid ${C.border}`,borderRadius:6,
-          padding:"3px 10px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)",whiteSpace:"nowrap"}}>
-          {next}
-        </button>}
+        <PPill p={item.priority}/><SPill s={item.status}/>
+        {next&&<button onClick={e=>{e.stopPropagation();onAdvance();}} style={{fontSize:11,background:"none",border:`1px solid ${C.border}`,borderRadius:6,padding:"3px 10px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)",whiteSpace:"nowrap"}}>{next}</button>}
       </div>
     </div>
   );
@@ -502,37 +359,22 @@ function ItemDetail({item,inspections,onUpdate,onAdvance,onClose}) {
   function save(){onUpdate(form);setEditing(false);}
   return (
     <SlideOver onClose={onClose} sub={`${GROUPS[prop?.group]} · ${prop?.name}`} title={item.description}>
-      <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:18}}>
-        <PPill p={item.priority}/><SPill s={item.status}/>
-        <Chip label={item.category} tc={C.muted} bg={C.bg} bc={C.border}/>
-      </div>
-      {next&&<button onClick={onAdvance} style={{width:"100%",marginBottom:20,padding:"10px 16px",
-        background:SBG[next],color:SCOLOR[next],border:`1px solid ${SBDR[next]}`,
-        borderRadius:8,cursor:"pointer",fontFamily:"var(--font-sans)",fontSize:13,fontWeight:600}}>
-        Mark as {next}
-      </button>}
-      {!editing ? <>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:1,marginBottom:20,
-          border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
-          {[["Assignee",item.assignee||"Unassigned"],["Vendor",item.vendor||"—"],
-            ["Created",item.createdAt?.slice(0,10)||""],["Scheduled",item.scheduledDate||"—"],
-            ["Completed",item.completedDate||"—"],["Inspection",insp?.date||"Manual"]
-          ].map(([label,val],i)=>(
+      <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:18}}><PPill p={item.priority}/><SPill s={item.status}/><Chip label={item.category} tc={C.muted} bg={C.bg} bc={C.border}/></div>
+      {next&&<button onClick={onAdvance} style={{width:"100%",marginBottom:20,padding:"10px 16px",background:SBG[next],color:SCOLOR[next],border:`1px solid ${SBDR[next]}`,borderRadius:8,cursor:"pointer",fontFamily:"var(--font-sans)",fontSize:13,fontWeight:600}}>Mark as {next}</button>}
+      {!editing?<>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:1,marginBottom:20,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
+          {[["Assignee",item.assignee||"Unassigned"],["Vendor",item.vendor||"—"],["Created",item.createdAt?.slice(0,10)||""],["Scheduled",item.scheduledDate||"—"],["Completed",item.completedDate||"—"],["Inspection",insp?.date||"Manual"]].map(([label,val],i)=>(
             <div key={label} style={{padding:"11px 14px",background:i%2===0?C.bg:C.surface}}>
               <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:C.faint,marginBottom:4}}>{label}</div>
               <div style={{fontSize:14,color:C.text,fontWeight:600}}>{val}</div>
             </div>
           ))}
         </div>
-        {item.notes&&<div style={{background:C.bg,borderRadius:8,padding:"12px 14px",marginBottom:20,borderLeft:`3px solid ${C.borderMid}`}}>
-          <ULabel>Notes</ULabel>
-          <div style={{fontSize:14,color:C.text,lineHeight:1.7}}>{item.notes}</div>
-        </div>}
+        {item.notes&&<div style={{background:C.bg,borderRadius:8,padding:"12px 14px",marginBottom:20,borderLeft:`3px solid ${C.borderMid}`}}><ULabel>Notes</ULabel><div style={{fontSize:14,color:C.text,lineHeight:1.7}}>{item.notes}</div></div>}
         <ULabel>Status history</ULabel>
         <div style={{marginBottom:20}}>
           {item.statusHistory.map((h,i)=>(
-            <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",
-              borderBottom:i<item.statusHistory.length-1?`1px solid ${C.border}`:"none"}}>
+            <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:i<item.statusHistory.length-1?`1px solid ${C.border}`:"none"}}>
               <Dot color={SCOLOR[h.status]} size={8}/>
               <span style={{fontSize:14,color:C.text,fontWeight:600,flex:1}}>{h.status}</span>
               <span style={{fontSize:13,color:C.faint}}>{h.date}</span>
@@ -541,28 +383,20 @@ function ItemDetail({item,inspections,onUpdate,onAdvance,onClose}) {
         </div>
         <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
           <GhostBtn onClick={()=>setEditing(true)}>Edit item</GhostBtn>
-          <button onClick={()=>setShowQuote(true)} style={{fontFamily:"var(--font-sans)",fontSize:13,
-            borderRadius:8,padding:"9px 16px",background:"#eff6ff",
-            color:"#1d4ed8",border:"1px solid #bfdbfe",cursor:"pointer",fontWeight:500}}>
-            Request Quote
-          </button>
+          <button onClick={()=>setShowQuote(true)} style={{fontFamily:"var(--font-sans)",fontSize:13,borderRadius:8,padding:"9px 16px",background:"#eff6ff",color:"#1d4ed8",border:"1px solid #bfdbfe",cursor:"pointer",fontWeight:500}}>Request Quote</button>
         </div>
         {showQuote&&<QuoteModal item={item} onClose={()=>setShowQuote(false)}/>}
-      </> : (
+      </>:(
         <div style={{display:"flex",flexDirection:"column",gap:14}}>
           <FInput label="Description" value={form.description} onChange={v=>setForm(f=>({...f,description:v}))} rows={2}/>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-            <FSelect label="Assignee" value={form.assignee} onChange={v=>setForm(f=>({...f,assignee:v}))}
-              options={[{v:"",l:"Unassigned"},...TEAM.map(t=>({v:t,l:t}))]}/>
+            <FSelect label="Assignee" value={form.assignee} onChange={v=>setForm(f=>({...f,assignee:v}))} options={[{v:"",l:"Unassigned"},...TEAM.map(t=>({v:t,l:t}))]}/>
             <FSelect label="Priority" value={form.priority} onChange={v=>setForm(f=>({...f,priority:v}))} options={PRIORITIES}/>
             <FInput label="Vendor" value={form.vendor} onChange={v=>setForm(f=>({...f,vendor:v}))} placeholder="Optional"/>
             <FInput label="Scheduled date" value={form.scheduledDate} onChange={v=>setForm(f=>({...f,scheduledDate:v}))} type="date"/>
           </div>
           <FInput label="Notes" value={form.notes} onChange={v=>setForm(f=>({...f,notes:v}))} placeholder="Optional..." rows={3}/>
-          <div style={{display:"flex",gap:8,marginTop:4}}>
-            <PrimaryBtn onClick={save}>Save changes</PrimaryBtn>
-            <GhostBtn onClick={()=>setEditing(false)}>Cancel</GhostBtn>
-          </div>
+          <div style={{display:"flex",gap:8,marginTop:4}}><PrimaryBtn onClick={save}>Save changes</PrimaryBtn><GhostBtn onClick={()=>setEditing(false)}>Cancel</GhostBtn></div>
         </div>
       )}
     </SlideOver>
@@ -576,11 +410,7 @@ function AISummaryCard({prop,propItems}) {
     <div style={{background:C.bg,border:`1px solid ${C.border}`,borderRadius:10,padding:"14px 18px",marginBottom:24}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:text?10:0}}>
         <ULabel>AI Status Summary</ULabel>
-        <button onClick={()=>genAISummary(prop,propItems,setText,setLoading)} disabled={loading}
-          style={{fontSize:11,background:C.surface,border:`1px solid ${C.border}`,borderRadius:6,
-            padding:"4px 10px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>
-          {loading?"Generating...":text?"Refresh":"Generate"}
-        </button>
+        <button onClick={()=>genAISummary(prop,propItems,setText,setLoading)} disabled={loading} style={{fontSize:11,background:C.surface,border:`1px solid ${C.border}`,borderRadius:6,padding:"4px 10px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>{loading?"Generating...":text?"Refresh":"Generate"}</button>
       </div>
       {text&&<p style={{fontSize:13,color:C.text,margin:0,lineHeight:1.7}}>{text}</p>}
     </div>
@@ -603,7 +433,7 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}) {
     r.onload=e=>{
       const base64=e.target.result.split(",")[1];
       const sizeInMB=(base64.length*0.75)/(1024*1024);
-      if(sizeInMB>4){alert(`PDF is ${sizeInMB.toFixed(1)}MB — too large. Compress at smallpdf.com first.`);return;}
+      if(sizeInMB>4){alert(`PDF is ${sizeInMB.toFixed(1)}MB — compress at smallpdf.com first.`);return;}
       setPdfBase64(base64);
     };
     r.readAsDataURL(file);
@@ -612,29 +442,17 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}) {
   if(preview) return (
     <Overlay onClose={onClose}>
       <OverlayHeader title="Review extracted items" sub={`${preview.items.length} items from ${fileName}`} onClose={onClose}/>
-      {preview.detectedProperty&&<div style={{fontSize:12,color:C.muted,background:C.bg,
-        padding:"8px 12px",borderRadius:8,border:`1px solid ${C.border}`,marginBottom:14}}>
-        PDF property: <strong style={{color:C.text}}>{preview.detectedProperty}</strong> → {prop?.name}
-      </div>}
+      {preview.detectedProperty&&<div style={{fontSize:12,color:C.muted,background:C.bg,padding:"8px 12px",borderRadius:8,border:`1px solid ${C.border}`,marginBottom:14}}>PDF property: <strong style={{color:C.text}}>{preview.detectedProperty}</strong> → {prop?.name}</div>}
       <div style={{maxHeight:420,overflowY:"auto",marginBottom:16,border:`1px solid ${C.border}`,borderRadius:10}}>
         {preview.items.map((item,i)=>(
-          <div key={i} style={{padding:"11px 16px",background:i%2===0?C.surface:C.bg,
-            borderBottom:i<preview.items.length-1?`1px solid ${C.border}`:"none"}}>
+          <div key={i} style={{padding:"11px 16px",background:i%2===0?C.surface:C.bg,borderBottom:i<preview.items.length-1?`1px solid ${C.border}`:"none"}}>
             <div style={{fontSize:13,fontWeight:500,color:C.text,marginBottom:6,lineHeight:1.4}}>{item.description}</div>
-            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-              <PPill p={item.priority}/>
-              <Chip label={item.category} tc={C.muted} bg={C.bg} bc={C.border}/>
-            </div>
+            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}><PPill p={item.priority}/><Chip label={item.category} tc={C.muted} bg={C.bg} bc={C.border}/></div>
           </div>
         ))}
       </div>
       <div style={{display:"flex",gap:8}}>
-        <PrimaryBtn onClick={()=>{
-          onSubmit({id:"i"+uid(),propertyId,
-            date:overrideDate||preview.date,
-            inspector:overrideInspector||preview.inspector||"SnapInspect",
-            notes:`SnapInspect PDF: ${fileName}`},preview.items);
-        }}>Confirm & add {preview.items.length} items</PrimaryBtn>
+        <PrimaryBtn onClick={()=>{onSubmit({id:"i"+uid(),propertyId,date:overrideDate||preview.date,inspector:overrideInspector||preview.inspector||"SnapInspect",notes:`SnapInspect PDF: ${fileName}`},preview.items);}}>Confirm & add {preview.items.length} items</PrimaryBtn>
         <GhostBtn onClick={()=>setPreview(null)}>Back</GhostBtn>
       </div>
     </Overlay>
@@ -643,97 +461,64 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}) {
     <Overlay onClose={onClose}>
       <OverlayHeader title="Import SnapInspect report" sub="Notes and photos extracted automatically" onClose={onClose}/>
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
-        <div onDragOver={e=>{e.preventDefault();setDragOver(true);}}
-          onDragLeave={()=>setDragOver(false)}
-          onDrop={e=>{e.preventDefault();setDragOver(false);handleFile(e.dataTransfer.files[0]);}}
-          onClick={()=>document.getElementById("pdf-upload-input").click()}
-          style={{border:`2px dashed ${dragOver?C.text:C.borderMid}`,borderRadius:10,
-            padding:"28px 20px",textAlign:"center",cursor:"pointer",
-            background:dragOver?C.bg:"transparent",transition:"all 0.15s"}}>
-          <input id="pdf-upload-input" type="file" accept="application/pdf" style={{display:"none"}}
-            onChange={e=>handleFile(e.target.files[0])}/>
-          {pdfBase64?<>
-            <div style={{fontSize:13,fontWeight:600,color:C.text}}>{fileName}</div>
-            <div style={{fontSize:11,color:C.faint,marginTop:2}}>Click to change</div>
-          </>:<>
-            <div style={{fontSize:13,fontWeight:600,color:C.text}}>Drop SnapInspect PDF here</div>
-            <div style={{fontSize:11,color:C.faint,marginTop:3}}>or click to browse</div>
-          </>}
+        <div onDragOver={e=>{e.preventDefault();setDragOver(true);}} onDragLeave={()=>setDragOver(false)} onDrop={e=>{e.preventDefault();setDragOver(false);handleFile(e.dataTransfer.files[0]);}} onClick={()=>document.getElementById("pdf-upload-input").click()} style={{border:`2px dashed ${dragOver?C.text:C.borderMid}`,borderRadius:10,padding:"28px 20px",textAlign:"center",cursor:"pointer",background:dragOver?C.bg:"transparent",transition:"all 0.15s"}}>
+          <input id="pdf-upload-input" type="file" accept="application/pdf" style={{display:"none"}} onChange={e=>handleFile(e.target.files[0])}/>
+          {pdfBase64?<><div style={{fontSize:13,fontWeight:600,color:C.text}}>{fileName}</div><div style={{fontSize:11,color:C.faint,marginTop:2}}>Click to change</div></>:<><div style={{fontSize:13,fontWeight:600,color:C.text}}>Drop SnapInspect PDF here</div><div style={{fontSize:11,color:C.faint,marginTop:3}}>or click to browse</div></>}
         </div>
-        <FSelect label="Property" value={propertyId} onChange={setPropertyId}
-          options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} — ${p.name}`}))}/>
+        <FSelect label="Property" value={propertyId} onChange={setPropertyId} options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} — ${p.name}`}))}/>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-          <FSelect label="Inspector (optional)" value={overrideInspector} onChange={setOverrideInspector}
-            options={[{v:"",l:"Auto-detect from PDF"},...TEAM.map(t=>({v:t,l:t}))]}/>
+          <FSelect label="Inspector (optional)" value={overrideInspector} onChange={setOverrideInspector} options={[{v:"",l:"Auto-detect from PDF"},...TEAM.map(t=>({v:t,l:t}))]}/>
           <FInput label="Date (optional)" value={overrideDate} onChange={setOverrideDate} type="date"/>
         </div>
-        <PrimaryBtn full disabled={loading||!pdfBase64}
-          onClick={()=>{const id="i"+uid();parsePDF({pdfBase64,propertyId,inspectionId:id,overrideDate,overrideInspector},setLoading,r=>setPreview({...r,inspId:id}));}}>
-          {loading?"Extracting items from PDF...":"Extract repair items"}
-        </PrimaryBtn>
+        <PrimaryBtn full disabled={loading||!pdfBase64} onClick={()=>{const id="i"+uid();parsePDF({pdfBase64,propertyId,inspectionId:id,overrideDate,overrideInspector},setLoading,r=>setPreview({...r,inspId:id}));}}>{loading?"Extracting items from PDF...":"Extract repair items"}</PrimaryBtn>
       </div>
     </Overlay>
   );
 }
 
 function AddItemForm({selectedPropertyId,onSubmit,onClose}) {
-  const [form,setForm]=useState({
-    propertyId:selectedPropertyId||PROPERTIES[0].id,
-    description:"",category:CATEGORIES[0],priority:"Medium",assignee:"",vendor:"",notes:""
-  });
+  const [form,setForm]=useState({propertyId:selectedPropertyId||PROPERTIES[0].id,description:"",category:CATEGORIES[0],priority:"Medium",assignee:"",vendor:"",notes:""});
   return (
     <Overlay onClose={onClose}>
       <OverlayHeader title="Add repair item" onClose={onClose}/>
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
-        <FSelect label="Property" value={form.propertyId} onChange={v=>setForm(f=>({...f,propertyId:v}))}
-          options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} — ${p.name}`}))}/>
-        <FInput label="Description" value={form.description} onChange={v=>setForm(f=>({...f,description:v}))}
-          placeholder="Describe the repair task clearly..." rows={2}/>
+        <FSelect label="Property" value={form.propertyId} onChange={v=>setForm(f=>({...f,propertyId:v}))} options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} — ${p.name}`}))}/>
+        <FInput label="Description" value={form.description} onChange={v=>setForm(f=>({...f,description:v}))} placeholder="Describe the repair task clearly..." rows={2}/>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
           <FSelect label="Category" value={form.category} onChange={v=>setForm(f=>({...f,category:v}))} options={CATEGORIES}/>
           <FSelect label="Priority" value={form.priority} onChange={v=>setForm(f=>({...f,priority:v}))} options={PRIORITIES}/>
-          <FSelect label="Assignee" value={form.assignee} onChange={v=>setForm(f=>({...f,assignee:v}))}
-            options={[{v:"",l:"Unassigned"},...TEAM.map(t=>({v:t,l:t}))]}/>
+          <FSelect label="Assignee" value={form.assignee} onChange={v=>setForm(f=>({...f,assignee:v}))} options={[{v:"",l:"Unassigned"},...TEAM.map(t=>({v:t,l:t}))]}/>
           <FInput label="Vendor" value={form.vendor} onChange={v=>setForm(f=>({...f,vendor:v}))} placeholder="Optional"/>
         </div>
         <FInput label="Notes" value={form.notes} onChange={v=>setForm(f=>({...f,notes:v}))} placeholder="Optional..." rows={2}/>
-        <PrimaryBtn full disabled={!form.description.trim()} onClick={()=>{
-          const ts=nowISO();
-          onSubmit({id:"r"+uid(),inspectionId:null,...form,
-            status:"Not Started",createdAt:ts,scheduledDate:"",completedDate:"",
-            statusHistory:[{status:"Not Started",date:today()}]});
-        }}>Add item</PrimaryBtn>
+        <PrimaryBtn full disabled={!form.description.trim()} onClick={()=>{const ts=nowISO();onSubmit({id:"r"+uid(),inspectionId:null,...form,status:"Not Started",createdAt:ts,scheduledDate:"",completedDate:"",statusHistory:[{status:"Not Started",date:today()}]});}}>Add item</PrimaryBtn>
       </div>
     </Overlay>
   );
 }
 
-// ─── App ──────────────────────────────────────────────────────────────────────
-
 export default function App() {
-  const [loaded,setLoaded]           = useState(false);
-  const [dbError,setDbError]         = useState(false);
-  const [saveError,setSaveError]     = useState("");
-  const [saving,setSaving]           = useState(false);
-  const [inspections,setInspections] = useState([]);
-  const [items,setItems]             = useState([]);
-  const [view,setView]               = useState("portfolio");
-  const [selProp,setSelProp]         = useState(null);
-  const [selItem,setSelItem]         = useState(null);
-  const [showImport,setShowImport]   = useState(false);
-  const [showAdd,setShowAdd]         = useState(false);
-  const [fStatus,setFStatus]         = useState("All");
-  const [fPriority,setFPriority]     = useState("All");
-  const [fCategory,setFCategory]     = useState("All");
-  const [fAssignee,setFAssignee]     = useState("All");
-  const [search,setSearch]           = useState("");
+  const [loaded,setLoaded]=useState(false);
+  const [dbError,setDbError]=useState(false);
+  const [saveError,setSaveError]=useState("");
+  const [saving,setSaving]=useState(false);
+  const [inspections,setInspections]=useState([]);
+  const [items,setItems]=useState([]);
+  const [view,setView]=useState("portfolio");
+  const [selProp,setSelProp]=useState(null);
+  const [selItem,setSelItem]=useState(null);
+  const [showImport,setShowImport]=useState(false);
+  const [showAdd,setShowAdd]=useState(false);
+  const [fStatus,setFStatus]=useState("All");
+  const [fPriority,setFPriority]=useState("All");
+  const [fCategory,setFCategory]=useState("All");
+  const [fAssignee,setFAssignee]=useState("All");
+  const [search,setSearch]=useState("");
 
   useEffect(()=>{
     loadAll().then(result=>{
-      if(result===null){ setDbError(true); setLoaded(true); return; }
-      setInspections(result.inspections);
-      setItems(result.items);
-      setLoaded(true);
+      if(result===null){setDbError(true);setLoaded(true);return;}
+      setInspections(result.inspections);setItems(result.items);setLoaded(true);
     });
   },[]);
 
@@ -741,45 +526,35 @@ export default function App() {
     const updated=items.map(i=>i.id===id?{...i,...changes}:i);
     setItems(updated);
     if(selItem?.id===id) setSelItem(p=>({...p,...changes}));
-    setSaving(true); setSaveError("");
+    setSaving(true);setSaveError("");
     const err=await saveItemToDB(updated.find(i=>i.id===id));
     if(err) setSaveError("Save failed: "+err.message);
     setSaving(false);
   }
-
   async function advance(item) {
-    const next=STATUS_NEXT[item.status]; if(!next)return;
+    const next=STATUS_NEXT[item.status];if(!next)return;
     const d=today();
     const h=[...item.statusHistory,{status:next,date:d}];
     const ch={status:next,statusHistory:h};
     if(next==="Completed") ch.completedDate=d;
     await updateItem(item.id,ch);
   }
-
   async function addInspectionAndItems(insp,newItems) {
-    setSaving(true); setSaveError("");
+    setSaving(true);setSaveError("");
     const e1=await saveInspection(insp);
-    if(e1){ setSaveError("Failed to save inspection: "+e1.message); setSaving(false); return; }
-    for(const item of newItems){
-      const e2=await saveItemToDB(item);
-      if(e2) setSaveError("Failed to save item: "+e2.message);
-    }
-    setInspections(prev=>[insp,...prev]);
-    setItems(prev=>[...newItems,...prev]);
-    setSaving(false);
+    if(e1){setSaveError("Failed to save inspection: "+e1.message);setSaving(false);return;}
+    for(const item of newItems){const e2=await saveItemToDB(item);if(e2)setSaveError("Failed to save item: "+e2.message);}
+    setInspections(prev=>[insp,...prev]);setItems(prev=>[...newItems,...prev]);setSaving(false);
   }
-
   async function addItem(item) {
-    setSaving(true); setSaveError("");
+    setSaving(true);setSaveError("");
     const err=await saveItemToDB(item);
-    if(err){ setSaveError("Save failed: "+err.message); setSaving(false); return; }
-    setItems(prev=>[item,...prev]);
-    setSaving(false);
+    if(err){setSaveError("Save failed: "+err.message);setSaving(false);return;}
+    setItems(prev=>[item,...prev]);setSaving(false);
   }
 
   const openItems=items.filter(i=>i.status!=="Completed");
-  const critical =items.filter(i=>i.priority==="Critical"&&i.status!=="Completed");
-
+  const critical=items.filter(i=>i.priority==="Critical"&&i.status!=="Completed");
   const filtered=useMemo(()=>items.filter(it=>{
     if(fStatus!=="All"&&it.status!==fStatus) return false;
     if(fPriority!=="All"&&it.priority!==fPriority) return false;
@@ -792,40 +567,20 @@ export default function App() {
 
   const NAV=[{id:"portfolio",label:"Portfolio"},{id:"items",label:"All Items"},{id:"inspections",label:"Inspections"}];
 
-  if(!loaded) return (
-    <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",
-      background:C.bg,fontFamily:"var(--font-sans)",color:C.faint,fontSize:13}}>
-      Loading...
-    </div>
-  );
+  if(!loaded) return <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:C.bg,fontFamily:"var(--font-sans)",color:C.faint,fontSize:13}}>Loading...</div>;
 
   return (
-    <div style={{display:"flex",height:"100vh",width:"100vw",background:C.bg,
-      fontFamily:"var(--font-sans)",overflow:"hidden",position:"relative"}}>
+    <div style={{display:"flex",height:"100vh",width:"100vw",background:C.bg,fontFamily:"var(--font-sans)",overflow:"hidden",position:"relative"}}>
 
-      {/* Sidebar */}
       <div style={{width:220,background:"#000",display:"flex",flexDirection:"column",flexShrink:0,borderRight:"1px solid #1a1a1a"}}>
         <div style={{padding:"20px 20px 16px",display:"flex",alignItems:"center",gap:10}}>
-          <div style={{width:36,height:36,background:"#222",borderRadius:6,flexShrink:0,
-            display:"flex",alignItems:"center",justifyContent:"center",border:"1px solid #333"}}>
-            <span style={{color:"#fff",fontSize:15,fontWeight:800}}>D</span>
-          </div>
-          <div>
-            <div style={{fontSize:15,fontWeight:800,color:C.sideText,letterSpacing:"-0.02em",lineHeight:1.1}}>PropertyOps</div>
-            <div style={{fontSize:9,color:C.sideMuted,letterSpacing:"0.04em",textTransform:"uppercase",marginTop:1}}>Dembs Development</div>
-          </div>
+          <div style={{width:36,height:36,background:"#222",borderRadius:6,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",border:"1px solid #333"}}><span style={{color:"#fff",fontSize:15,fontWeight:800}}>D</span></div>
+          <div><div style={{fontSize:15,fontWeight:800,color:C.sideText,letterSpacing:"-0.02em",lineHeight:1.1}}>PropertyOps</div><div style={{fontSize:9,color:C.sideMuted,letterSpacing:"0.04em",textTransform:"uppercase",marginTop:1}}>Dembs Development</div></div>
         </div>
         <div style={{height:1,background:"rgba(255,255,255,0.07)",margin:"0 14px 8px"}}/>
         <nav style={{flex:1,padding:"4px 10px"}}>
           {NAV.map(n=>(
-            <button key={n.id} onClick={()=>{setView(n.id);setSelProp(null);}} style={{
-              display:"block",width:"100%",textAlign:"left",padding:"8px 10px",
-              background:view===n.id?"rgba(255,255,255,0.08)":"transparent",
-              border:"none",borderRadius:7,cursor:"pointer",marginBottom:1,
-              fontSize:14,fontWeight:view===n.id?600:400,
-              color:view===n.id?C.sideText:C.sideMuted,transition:"all 0.1s"}}>
-              {n.label}
-            </button>
+            <button key={n.id} onClick={()=>{setView(n.id);setSelProp(null);}} style={{display:"block",width:"100%",textAlign:"left",padding:"8px 10px",background:view===n.id?"rgba(255,255,255,0.08)":"transparent",border:"none",borderRadius:7,cursor:"pointer",marginBottom:1,fontSize:14,fontWeight:view===n.id?600:400,color:view===n.id?C.sideText:C.sideMuted,transition:"all 0.1s"}}>{n.label}</button>
           ))}
         </nav>
         <div style={{padding:"16px 20px",borderTop:"1px solid rgba(255,255,255,0.08)"}}>
@@ -840,50 +595,22 @@ export default function App() {
         </div>
       </div>
 
-      {/* Main */}
       <div style={{flex:1,minWidth:0,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-
-        {dbError&&<div style={{background:"#fef2f2",borderBottom:"1px solid #fecaca",padding:"10px 24px",
-          fontSize:13,color:"#b91c1c",flexShrink:0}}>
-          Could not connect to database. Check your internet connection and refresh the page.
-        </div>}
-
-        {/* Topbar */}
-        <div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,
-          padding:"0 24px",height:48,display:"flex",alignItems:"center",
-          justifyContent:"space-between",flexShrink:0,zIndex:10}}>
+        <div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,padding:"0 24px",height:48,display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0,zIndex:10}}>
           <div style={{fontSize:16,fontWeight:700,color:C.text,display:"flex",alignItems:"center",gap:6}}>
-            {view==="portfolio"&&selProp?(()=>{
-              const p=PROPERTIES.find(pr=>pr.id===selProp);
-              return <><span onClick={()=>setSelProp(null)} style={{color:C.muted,cursor:"pointer",fontWeight:400,fontSize:13}}>Portfolio</span>
-                <span style={{color:C.border,margin:"0 4px"}}>&rsaquo;</span><span>{p?.name}</span></>;
-            })():view==="portfolio"?"Portfolio":view==="items"?"All Items":"Inspections"}
+            {view==="portfolio"&&selProp?(()=>{const p=PROPERTIES.find(pr=>pr.id===selProp);return <><span onClick={()=>setSelProp(null)} style={{color:C.muted,cursor:"pointer",fontWeight:400,fontSize:13}}>Portfolio</span><span style={{color:C.border,margin:"0 4px"}}>&rsaquo;</span><span>{p?.name}</span></>;})():view==="portfolio"?"Portfolio":view==="items"?"All Items":"Inspections"}
           </div>
           <div style={{display:"flex",gap:8}}>
-            <button onClick={()=>setShowAdd(true)} style={{fontSize:13,fontWeight:500,
-              background:"transparent",border:`1px solid ${C.border}`,borderRadius:7,
-              padding:"6px 14px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>
-              + Add item
-            </button>
-            <button onClick={()=>setShowImport(true)} style={{fontSize:13,fontWeight:600,
-              background:C.text,border:"none",borderRadius:7,padding:"7px 16px",
-              cursor:"pointer",color:"#fff",fontFamily:"var(--font-sans)"}}>
-              + Import inspection
-            </button>
+            <button onClick={()=>setShowAdd(true)} style={{fontSize:13,fontWeight:500,background:"transparent",border:`1px solid ${C.border}`,borderRadius:7,padding:"6px 14px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>+ Add item</button>
+            <button onClick={()=>setShowImport(true)} style={{fontSize:13,fontWeight:600,background:C.text,border:"none",borderRadius:7,padding:"7px 16px",cursor:"pointer",color:"#fff",fontFamily:"var(--font-sans)"}}>+ Import inspection</button>
           </div>
         </div>
 
-        {/* Body */}
         <div style={{flex:1,overflowY:"auto",padding:"24px 28px"}}>
 
           {view==="portfolio"&&!selProp&&<>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:12,marginBottom:24}}>
-              {[
-                {l:"Open Items",v:openItems.length,s:"across portfolio",red:false},
-                {l:"Critical",v:critical.length,s:"immediate action",red:critical.length>0},
-                {l:"Scheduled",v:items.filter(i=>i.status==="Scheduled").length,s:"confirmed with vendors"},
-                {l:"Completed",v:items.filter(i=>i.status==="Completed").length,s:"all time"},
-              ].map(k=>(
+              {[{l:"Open Items",v:openItems.length,s:"across portfolio",red:false},{l:"Critical",v:critical.length,s:"immediate action",red:critical.length>0},{l:"Scheduled",v:items.filter(i=>i.status==="Scheduled").length,s:"confirmed with vendors"},{l:"Completed",v:items.filter(i=>i.status==="Completed").length,s:"all time"}].map(k=>(
                 <div key={k.l} style={{background:C.surface,border:`1px solid ${k.red?PBDR.Critical:C.border}`,borderRadius:10,padding:"16px 18px"}}>
                   <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.06em",textTransform:"uppercase",color:k.red?PCOLOR.Critical:C.faint,marginBottom:8}}>{k.l}</div>
                   <div style={{fontSize:36,fontWeight:800,color:k.red?PCOLOR.Critical:C.text,lineHeight:1,marginBottom:6}}>{k.v}</div>
@@ -891,33 +618,18 @@ export default function App() {
                 </div>
               ))}
             </div>
-            <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,
-              padding:"12px 18px",marginBottom:24,display:"flex",gap:24,flexWrap:"wrap",alignItems:"center"}}>
+            <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 18px",marginBottom:24,display:"flex",gap:24,flexWrap:"wrap",alignItems:"center"}}>
               <span style={{fontSize:10,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:C.faint}}>Status</span>
-              {STATUSES.map(s=>{
-                const n=items.filter(i=>i.status===s).length;
-                return <div key={s} style={{display:"flex",alignItems:"center",gap:6}}>
-                  <Dot color={SCOLOR[s]} size={7}/>
-                  <span style={{fontSize:13,color:C.muted}}>{s}</span>
-                  <span style={{fontSize:14,fontWeight:700,color:C.text}}>{n}</span>
-                </div>;
-              })}
+              {STATUSES.map(s=>{const n=items.filter(i=>i.status===s).length;return <div key={s} style={{display:"flex",alignItems:"center",gap:6}}><Dot color={SCOLOR[s]} size={7}/><span style={{fontSize:13,color:C.muted}}>{s}</span><span style={{fontSize:14,fontWeight:700,color:C.text}}>{n}</span></div>;})}
             </div>
             {Object.entries(GROUPS).map(([gkey,gname])=>{
-              const gps=PROPERTIES.filter(p=>p.group===gkey);
-              if(!gps.length) return null;
-              return (
-                <div key={gkey} style={{marginBottom:20}}>
-                  <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.06em",textTransform:"uppercase",color:C.faint,marginBottom:8}}>{gname}</div>
-                  <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
-                    {gps.map((prop,i)=>(
-                      <PropRow key={prop.id} prop={prop} items={items} inspections={inspections}
-                        isLast={i===gps.length-1}
-                        onClick={()=>{setSelProp(prop.id);setView("portfolio");}}/>
-                    ))}
-                  </div>
+              const gps=PROPERTIES.filter(p=>p.group===gkey);if(!gps.length)return null;
+              return (<div key={gkey} style={{marginBottom:20}}>
+                <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.06em",textTransform:"uppercase",color:C.faint,marginBottom:8}}>{gname}</div>
+                <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
+                  {gps.map((prop,i)=><PropRow key={prop.id} prop={prop} items={items} inspections={inspections} isLast={i===gps.length-1} onClick={()=>{setSelProp(prop.id);setView("portfolio");}}/>)}
                 </div>
-              );
+              </div>);
             })}
           </>}
 
@@ -935,50 +647,28 @@ export default function App() {
                 </div>
                 <div style={{display:"flex",gap:20}}>
                   {[[oi.length,"open"],[pi.filter(i=>i.status==="Completed").length,"done"],[pInsp.length,"inspections"]].map(([n,l])=>(
-                    <div key={l} style={{textAlign:"right"}}>
-                      <div style={{fontSize:28,fontWeight:800,color:C.text}}>{n}</div>
-                      <div style={{fontSize:11,color:C.faint}}>{l}</div>
-                    </div>
+                    <div key={l} style={{textAlign:"right"}}><div style={{fontSize:28,fontWeight:800,color:C.text}}>{n}</div><div style={{fontSize:11,color:C.faint}}>{l}</div></div>
                   ))}
                 </div>
               </div>
               <AISummaryCard prop={prop} propItems={pi}/>
               {PRIORITIES.map(p=>{
-                const grp=oi.filter(i=>i.priority===p);
-                if(!grp.length) return null;
-                return (
-                  <div key={p} style={{marginBottom:20}}>
-                    <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:8}}>
-                      <Dot color={PCOLOR[p]} size={7}/>
-                      <span style={{fontSize:10,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:PCOLOR[p]}}>{p}</span>
-                      <span style={{fontSize:11,color:C.faint}}>({grp.length})</span>
-                    </div>
-                    <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
-                      {grp.map(it=><ItemRow key={it.id} item={it} onClick={()=>setSelItem(it)} onAdvance={()=>advance(it)}/>)}
-                    </div>
-                  </div>
-                );
+                const grp=oi.filter(i=>i.priority===p);if(!grp.length)return null;
+                return (<div key={p} style={{marginBottom:20}}>
+                  <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:8}}><Dot color={PCOLOR[p]} size={7}/><span style={{fontSize:10,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:PCOLOR[p]}}>{p}</span><span style={{fontSize:11,color:C.faint}}>({grp.length})</span></div>
+                  <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>{grp.map(it=><ItemRow key={it.id} item={it} onClick={()=>setSelItem(it)} onAdvance={()=>advance(it)}/>)}</div>
+                </div>);
               })}
               {oi.length===0&&<div style={{textAlign:"center",padding:"48px 0",color:C.faint,fontSize:13}}>No open items — this property is clear.</div>}
               {pInsp.length>0&&<div style={{marginTop:28}}>
                 <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.09em",textTransform:"uppercase",color:C.faint,marginBottom:10}}>Inspection history</div>
                 <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
-                  {pInsp.map((insp,i)=>{
-                    const ii=items.filter(it=>it.inspectionId===insp.id);
-                    return <div key={insp.id} style={{display:"flex",alignItems:"center",gap:14,padding:"12px 18px",
-                      borderBottom:i<pInsp.length-1?`1px solid ${C.border}`:"none"}}>
-                      <div style={{flex:1}}>
-                        <div style={{fontSize:13,fontWeight:500,color:C.text}}>{insp.date}</div>
-                        <div style={{fontSize:11,color:C.faint,marginTop:2}}>{insp.inspector}</div>
-                      </div>
-                      <div style={{display:"flex",gap:6}}>
-                        <Chip label={`${ii.length} items`} tc={SCOLOR.Scheduled} bg={SBG.Scheduled} bc={SBDR.Scheduled}/>
-                        {ii.filter(it=>it.status==="Completed").length>0&&
-                          <Chip label={`${ii.filter(it=>it.status==="Completed").length} done`}
-                            tc={SCOLOR.Completed} bg={SBG.Completed} bc={SBDR.Completed}/>}
-                      </div>
-                    </div>;
-                  })}
+                  {pInsp.map((insp,i)=>{const ii=items.filter(it=>it.inspectionId===insp.id);return(
+                    <div key={insp.id} style={{display:"flex",alignItems:"center",gap:14,padding:"12px 18px",borderBottom:i<pInsp.length-1?`1px solid ${C.border}`:"none"}}>
+                      <div style={{flex:1}}><div style={{fontSize:13,fontWeight:500,color:C.text}}>{insp.date}</div><div style={{fontSize:11,color:C.faint,marginTop:2}}>{insp.inspector}</div></div>
+                      <div style={{display:"flex",gap:6}}><Chip label={`${ii.length} items`} tc={SCOLOR.Scheduled} bg={SBG.Scheduled} bc={SBDR.Scheduled}/>{ii.filter(it=>it.status==="Completed").length>0&&<Chip label={`${ii.filter(it=>it.status==="Completed").length} done`} tc={SCOLOR.Completed} bg={SBG.Completed} bc={SBDR.Completed}/>}</div>
+                    </div>
+                  );})}
                 </div>
               </div>}
             </>;
@@ -986,88 +676,50 @@ export default function App() {
 
           {view==="items"&&<>
             <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center",marginBottom:16}}>
-              <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search..."
-                style={{fontFamily:"var(--font-sans)",fontSize:13,padding:"7px 11px",borderRadius:8,
-                  border:`1px solid ${C.border}`,background:C.surface,color:C.text,width:200,outline:"none"}}/>
-              {[
-                [["All",...STATUSES],   fStatus,   setFStatus,   "Status"  ],
-                [["All",...PRIORITIES], fPriority, setFPriority, "Priority"],
-                [["All",...CATEGORIES], fCategory, setFCategory, "Category"],
-                [["All",...TEAM],       fAssignee, setFAssignee, "Assignee"],
-              ].map(([opts,val,setter,label])=>(
-                <select key={label} value={val} onChange={e=>setter(e.target.value)}
-                  style={{fontFamily:"var(--font-sans)",fontSize:13,padding:"7px 10px",borderRadius:8,
-                    border:`1px solid ${C.border}`,background:C.surface,color:val==="All"?C.muted:C.text}}>
+              <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search..." style={{fontFamily:"var(--font-sans)",fontSize:13,padding:"7px 11px",borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:C.text,width:200,outline:"none"}}/>
+              {[[["All",...STATUSES],fStatus,setFStatus,"Status"],[["All",...PRIORITIES],fPriority,setFPriority,"Priority"],[["All",...CATEGORIES],fCategory,setFCategory,"Category"],[["All",...TEAM],fAssignee,setFAssignee,"Assignee"]].map(([opts,val,setter,label])=>(
+                <select key={label} value={val} onChange={e=>setter(e.target.value)} style={{fontFamily:"var(--font-sans)",fontSize:13,padding:"7px 10px",borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:val==="All"?C.muted:C.text}}>
                   {opts.map(o=><option key={o} value={o}>{o==="All"?`All ${label==="Status"?"Statuses":label==="Priority"?"Priorities":label==="Category"?"Categories":label+"s"}`:o}</option>)}
                 </select>
               ))}
               <span style={{fontSize:12,color:C.faint}}>{filtered.length} items</span>
             </div>
-            {filtered.length===0
-              ?<div style={{textAlign:"center",padding:"60px 0",color:C.faint,fontSize:13}}>No items match the current filters.</div>
-              :<div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
-                {filtered.map(it=><ItemRow key={it.id} item={it} showProperty
-                  onClick={()=>setSelItem(it)} onAdvance={()=>advance(it)}/>)}
-              </div>}
+            {filtered.length===0?<div style={{textAlign:"center",padding:"60px 0",color:C.faint,fontSize:13}}>No items match the current filters.</div>:
+            <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>{filtered.map(it=><ItemRow key={it.id} item={it} showProperty onClick={()=>setSelItem(it)} onAdvance={()=>advance(it)}/>)}</div>}
           </>}
 
           {view==="inspections"&&<>
             <div style={{fontSize:12,color:C.faint,marginBottom:14}}>{inspections.length} inspections logged</div>
-            {inspections.length===0
-              ?<div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:"48px 24px",textAlign:"center"}}>
-                <div style={{fontSize:15,fontWeight:700,color:C.text,marginBottom:6}}>No inspections yet</div>
-                <div style={{fontSize:13,color:C.muted,marginBottom:20}}>Import your first SnapInspect PDF to get started.</div>
-                <PrimaryBtn onClick={()=>setShowImport(true)}>Import inspection</PrimaryBtn>
-              </div>
-              :<div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
-                {inspections.map((insp,i)=>{
-                  const prop=PROPERTIES.find(p=>p.id===insp.propertyId);
-                  const ii=items.filter(it=>it.inspectionId===insp.id);
-                  return <div key={insp.id} style={{padding:"14px 20px",
-                    borderBottom:i<inspections.length-1?`1px solid ${C.border}`:"none"}}>
-                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
-                      <div>
-                        <div style={{fontSize:13,fontWeight:600,color:C.text}}>{prop?.name}</div>
-                        <div style={{fontSize:11,color:C.faint,marginTop:2}}>{insp.date} · {insp.inspector}</div>
-                      </div>
-                      <div style={{display:"flex",gap:6}}>
-                        <Chip label={`${ii.length} items`} tc={SCOLOR.Scheduled} bg={SBG.Scheduled} bc={SBDR.Scheduled}/>
-                        {ii.filter(it=>it.status==="Completed").length>0&&
-                          <Chip label={`${ii.filter(it=>it.status==="Completed").length} done`}
-                            tc={SCOLOR.Completed} bg={SBG.Completed} bc={SBDR.Completed}/>}
-                      </div>
-                    </div>
-                    <div style={{fontSize:11,color:C.muted,fontStyle:"italic",marginBottom:8,lineHeight:1.5}}>{insp.notes}</div>
-                    <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-                      {ii.slice(0,5).map(it=>(
-                        <button key={it.id} onClick={()=>setSelItem(it)}
-                          style={{fontSize:11,background:C.bg,border:`1px solid ${C.border}`,
-                            borderRadius:6,padding:"3px 9px",cursor:"pointer",color:C.muted,
-                            fontFamily:"var(--font-sans)",maxWidth:220,
-                            overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
-                          {it.description.slice(0,45)}{it.description.length>45?"...":""}
-                        </button>
-                      ))}
-                      {ii.length>5&&<span style={{fontSize:11,color:C.faint,padding:"3px 0"}}>+{ii.length-5} more</span>}
-                    </div>
-                  </div>;
-                })}
-              </div>}
+            {inspections.length===0?
+            <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:"48px 24px",textAlign:"center"}}>
+              <div style={{fontSize:15,fontWeight:700,color:C.text,marginBottom:6}}>No inspections yet</div>
+              <div style={{fontSize:13,color:C.muted,marginBottom:20}}>Import your first SnapInspect PDF to get started.</div>
+              <PrimaryBtn onClick={()=>setShowImport(true)}>Import inspection</PrimaryBtn>
+            </div>:
+            <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
+              {inspections.map((insp,i)=>{
+                const prop=PROPERTIES.find(p=>p.id===insp.propertyId);
+                const ii=items.filter(it=>it.inspectionId===insp.id);
+                return(<div key={insp.id} style={{padding:"14px 20px",borderBottom:i<inspections.length-1?`1px solid ${C.border}`:"none"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+                    <div><div style={{fontSize:13,fontWeight:600,color:C.text}}>{prop?.name}</div><div style={{fontSize:11,color:C.faint,marginTop:2}}>{insp.date} · {insp.inspector}</div></div>
+                    <div style={{display:"flex",gap:6}}><Chip label={`${ii.length} items`} tc={SCOLOR.Scheduled} bg={SBG.Scheduled} bc={SBDR.Scheduled}/>{ii.filter(it=>it.status==="Completed").length>0&&<Chip label={`${ii.filter(it=>it.status==="Completed").length} done`} tc={SCOLOR.Completed} bg={SBG.Completed} bc={SBDR.Completed}/>}</div>
+                  </div>
+                  <div style={{fontSize:11,color:C.muted,fontStyle:"italic",marginBottom:8,lineHeight:1.5}}>{insp.notes}</div>
+                  <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+                    {ii.slice(0,5).map(it=>(<button key={it.id} onClick={()=>setSelItem(it)} style={{fontSize:11,background:C.bg,border:`1px solid ${C.border}`,borderRadius:6,padding:"3px 9px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)",maxWidth:220,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{it.description.slice(0,45)}{it.description.length>45?"...":""}</button>))}
+                    {ii.length>5&&<span style={{fontSize:11,color:C.faint,padding:"3px 0"}}>+{ii.length-5} more</span>}
+                  </div>
+                </div>);
+              })}
+            </div>}
           </>}
         </div>
       </div>
 
-      {/* Overlays */}
-      {selItem&&<ItemDetail item={selItem} inspections={inspections}
-        onUpdate={ch=>updateItem(selItem.id,ch)} onAdvance={()=>advance(selItem)}
-        onClose={()=>setSelItem(null)}/>}
-      {showImport&&<ImportForm selectedPropertyId={selProp}
-        onSubmit={(insp,its)=>{addInspectionAndItems(insp,its);setShowImport(false);}}
-        onClose={()=>setShowImport(false)}/>}
-      {showAdd&&<AddItemForm
-        selectedPropertyId={selProp}
-        onSubmit={it=>{addItem(it);setShowAdd(false);}}
-        onClose={()=>setShowAdd(false)}/>}
+      {selItem&&<ItemDetail item={selItem} inspections={inspections} onUpdate={ch=>updateItem(selItem.id,ch)} onAdvance={()=>advance(selItem)} onClose={()=>setSelItem(null)}/>}
+      {showImport&&<ImportForm selectedPropertyId={selProp} onSubmit={(insp,its)=>{addInspectionAndItems(insp,its);setShowImport(false);}} onClose={()=>setShowImport(false)}/>}
+      {showAdd&&<AddItemForm selectedPropertyId={selProp} onSubmit={it=>{addItem(it);setShowAdd(false);}} onClose={()=>setShowAdd(false)}/>}
     </div>
   );
 }
