@@ -314,7 +314,7 @@ For each item return:
 Also extract from header: propertyName, inspectorName, inspectionDate (YYYY-MM-DD format)
 Respond ONLY with valid JSON, no markdown:
 {"propertyName":"","inspectorName":"","inspectionDate":"","items":[{"description":"","category":"","priority":"","location":""}]}`;
-  fetch("/api/anthropic",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,messages:[{role:"user",content:[{type:"document",source:{type:"base64",media_type:"application/pdf",data:pdfBase64}},{type:"text",text:prompt}]})})})
+  fetch("/api/anthropic",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,messages:[{role:"user",content:[{type:"document",source:{type:"base64",media_type:"application/pdf",data:pdfBase64}},{type:"text",text:prompt}]}]})})
   .then(r=>r.json()).then(data=>{
     const raw=data.content?.find(b=>b.type==="text")?.text||"{}";
     let parsed={items:[]};
