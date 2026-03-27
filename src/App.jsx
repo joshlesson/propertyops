@@ -1064,8 +1064,9 @@ export default function App() {
         onSubmit={(insp,its)=>{addInspectionAndItems(insp,its);setShowImport(false);}}
         onClose={()=>setShowImport(false)}/>}
       {showAdd&&<AddItemForm
-        onSubmit={it=>{addItem(it);setShowAdd(false);}}
-        onClose={()=>setShowAdd(false)}/>}
+  selectedPropertyId={selProp}
+  onSubmit={it=>{addItem(it);setShowAdd(false);}}
+  onClose={()=>setShowAdd(false)}/>}
     </div>
   );
 }
