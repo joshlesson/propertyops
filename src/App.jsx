@@ -2,8 +2,8 @@ import { useState, useMemo, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 
 const sb = createClient(
-  "https://rvpacnokfnvwscxvjsou.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2cGFjbm9rZm52d3NjeHZqc291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNjk4MjEsImV4cCI6MjA4OTg0NTgyMX0.KRYZU6mnQpfXtJjUwVV-QvRf-2Gl72gkQBKc_pq7YOw"
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
 );
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -170,7 +170,6 @@ async function saveItemToDB(item) {
     completed_date: item.completedDate || "",
     created_at: item.createdAt,
     status_history: item.statusHistory,
-    updated_at: nowISO(),
   }, { onConflict: "id" });
   if (error) console.error("saveItemToDB error:", error);
   return error;
@@ -763,7 +762,7 @@ export default function App() {
     if(e1){ setSaveError("Failed to save inspection: "+e1.message); setSaving(false); return; }
     for(const item of newItems){
       const e2=await saveItemToDB(item);
-      if(e2){ setSaveError("Failed to save item: "+e2.message); }
+      if(e2) setSaveError("Failed to save item: "+e2.message);
     }
     setInspections(prev=>[insp,...prev]);
     setItems(prev=>[...newItems,...prev]);
@@ -844,7 +843,6 @@ export default function App() {
       {/* Main */}
       <div style={{flex:1,minWidth:0,display:"flex",flexDirection:"column",overflow:"hidden"}}>
 
-        {/* DB error banner */}
         {dbError&&<div style={{background:"#fef2f2",borderBottom:"1px solid #fecaca",padding:"10px 24px",
           fontSize:13,color:"#b91c1c",flexShrink:0}}>
           Could not connect to database. Check your internet connection and refresh the page.
@@ -878,7 +876,6 @@ export default function App() {
         {/* Body */}
         <div style={{flex:1,overflowY:"auto",padding:"24px 28px"}}>
 
-          {/* Portfolio */}
           {view==="portfolio"&&!selProp&&<>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:12,marginBottom:24}}>
               {[
@@ -924,7 +921,6 @@ export default function App() {
             })}
           </>}
 
-          {/* Property detail */}
           {view==="portfolio"&&selProp&&(()=>{
             const prop=PROPERTIES.find(p=>p.id===selProp);
             const pi=items.filter(i=>i.propertyId===selProp);
@@ -988,7 +984,6 @@ export default function App() {
             </>;
           })()}
 
-          {/* All items */}
           {view==="items"&&<>
             <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center",marginBottom:16}}>
               <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search..."
@@ -1016,7 +1011,6 @@ export default function App() {
               </div>}
           </>}
 
-          {/* Inspections */}
           {view==="inspections"&&<>
             <div style={{fontSize:12,color:C.faint,marginBottom:14}}>{inspections.length} inspections logged</div>
             {inspections.length===0
@@ -1063,7 +1057,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* Overlays */}
       {selItem&&<ItemDetail item={selItem} inspections={inspections}
         onUpdate={ch=>updateItem(selItem.id,ch)} onAdvance={()=>advance(selItem)}
         onClose={()=>setSelItem(null)}/>}
