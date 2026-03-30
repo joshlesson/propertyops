@@ -232,7 +232,7 @@ function FSelect({label,value,onChange,options}) {
 }
 
 function Overlay({children,onClose}) {
-  return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"absolute",inset:0,zIndex:200,background:"rgba(0,0,0,0.3)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"48px 16px",overflowY:"auto"}}>
+  return <div  style={{position:"absolute",inset:0,zIndex:200,background:"rgba(0,0,0,0.3)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"48px 16px",overflowY:"auto"}}>
     <div style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,width:"100%",maxWidth:580,padding:"24px 24px 20px",boxShadow:"0 12px 40px rgba(0,0,0,0.15)"}}>{children}</div>
   </div>;
 }
@@ -243,7 +243,7 @@ function OverlayHeader({title,sub,onClose}) {
   </div>;
 }
 function SlideOver({children,title,sub,onClose}) {
-  return <div style={{position:"absolute",inset:0,zIndex:200,display:"flex"}} onClick={e=>e.target===e.currentTarget&&onClose()}>
+  return <div style={{position:"absolute",inset:0,zIndex:200,display:"flex"}} >
     <div style={{flex:1,background:"rgba(0,0,0,0.2)",cursor:"pointer"}} onClick={onClose}/>
     <div style={{width:500,background:C.surface,overflowY:"auto",borderLeft:`1px solid ${C.border}`,display:"flex",flexDirection:"column",boxShadow:"-4px 0 24px rgba(0,0,0,0.1)"}}>
       <div style={{padding:"20px 24px 16px",borderBottom:`1px solid ${C.border}`,flexShrink:0}}>
@@ -418,7 +418,7 @@ function QuoteModal({item,onClose}) {
   const T="#1a1a1a";const M="#555550";const B="#d0cec8";
   const I={fontFamily:"var(--font-sans)",fontSize:13,width:"100%",borderRadius:7,border:`1px solid ${B}`,background:"#fff",color:T,padding:"8px 10px",boxSizing:"border-box"};
   return (
-    <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"absolute",inset:0,zIndex:300,background:"rgba(0,0,0,0.35)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"52px 16px",overflowY:"auto"}}>
+    <div  style={{position:"absolute",inset:0,zIndex:300,background:"rgba(0,0,0,0.35)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"52px 16px",overflowY:"auto"}}>
       <div style={{background:"#fff",borderRadius:12,border:`1px solid ${B}`,width:"100%",maxWidth:580,padding:"26px 26px 22px",boxShadow:"0 12px 40px rgba(0,0,0,0.15)"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18}}>
           <div><div style={{fontSize:16,fontWeight:700,color:T}}>Request Vendor Quote</div><div style={{fontSize:12,color:M,marginTop:3}}>{prop?.name} - {item.category}</div></div>
