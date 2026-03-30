@@ -539,7 +539,7 @@ function ItemDetail({item,inspections,onUpdate,onAdvance,onClose}) {
           ))}
         </div>
         <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-          <GhostBtn onClick={()=>setEditing(true)}>Edit item</GhostBtn>
+          <GhostBtn onClick={()=>setEditing(true)}>Edit item</GhostBtn><button onClick={()=>deleteItem(item.id)} style={{fontFamily:"var(--font-sans)",fontSize:13,borderRadius:8,padding:"9px 16px",background:"#fff0f0",color:"#e00",border:"1px solid #ffcccc",cursor:"pointer"}}>Delete item</button>
           <button onClick={()=>setShowQuote(true)} style={{fontFamily:"var(--font-sans)",fontSize:13,borderRadius:8,padding:"9px 16px",background:"#eff6ff",color:"#1d4ed8",border:"1px solid #bfdbfe",cursor:"pointer",fontWeight:500}}>Request Quote</button>
         </div>
         {showQuote&&<QuoteModal item={item} onClose={()=>setShowQuote(false)}/>}
@@ -711,7 +711,12 @@ export default function App() {
     if(err){setSaveError("Save failed: "+err.message);setSaving(false);return;}
     setItems(prev=>[item,...prev]);setSaving(false);
   }
-  async function saveTenant(tenant) {
+  async function deleteItem(id) {
+  if(!window.confirm('Delete this item? This cannot be undone.')) return;
+  const {error} = await sb.from('items').delete().eq('id',id);
+  if(!error){setItems(prev=>prev.filter(i=>i.id!==id));setSelItem(null);}else setSaveError('Delete failed: '+error.message);
+}
+async function saveTenant(tenant) {
     setSaving(true);setSaveError("");
     const err=await saveTenantToDB(tenant);
     if(err){setSaveError("Save failed: "+err.message);setSaving(false);return;}
@@ -972,4 +977,6 @@ export default function App() {
     </div>
   );
 }
+
+
 
