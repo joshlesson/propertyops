@@ -90,6 +90,16 @@ const GROUPS = {
   "FDEMBS":"Dembs Roth","FDRGRP":"DR Group","FDRP":"DRP",
   "FLIVGR":"Livonia Group","FNEWBR":"Newburgh",
 };
+const GROUP_COLOR = {
+  "2925":  {bg:"#eff6ff",tc:"#1d4ed8",bc:"#bfdbfe"},
+  "STANSB":{bg:"#f0fdf4",tc:"#15803d",bc:"#bbf7d0"},
+  "FCHRIS":{bg:"#fdf4ff",tc:"#7e22ce",bc:"#e9d5ff"},
+  "FDEMBS":{bg:"#fff7ed",tc:"#c2410c",bc:"#fed7aa"},
+  "FDRGRP":{bg:"#fefce8",tc:"#a16207",bc:"#fde68a"},
+  "FDRP":  {bg:"#fff0f0",tc:"#b91c1c",bc:"#fecaca"},
+  "FLIVGR":{bg:"#f0fdfa",tc:"#0f766e",bc:"#99f6e4"},
+  "FNEWBR":{bg:"#faf5ff",tc:"#6d28d9",bc:"#ddd6fe"},
+};
 
 const C = {
   bg:"#fafafa", surface:"#ffffff", border:"#eaeaea", borderMid:"#d4d4d4",
@@ -709,7 +719,11 @@ export default function App() {
     const filtered=tenants.filter(t=>{
       if(!tenantSearch)return true;
       const q=tenantSearch.toLowerCase();
-      return t.companyName?.toLowerCase().includes(q)||(t.contacts||[]).some(c=>c.name?.toLowerCase().includes(q)||c.email?.toLowerCase().includes(q));
+      const prop=PROPERTIES.find(p=>p.id===t.propertyId);
+      return t.companyName?.toLowerCase().includes(q)
+        ||(t.contacts||[]).some(c=>c.name?.toLowerCase().includes(q)||c.email?.toLowerCase().includes(q))
+        ||prop?.name?.toLowerCase().includes(q)
+        ||prop?.address?.toLowerCase().includes(q);
     });
     return [...filtered].sort((a,b)=>{
       if(tenantSort==="tenant") return (a.companyName||"").localeCompare(b.companyName||"");
@@ -871,10 +885,12 @@ export default function App() {
                   <div key={t.id} style={{padding:"14px 18px",borderBottom:i<filteredTenants.length-1?`1px solid ${C.border}`:"none"}}>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                       <div style={{flex:1,minWidth:0}}>
-                        <div style={{fontSize:14,fontWeight:700,color:C.text}}>{t.companyName}{t.unit&&<span style={{fontSize:12,fontWeight:500,color:C.muted,marginLeft:8}}>{t.unit}</span>}</div>
-                        <div style={{display:"flex",gap:12,alignItems:"center",marginTop:4,flexWrap:"wrap"}}>
-                          <span style={{fontSize:12,fontWeight:600,color:C.text}}>{GROUPS[prop?.group]}</span>
-                          <span style={{fontSize:11,color:C.faint}}>·</span>
+                        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:5,flexWrap:"wrap"}}>
+                          {prop?.group&&<span style={{fontSize:11,fontWeight:600,padding:"2px 9px",borderRadius:99,background:GROUP_COLOR[prop.group]?.bg,color:GROUP_COLOR[prop.group]?.tc,border:`1px solid ${GROUP_COLOR[prop.group]?.bc}`,whiteSpace:"nowrap"}}>{GROUPS[prop.group]}</span>}
+                          <span style={{fontSize:15,fontWeight:800,color:C.text,letterSpacing:"-0.01em"}}>{t.companyName}</span>
+                          {t.unit&&<span style={{fontSize:12,fontWeight:500,color:C.muted}}>{t.unit}</span>}
+                        </div>
+                        <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
                           <span style={{fontSize:12,fontWeight:600,color:C.text}}>{prop?.name}</span>
                           {t.leaseEnd&&<><span style={{fontSize:11,color:C.faint}}>·</span><span style={{fontSize:12,fontWeight:600,color:C.text}}>Exp. {fmtDate(t.leaseEnd)}</span></>}
                         </div>
