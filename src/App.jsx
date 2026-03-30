@@ -639,6 +639,7 @@ export default function App() {
   const [fAssignee,setFAssignee]=useState("All");
   const [search,setSearch]=useState("");
   const [tenantSearch,setTenantSearch]=useState("");
+  const [tenantSort,setTenantSort]=useState("tenant");
 
   useEffect(()=>{
     loadAll().then(result=>{
@@ -699,11 +700,28 @@ export default function App() {
     return true;
   }),[items,fStatus,fPriority,fCategory,fAssignee,selProp,search]);
 
-  const filteredTenants=useMemo(()=>tenants.filter(t=>{
-    if(!tenantSearch)return true;
-    const q=tenantSearch.toLowerCase();
-    return t.companyName?.toLowerCase().includes(q)||(t.contacts||[]).some(c=>c.name?.toLowerCase().includes(q)||c.email?.toLowerCase().includes(q));
-  }),[tenants,tenantSearch]);
+  const filteredTenants=useMemo(()=>{
+    const filtered=tenants.filter(t=>{
+      if(!tenantSearch)return true;
+      const q=tenantSearch.toLowerCase();
+      return t.companyName?.toLowerCase().includes(q)||(t.contacts||[]).some(c=>c.name?.toLowerCase().includes(q)||c.email?.toLowerCase().includes(q));
+    });
+    return [...filtered].sort((a,b)=>{
+      if(tenantSort==="tenant") return (a.companyName||"").localeCompare(b.companyName||"");
+      if(tenantSort==="partnership") {
+        const pa=PROPERTIES.find(p=>p.id===a.propertyId)?.group||"";
+        const pb=PROPERTIES.find(p=>p.id===b.propertyId)?.group||"";
+        return pa.localeCompare(pb)||((a.companyName||"").localeCompare(b.companyName||""));
+      }
+      if(tenantSort==="lease") {
+        if(!a.leaseEnd&&!b.leaseEnd) return 0;
+        if(!a.leaseEnd) return 1;
+        if(!b.leaseEnd) return -1;
+        return a.leaseEnd.localeCompare(b.leaseEnd);
+      }
+      return 0;
+    });
+  },[tenants,tenantSearch,tenantSort]);
 
   const NAV=[{id:"portfolio",label:"Portfolio"},{id:"items",label:"All Items"},{id:"tenants",label:"Tenants"},{id:"inspections",label:"Inspections"}];
 
@@ -832,6 +850,11 @@ export default function App() {
           {view==="tenants"&&<>
             <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:16}}>
               <input value={tenantSearch} onChange={e=>setTenantSearch(e.target.value)} placeholder="Search tenants..." style={{fontFamily:"var(--font-sans)",fontSize:13,padding:"7px 11px",borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:C.text,width:240,outline:"none"}}/>
+              <select value={tenantSort} onChange={e=>setTenantSort(e.target.value)} style={{fontFamily:"var(--font-sans)",fontSize:13,padding:"7px 10px",borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:C.text}}>
+                <option value="tenant">Sort: Tenant A-Z</option>
+                <option value="partnership">Sort: Partnership</option>
+                <option value="lease">Sort: Lease Expiration</option>
+              </select>
               <span style={{fontSize:12,color:C.faint}}>{filteredTenants.length} tenants</span>
             </div>
             {filteredTenants.length===0?
