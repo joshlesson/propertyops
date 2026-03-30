@@ -127,7 +127,7 @@ async function loadAll() {
     }));
     const tenants = (r3.data||[]).map(r=>({
       id:r.id, propertyId:r.property_id, companyName:r.company_name||"",
-      leaseEnd:r.lease_end||"",
+      unit:r.unit||"", leaseEnd:r.lease_end||"",
       contacts:r.contacts||[],
     }));
     return { inspections, items, tenants };
@@ -157,7 +157,7 @@ async function saveItemToDB(item) {
 async function saveTenantToDB(tenant) {
   const { error } = await sb.from("tenants").upsert({
     id:tenant.id, property_id:tenant.propertyId, company_name:tenant.companyName||"",
-    lease_end:tenant.leaseEnd||null,
+    unit:tenant.unit||"", lease_end:tenant.leaseEnd||null,
     contacts:tenant.contacts||[],
   }, { onConflict:"id" });
   if (error) console.error("saveTenantToDB error:", error);
@@ -226,7 +226,7 @@ function SlideOver({children,title,sub,onClose}) {
 function TenantForm({tenant, propertyId, onSave, onClose}) {
   const [form, setForm] = useState(tenant || {
     propertyId: propertyId||PROPERTIES[0].id,
-    companyName:"", leaseEnd:"", contacts:[{name:"",email:"",phone:""}]
+    companyName:"", unit:"", leaseEnd:"", contacts:[{name:"",email:"",phone:""}]
   });
 
   function updateContact(i, field, val) {
@@ -246,8 +246,9 @@ function TenantForm({tenant, propertyId, onSave, onClose}) {
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
         {!tenant&&<FSelect label="Property" value={form.propertyId} onChange={v=>setForm(f=>({...f,propertyId:v}))}
           options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} - ${p.name}`}))}/>}
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
           <FInput label="Company name" value={form.companyName} onChange={v=>setForm(f=>({...f,companyName:v}))} placeholder="Acme Corp"/>
+          <FInput label="Unit / Suite" value={form.unit} onChange={v=>setForm(f=>({...f,unit:v}))} placeholder="Suite 100"/>
           <FInput label="Lease end date" value={form.leaseEnd} onChange={v=>setForm(f=>({...f,leaseEnd:v}))} type="date"/>
         </div>
 
@@ -295,7 +296,7 @@ function TenantsSection({propertyId, tenants, onAdd, onEdit, onDelete}) {
               <div key={t.id} style={{padding:"14px 18px",borderBottom:i<propTenants.length-1?`1px solid ${C.border}`:"none"}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                   <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:14,fontWeight:700,color:C.text}}>{t.companyName}</div>
+                    <div style={{fontSize:14,fontWeight:700,color:C.text}}>{t.companyName}{t.unit&&<span style={{fontSize:12,fontWeight:400,color:C.muted,marginLeft:8}}>{t.unit}</span>}</div>
                     {t.leaseEnd&&<div style={{fontSize:11,color:C.faint,marginTop:2}}>Lease ends: {t.leaseEnd}</div>}
                     {(t.contacts||[]).length>0&&<div style={{marginTop:8,display:"flex",flexDirection:"column",gap:4}}>
                       {t.contacts.map((c,ci)=>(
@@ -842,7 +843,7 @@ export default function App() {
                   <div key={t.id} style={{padding:"14px 18px",borderBottom:i<filteredTenants.length-1?`1px solid ${C.border}`:"none"}}>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                       <div style={{flex:1,minWidth:0}}>
-                        <div style={{fontSize:14,fontWeight:700,color:C.text}}>{t.companyName}</div>
+                        <div style={{fontSize:14,fontWeight:700,color:C.text}}>{t.companyName}{t.unit&&<span style={{fontSize:12,fontWeight:400,color:C.muted,marginLeft:8}}>{t.unit}</span>}</div>
                         <div style={{fontSize:11,color:C.faint,marginTop:2}}>{GROUPS[prop?.group]} - {prop?.name}</div>
                         {t.leaseEnd&&<div style={{fontSize:11,color:C.faint,marginTop:2}}>Lease ends: {t.leaseEnd}</div>}
                         {(t.contacts||[]).length>0&&<div style={{marginTop:8,display:"flex",flexDirection:"column",gap:4}}>
