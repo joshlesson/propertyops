@@ -875,7 +875,7 @@ export default function App() {
                         <div style={{display:"flex",gap:12,alignItems:"center",marginTop:4,flexWrap:"wrap"}}>
                           <span style={{fontSize:12,fontWeight:600,color:C.text}}>{GROUPS[prop?.group]}</span>
                           <span style={{fontSize:11,color:C.faint}}>·</span>
-                          <span style={{fontSize:12,color:C.muted}}>{prop?.name}</span>
+                          <span style={{fontSize:12,fontWeight:600,color:C.text}}>{prop?.name}</span>
                           {t.leaseEnd&&<><span style={{fontSize:11,color:C.faint}}>·</span><span style={{fontSize:12,fontWeight:600,color:C.text}}>Exp. {fmtDate(t.leaseEnd)}</span></>}
                         </div>
                         {(t.contacts||[]).length>0&&<div style={{marginTop:8,display:"flex",flexDirection:"column",gap:4}}>
