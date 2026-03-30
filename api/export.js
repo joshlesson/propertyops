@@ -194,9 +194,7 @@ module.exports = async (req, res) => {
   // Auto-filter on header row
   ws.autoFilter = { from:"A3", to:`H3` };
 
-  res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-  res.setHeader("Content-Disposition", `attachment; filename="PropertyOps_Action_Items_${new Date().toISOString().slice(0,10)}.xlsx"`);
-
   const buffer = await wb.xlsx.writeBuffer();
-  res.status(200).send(buffer);
+  const base64 = Buffer.from(buffer).toString("base64");
+  res.status(200).json({ file: base64 });
 };
