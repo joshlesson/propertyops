@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const sb = createClient(
   "https://rvpacnokfnvwscxvjsou.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2cGFjbm9rZm52d3NjeHZqc291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNjk4MjEsImV4cCI6MjA4OTg0NTgyMX0.KRYZU6mnQpfXtJjUwVV-QvRf-2Gl72gkQBKc_pq7YOw"
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2cGFjbm9rZm52d3NjeHZqc291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNjk4MjEsImV4cCI6MjA4OTg0NTgyMX0.KRYZU6mnQpfXtJjUwVV-QvRf-2Gl72gkQBKc_pq7Yow"
 );
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -115,6 +115,17 @@ function today() { return new Date().toISOString().slice(0,10); }
 
 // ─── Supabase data layer ──────────────────────────────────────────────────────
 
+
+async function doExport(filtered){
+  const mod=await import('https://cdn.sheetjs.com/xlsx-0.20.1/package/xlsx.mjs');
+  const X=mod.default||mod;
+  const getProp=(id)=>PROPERTIES.find(p=>p.id===id);
+  const rows=filtered.map(it=>({'Category':it.category||'','Property':getProp(it.propertyId)?.name||'','Partnership':GROUPS[getProp(it.propertyId)?.group]||'','Description':it.description||'','Notes':it.notes||'','Status':it.status||'','Priority':it.priority||'','Assignee':it.assignee||'','Scheduled':it.scheduledDate||'','Created':it.createdAt?.slice(0,10)||''}));
+  const ws=X.utils.json_to_sheet(rows);
+  const wb=X.utils.book_new();
+  X.utils.book_append_sheet(wb,ws,'Action Items');
+  X.writeFile(wb,'PropertyOps_Items_'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
 async function loadAll() {
   try {
     const [{ data: insps, error: e1 }, { data: its, error: e2 }] = await Promise.all([
@@ -1136,5 +1147,4 @@ export default function App() {
     </div>
   );
 }
-
 
