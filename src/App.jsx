@@ -779,6 +779,14 @@ export default function App() {
           <div style={{display:"flex",gap:8}}>
             {view==="tenants"&&<button onClick={()=>setTenantForm({mode:"add",propertyId:selProp})} style={{fontSize:13,fontWeight:500,background:"transparent",border:`1px solid ${C.border}`,borderRadius:7,padding:"6px 14px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>+ Add tenant</button>}
             {view!=="tenants"&&<button onClick={()=>setShowAdd(true)} style={{fontSize:13,fontWeight:500,background:"transparent",border:`1px solid ${C.border}`,borderRadius:7,padding:"6px 14px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>+ Add item</button>}
+            {view==="items"&&<button onClick={async()=>{
+              const res=await fetch("/api/export",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items:filtered})});
+              const blob=await res.blob();
+              const url=URL.createObjectURL(blob);
+              const a=document.createElement("a");a.href=url;a.download=`PropertyOps_Items_${new Date().toISOString().slice(0,10)}.xlsx`;a.click();
+            }} style={{fontSize:13,fontWeight:500,background:"#f0fff4",border:"1px solid #bbf7d0",borderRadius:7,padding:"6px 14px",cursor:"pointer",color:"#16a34a",fontFamily:"var(--font-sans)"}}>
+              Export to Excel
+            </button>}
             <button onClick={()=>setShowImport(true)} style={{fontSize:13,fontWeight:600,background:C.text,border:"none",borderRadius:7,padding:"7px 16px",cursor:"pointer",color:"#fff",fontFamily:"var(--font-sans)"}}>+ Import inspection</button>
           </div>
         </div>
