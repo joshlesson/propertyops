@@ -197,6 +197,6 @@ module.exports = async (req, res) => {
   res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
   res.setHeader("Content-Disposition", `attachment; filename="PropertyOps_Action_Items_${new Date().toISOString().slice(0,10)}.xlsx"`);
 
-  await wb.xlsx.write(res);
-  res.end();
+  const buffer = await wb.xlsx.writeBuffer();
+  res.status(200).send(buffer);
 };
