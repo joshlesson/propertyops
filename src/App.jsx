@@ -106,6 +106,11 @@ const SBDR   = {"Not Started":"#eaeaea","PO Issued":"#ddd6fe","Scheduled":"#bfdb
 function uid()   { return Math.random().toString(36).slice(2,9); }
 function nowISO(){ return new Date().toISOString(); }
 function today() { return new Date().toISOString().slice(0,10); }
+function fmtDate(iso) {
+  if(!iso) return "";
+  const [y,m,d] = iso.split("-");
+  return `${m}/${d}/${y}`;
+}
 
 async function loadAll() {
   try {
@@ -297,7 +302,7 @@ function TenantsSection({propertyId, tenants, onAdd, onEdit, onDelete}) {
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:14,fontWeight:700,color:C.text}}>{t.companyName}{t.unit&&<span style={{fontSize:12,fontWeight:400,color:C.muted,marginLeft:8}}>{t.unit}</span>}</div>
-                    {t.leaseEnd&&<div style={{fontSize:11,color:C.faint,marginTop:2}}>Lease ends: {t.leaseEnd}</div>}
+                    {t.leaseEnd&&<div style={{fontSize:11,color:C.faint,marginTop:2}}>Lease ends: {fmtDate(t.leaseEnd)}</div>}
                     {(t.contacts||[]).length>0&&<div style={{marginTop:8,display:"flex",flexDirection:"column",gap:4}}>
                       {t.contacts.map((c,ci)=>(
                         <div key={ci} style={{display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
@@ -737,7 +742,7 @@ export default function App() {
         <div style={{height:1,background:"rgba(255,255,255,0.07)",margin:"0 14px 8px"}}/>
         <nav style={{flex:1,padding:"4px 10px"}}>
           {NAV.map(n=>(
-            <button key={n.id} onClick={()=>{setView(n.id);setSelProp(null);}} style={{display:"block",width:"100%",textAlign:"left",padding:"8px 10px",background:view===n.id?"rgba(255,255,255,0.08)":"transparent",border:"none",borderRadius:7,cursor:"pointer",marginBottom:1,fontSize:14,fontWeight:view===n.id?600:400,color:view===n.id?C.sideText:C.sideMuted,transition:"all 0.1s"}}>{n.label}</button>
+            <button key={n.id} onClick={()=>{setView(n.id);setSelProp(null);}} style={{display:"block",width:"100%",textAlign:"left",padding:"8px 10px",background:view===n.id?"rgba(255,255,255,0.12)":"transparent",border:"none",borderRadius:7,cursor:"pointer",marginBottom:1,fontSize:14,fontWeight:view===n.id?700:400,color:view===n.id?"#ffffff":C.sideMuted,letterSpacing:view===n.id?"-0.01em":"normal",transition:"all 0.1s"}}>{n.label}</button>
           ))}
         </nav>
         <div style={{padding:"16px 20px",borderTop:"1px solid rgba(255,255,255,0.08)"}}>
@@ -866,9 +871,13 @@ export default function App() {
                   <div key={t.id} style={{padding:"14px 18px",borderBottom:i<filteredTenants.length-1?`1px solid ${C.border}`:"none"}}>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                       <div style={{flex:1,minWidth:0}}>
-                        <div style={{fontSize:14,fontWeight:700,color:C.text}}>{t.companyName}{t.unit&&<span style={{fontSize:12,fontWeight:400,color:C.muted,marginLeft:8}}>{t.unit}</span>}</div>
-                        <div style={{fontSize:11,color:C.faint,marginTop:2}}>{GROUPS[prop?.group]} - {prop?.name}</div>
-                        {t.leaseEnd&&<div style={{fontSize:11,color:C.faint,marginTop:2}}>Lease ends: {t.leaseEnd}</div>}
+                        <div style={{fontSize:14,fontWeight:700,color:C.text}}>{t.companyName}{t.unit&&<span style={{fontSize:12,fontWeight:500,color:C.muted,marginLeft:8}}>{t.unit}</span>}</div>
+                        <div style={{display:"flex",gap:12,alignItems:"center",marginTop:4,flexWrap:"wrap"}}>
+                          <span style={{fontSize:12,fontWeight:600,color:C.text}}>{GROUPS[prop?.group]}</span>
+                          <span style={{fontSize:11,color:C.faint}}>·</span>
+                          <span style={{fontSize:12,color:C.muted}}>{prop?.name}</span>
+                          {t.leaseEnd&&<><span style={{fontSize:11,color:C.faint}}>·</span><span style={{fontSize:12,fontWeight:600,color:C.text}}>Exp. {fmtDate(t.leaseEnd)}</span></>}
+                        </div>
                         {(t.contacts||[]).length>0&&<div style={{marginTop:8,display:"flex",flexDirection:"column",gap:4}}>
                           {t.contacts.map((c,ci)=>(
                             <div key={ci} style={{display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
