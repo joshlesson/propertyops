@@ -3,36 +3,39 @@ import { createClient } from "@supabase/supabase-js";
 
 const sb = createClient(
   "https://rvpacnokfnvwscxvjsou.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2cGFjbm9rZm52d3NjeHZqc291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNjk4MjEsImV4cCI6MjA4OTg0NTgyMX0.KRYZU6mnQpfXtJjUwVV-QvRf-2Gl72gkQBKc_pq7YOw"
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2cGFjbm9rZm52d3NjeHZqc291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNjk4MjEsImV4cCI6MjA4OTg0NTgyMX0.KRYZU6mnQpfXtJjUwVV-QvRf-2Gl72gkQBKc_pq7Yow"
 );
+
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const TEAM       = ["Kenny Perkins","Josh Lesson","Rob Stout","Spencer Vankirk","Dylan Dembs"];
 const CATEGORIES = ["Signage","Structural","Concrete / Hardscape","Painting / Finishes","Dock / Loading","Roofing","HVAC","Plumbing","Electrical","Landscaping","Safety","Other"];
 const PRIORITIES = ["Critical","High","Medium","Low"];
+
 const CONTACT_EMAIL = "management@dembsroth.com";
 
 const VENDORS = {
-  "Roofing":             [{name:"Lutz Roofing",             contacts:[{person:"Brandon Tomayko",   email:"btomayko@lutzroofing.com"}]}],
-  "Masonry":             [{name:"Custom Masonry",            contacts:[{person:"Jim Borchardt",     email:"jimcustommasonry@gmail.com"}]}],
-  "Concrete / Hardscape":[{name:"Custom Masonry",            contacts:[{person:"Jim Borchardt",     email:"jimcustommasonry@gmail.com"}]},
-                          {name:"S&J Asphalt",               contacts:[{person:"Jeffrey Gossett",   email:"jeff_sandjasphalt@yahoo.com"}]}],
-  "Painting / Finishes": [{name:"Ray's Paint",               contacts:[{person:"Rich Sawulski",     email:"bitnerpaintman@yahoo.com"}]}],
-  "Asphalt":             [{name:"S&J Asphalt",               contacts:[{person:"Jeffrey Gossett",   email:"jeff_sandjasphalt@yahoo.com"}]}],
-  "Striping":            [{name:"TBD",                       contacts:[]}],
-  "Dock / Loading":      [{name:"West Metro Door",           contacts:[{person:"Paul Toner",        email:"office@westmetrodoor.com"}]},
-                          {name:"Raynor Overhead Door",      contacts:[{person:"Charles Wikentiew", email:"clwikentiew@ameritech.net"}]}],
-  "Signage":             [{name:"TBD",                       contacts:[]}],
-  "HVAC":                [{name:"AFM Heating & Cooling",     contacts:[{person:"Kevin Champagne",   email:"kevin@afmheatcool.com"}]}],
-  "Electrical":          [{name:"DMS Electric",              contacts:[{person:"Matt Stabnick",     email:"dmselectric@comcast.net"}]}],
-  "Plumbing":            [{name:"JLM Plumbing",              contacts:[{person:"Jim Marsalese",     email:"jlmplumbingllc@gmail.com"}]}],
-  "Landscaping":         [{name:"Excell Landscape",          contacts:[{person:"Rob Simon",         email:"rob-excell@comcast.net"}]}],
-  "Structural":          [{name:"Inter-Office Construction", contacts:[{person:"Pat Carney",        email:"patcarneyioc@aol.com"}]}],
-  "Safety":              [{name:"TBD",                       contacts:[]}],
-  "Other":               [{name:"Inter-Office Construction", contacts:[{person:"Pat Carney",        email:"patcarneyioc@aol.com"}]}],
+  "Roofing":             [{name:"Lutz Roofing",              email:"btomayko@lutzroofing.com"}],
+  "Masonry":             [{name:"Custom Masonry",             email:"jimcustommasonry@gmail.com"}],
+  "Concrete / Hardscape":[{name:"Custom Masonry",             email:"jimcustommasonry@gmail.com"},
+                          {name:"S&J Asphalt",                email:"jeff_sandjasphalt@yahoo.com"}],
+  "Painting / Finishes": [{name:"Ray's Paint",                email:"bitnerpaintman@yahoo.com"}],
+  "Asphalt":             [{name:"S&J Asphalt",                email:"jeff_sandjasphalt@yahoo.com"}],
+  "Striping":            [{name:"TBD",                        email:""}],
+  "Dock / Loading":      [{name:"West Metro Door",            email:"office@westmetrodoor.com"},
+                          {name:"Raynor Overhead Door",       email:"clwikentiew@ameritech.net"}],
+  "Signage":             [{name:"TBD",                        email:""}],
+  "HVAC":                [{name:"AFM Heating & Cooling",      email:"kevin@afmheatcool.com"}],
+  "Electrical":          [{name:"DMS Electric",               email:"dmselectric@comcast.net"}],
+  "Plumbing":            [{name:"JLM Plumbing",               email:"jlmplumbingllc@gmail.com"}],
+  "Landscaping":         [{name:"Excell Landscape",           email:"rob-excell@comcast.net"}],
+  "Structural":          [{name:"Inter-Office Construction",  email:"patcarneyioc@aol.com"}],
+  "Safety":              [{name:"TBD",                        email:""}],
+  "Other":               [{name:"Inter-Office Construction",  email:"patcarneyioc@aol.com"}],
 };
 
-const STATUSES    = ["Not Started","PO Issued","Scheduled","In Progress","Completed"];
-const STATUS_NEXT = {"Not Started":"PO Issued","PO Issued":"Scheduled","Scheduled":"In Progress","In Progress":"Completed"};
+const STATUSES   = ["Not Started","PO Issued","Scheduled","In Progress","Completed"];
+const STATUS_NEXT= {"Not Started":"PO Issued","PO Issued":"Scheduled","Scheduled":"In Progress","In Progress":"Completed"};
 
 const PROPERTIES = [
   {id:"2925",   name:"2925 Boardwalk",            address:"2925 Boardwalk, Ann Arbor, MI 48104",               owner:"2925 Jagar, L.L.C.",                group:"2925"  },
@@ -90,103 +93,77 @@ const GROUPS = {
   "FDEMBS":"Dembs Roth","FDRGRP":"DR Group","FDRP":"DRP",
   "FLIVGR":"Livonia Group","FNEWBR":"Newburgh",
 };
-const GROUP_COLOR = {
-  "2925":  {bg:"#eff6ff",tc:"#1d4ed8",bc:"#bfdbfe"},
-  "STANSB":{bg:"#f0fdf4",tc:"#15803d",bc:"#bbf7d0"},
-  "FCHRIS":{bg:"#fdf4ff",tc:"#7e22ce",bc:"#e9d5ff"},
-  "FDEMBS":{bg:"#fff7ed",tc:"#c2410c",bc:"#fed7aa"},
-  "FDRGRP":{bg:"#fefce8",tc:"#a16207",bc:"#fde68a"},
-  "FDRP":  {bg:"#fff0f0",tc:"#b91c1c",bc:"#fecaca"},
-  "FLIVGR":{bg:"#f0fdfa",tc:"#0f766e",bc:"#99f6e4"},
-  "FNEWBR":{bg:"#faf5ff",tc:"#6d28d9",bc:"#ddd6fe"},
-};
+
+// ─── Theme ────────────────────────────────────────────────────────────────────
 
 const C = {
   bg:"#fafafa", surface:"#ffffff", border:"#eaeaea", borderMid:"#d4d4d4",
   text:"#000000", muted:"#666666", faint:"#999999",
   sidebar:"#000000", sideText:"#ffffff", sideMuted:"#888888",
 };
-const PCOLOR = {Critical:"#e00",High:"#f5a623",Medium:"#0070f3",Low:"#50c878"};
-const PBG    = {Critical:"#fff0f0",High:"#fff8ee",Medium:"#f0f7ff",Low:"#f0fff4"};
-const PBDR   = {Critical:"#ffcccc",High:"#fde68a",Medium:"#bfdbfe",Low:"#bbf7d0"};
-const SCOLOR = {"Not Started":"#666666","PO Issued":"#7c3aed","Scheduled":"#0070f3","In Progress":"#f5a623","Completed":"#16a34a"};
-const SBG    = {"Not Started":"#fafafa","PO Issued":"#f5f3ff","Scheduled":"#f0f7ff","In Progress":"#fff8ee","Completed":"#f0fff4"};
-const SBDR   = {"Not Started":"#eaeaea","PO Issued":"#ddd6fe","Scheduled":"#bfdbfe","In Progress":"#fde68a","Completed":"#bbf7d0"};
+const PCOLOR={Critical:"#e00","High":"#f5a623",Medium:"#0070f3",Low:"#50c878"};
+const PBG   ={Critical:"#fff0f0",High:"#fff8ee",Medium:"#f0f7ff",Low:"#f0fff4"};
+const PBDR  ={Critical:"#ffcccc",High:"#fde68a",Medium:"#bfdbfe",Low:"#bbf7d0"};
+const SCOLOR={"Not Started":"#666666","PO Issued":"#7c3aed","Scheduled":"#0070f3","In Progress":"#f5a623","Completed":"#0070f3"};
+const SBG   ={"Not Started":"#fafafa","PO Issued":"#f5f3ff","Scheduled":"#f0f7ff","In Progress":"#fff8ee","Completed":"#f0fff4"};
+const SBDR  ={"Not Started":"#eaeaea","PO Issued":"#ddd6fe","Scheduled":"#bfdbfe","In Progress":"#fde68a","Completed":"#bbf7d0"};
 
-function uid()   { return Math.random().toString(36).slice(2,9); }
-function nowISO(){ return new Date().toISOString(); }
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function uid() { return Math.random().toString(36).slice(2,9); }
 function today() { return new Date().toISOString().slice(0,10); }
-function fmtDate(iso) {
-  if(!iso) return "";
-  const [y,m,d] = iso.split("-");
-  return `${m}/${d}/${y}`;
-}
+
+// ─── Supabase data layer ──────────────────────────────────────────────────────
 
 async function loadAll() {
   try {
-    const [r1, r2, r3] = await Promise.all([
+    const [{ data: insps, error: e1 }, { data: its, error: e2 }] = await Promise.all([
       sb.from("inspections").select("*").order("date", { ascending: false }),
       sb.from("items").select("*").order("created_at", { ascending: false }),
-      sb.from("tenants").select("*").order("company_name", { ascending: true }),
     ]);
-    if (r1.error) { console.error("inspections error:", r1.error); return null; }
-    if (r2.error) { console.error("items error:", r2.error); return null; }
-    if (r3.error) { console.error("tenants error:", r3.error); }
-    const inspections = (r1.data||[]).map(r=>({ id:r.id, propertyId:r.property_id, date:r.date, inspector:r.inspector, notes:r.notes }));
-    const items = (r2.data||[]).map(r=>({
-      id:r.id, inspectionId:r.inspection_id, propertyId:r.property_id,
-      description:r.description, category:r.category, priority:r.priority,
-      status:r.status, assignee:r.assignee||"", vendor:r.vendor||"", notes:r.notes||"",
-      scheduledDate:r.scheduled_date||"", completedDate:r.completed_date||"",
-      createdAt:r.created_at, statusHistory:r.status_history||[],
+    if (e1) console.error("inspections load error:", e1);
+    if (e2) console.error("items load error:", e2);
+    const inspections = (insps || []).map(r => ({
+      id: r.id, propertyId: r.property_id, date: r.date,
+      inspector: r.inspector, notes: r.notes,
     }));
-    const tenants = (r3.data||[]).map(r=>({
-      id:r.id, propertyId:r.property_id, companyName:r.company_name||"",
-      unit:r.unit||"", leaseEnd:r.lease_end||"",
-      contacts:r.contacts||[],
+    const items = (its || []).map(r => ({
+      id: r.id, inspectionId: r.inspection_id, propertyId: r.property_id,
+      description: r.description, category: r.category, priority: r.priority,
+      status: r.status, assignee: r.assignee, vendor: r.vendor, notes: r.notes,
+      scheduledDate: r.scheduled_date || "", completedDate: r.completed_date || "",
+      createdAt: r.created_at, statusHistory: r.status_history || [],
     }));
-    return { inspections, items, tenants };
-  } catch(e) { console.error("loadAll error:", e); return null; }
+    return { inspections, items };
+  } catch(e) { console.error("loadAll error", e); return { inspections:[], items:[] }; }
 }
 
 async function saveInspection(insp) {
   const { error } = await sb.from("inspections").upsert({
-    id:insp.id, property_id:insp.propertyId, date:insp.date, inspector:insp.inspector, notes:insp.notes,
-  }, { onConflict:"id" });
+    id: insp.id, property_id: insp.propertyId, date: insp.date,
+    inspector: insp.inspector, notes: insp.notes,
+  });
   if (error) console.error("saveInspection error:", error);
-  return error;
 }
 
 async function saveItemToDB(item) {
   const { error } = await sb.from("items").upsert({
-    id:item.id, inspection_id:item.inspectionId||null, property_id:item.propertyId,
-    description:item.description, category:item.category, priority:item.priority,
-    status:item.status, assignee:item.assignee||"", vendor:item.vendor||"", notes:item.notes||"",
-    scheduled_date:item.scheduledDate||"", completed_date:item.completedDate||"",
-    created_at:item.createdAt, status_history:item.statusHistory,
-  }, { onConflict:"id" });
+    id: item.id, inspection_id: item.inspectionId || null,
+    property_id: item.propertyId, description: item.description,
+    category: item.category, priority: item.priority, status: item.status,
+    assignee: item.assignee, vendor: item.vendor, notes: item.notes,
+    scheduled_date: item.scheduledDate || "", completed_date: item.completedDate || "",
+    created_at: item.createdAt, status_history: item.statusHistory,
+    updated_at: new Date().toISOString(),
+  });
   if (error) console.error("saveItemToDB error:", error);
-  return error;
 }
 
-async function saveTenantToDB(tenant) {
-  const { error } = await sb.from("tenants").upsert({
-    id:tenant.id, property_id:tenant.propertyId, company_name:tenant.companyName||"",
-    unit:tenant.unit||"", lease_end:tenant.leaseEnd||null,
-    contacts:tenant.contacts||[],
-  }, { onConflict:"id" });
-  if (error) console.error("saveTenantToDB error:", error);
-  return error;
-}
-
-async function deleteTenantFromDB(id) {
-  const { error } = await sb.from("tenants").delete().eq("id", id);
-  if (error) console.error("deleteTenant error:", error);
-  return error;
-}
+// ─── Primitives ───────────────────────────────────────────────────────────────
 
 function Chip({label,tc,bg,bc}) {
-  return <span style={{fontSize:11,fontWeight:500,padding:"2px 9px",borderRadius:99,background:bg,color:tc,border:`1px solid ${bc}`,whiteSpace:"nowrap"}}>{label}</span>;
+  return <span style={{fontSize:11,fontWeight:500,padding:"2px 9px",borderRadius:99,
+    background:bg,color:tc,border:`1px solid ${bc}`,whiteSpace:"nowrap"}}>{label}</span>;
 }
 function PPill({p}) { return <Chip label={p} tc={PCOLOR[p]} bg={PBG[p]} bc={PBDR[p]}/>; }
 function SPill({s}) { return <Chip label={s} tc={SCOLOR[s]} bg={SBG[s]} bc={SBDR[s]}/>; }
@@ -194,41 +171,89 @@ function Dot({color,size=7}) {
   return <span style={{display:"inline-block",width:size,height:size,borderRadius:"50%",background:color,flexShrink:0}}/>;
 }
 function ULabel({children}) {
-  return <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:C.faint,marginBottom:5}}>{children}</div>;
+  return <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",
+    color:C.faint,marginBottom:5}}>{children}</div>;
 }
 function PrimaryBtn({children,onClick,disabled,full}) {
-  return <button onClick={disabled?undefined:onClick} style={{fontFamily:"var(--font-sans)",fontSize:13,fontWeight:600,borderRadius:8,padding:"9px 20px",background:disabled?"#d1d0cb":C.text,color:disabled?"#9c9a93":"#fff",border:"none",cursor:disabled?"not-allowed":"pointer",width:full?"100%":"auto"}}>{children}</button>;
+  return <button onClick={disabled?undefined:onClick} style={{
+    fontFamily:"var(--font-sans)",fontSize:13,fontWeight:600,borderRadius:8,
+    padding:"9px 20px",background:disabled?"#d1d0cb":C.text,
+    color:disabled?"#9c9a93":"#fff",border:"none",
+    cursor:disabled?"not-allowed":"pointer",width:full?"100%":"auto"}}>
+    {children}
+  </button>;
 }
 function GhostBtn({children,onClick}) {
-  return <button onClick={onClick} style={{fontFamily:"var(--font-sans)",fontSize:13,borderRadius:8,padding:"9px 16px",background:"transparent",color:C.muted,border:`1px solid ${C.border}`,cursor:"pointer"}}>{children}</button>;
+  return <button onClick={onClick} style={{fontFamily:"var(--font-sans)",fontSize:13,
+    borderRadius:8,padding:"9px 16px",background:"transparent",
+    color:C.muted,border:`1px solid ${C.border}`,cursor:"pointer"}}>
+    {children}
+  </button>;
 }
 function FInput({label,value,onChange,type="text",placeholder,rows}) {
-  const s={fontFamily:"var(--font-sans)",fontSize:13,width:"100%",borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:C.text,padding:"8px 11px",boxSizing:"border-box",outline:"none",resize:rows?"vertical":"none"};
-  return <div>{label&&<ULabel>{label}</ULabel>}{rows?<textarea value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} rows={rows} style={s}/>:<input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} style={s}/>}</div>;
+  const s={fontFamily:"var(--font-sans)",fontSize:13,width:"100%",borderRadius:8,
+    border:`1px solid ${C.border}`,background:C.surface,color:C.text,
+    padding:"8px 11px",boxSizing:"border-box",outline:"none",
+    resize:rows?"vertical":"none"};
+  return <div>
+    {label&&<ULabel>{label}</ULabel>}
+    {rows
+      ? <textarea value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} rows={rows} style={s}/>
+      : <input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} style={s}/>}
+  </div>;
 }
 function FSelect({label,value,onChange,options}) {
-  return <div>{label&&<ULabel>{label}</ULabel>}<select value={value} onChange={e=>onChange(e.target.value)} style={{fontFamily:"var(--font-sans)",fontSize:13,width:"100%",borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:C.text,padding:"8px 11px"}}>{options.map(o=><option key={o.v??o} value={o.v??o}>{o.l??o}</option>)}</select></div>;
+  return <div>
+    {label&&<ULabel>{label}</ULabel>}
+    <select value={value} onChange={e=>onChange(e.target.value)} style={{
+      fontFamily:"var(--font-sans)",fontSize:13,width:"100%",borderRadius:8,
+      border:`1px solid ${C.border}`,background:C.surface,color:C.text,padding:"8px 11px"}}>
+      {options.map(o=><option key={o.v??o} value={o.v??o}>{o.l??o}</option>)}
+    </select>
+  </div>;
 }
 
+// ─── Overlay primitives ───────────────────────────────────────────────────────
+
 function Overlay({children,onClose}) {
-  return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"absolute",inset:0,zIndex:200,background:"rgba(0,0,0,0.3)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"48px 16px",overflowY:"auto"}}>
-    <div style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,width:"100%",maxWidth:580,padding:"24px 24px 20px",boxShadow:"0 12px 40px rgba(0,0,0,0.15)"}}>{children}</div>
+  return <div onClick={e=>e.target===e.currentTarget&&onClose()}
+    style={{position:"absolute",inset:0,zIndex:200,background:"rgba(0,0,0,0.3)",
+      display:"flex",alignItems:"flex-start",justifyContent:"center",
+      padding:"48px 16px",overflowY:"auto"}}>
+    <div style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,
+      width:"100%",maxWidth:560,padding:"24px 24px 20px",
+      boxShadow:"0 12px 40px rgba(0,0,0,0.15)"}}>
+      {children}
+    </div>
   </div>;
 }
+
 function OverlayHeader({title,sub,onClose}) {
   return <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20}}>
-    <div>{sub&&<div style={{fontSize:11,color:C.faint,marginBottom:4}}>{sub}</div>}<div style={{fontSize:16,fontWeight:700,color:C.text}}>{title}</div></div>
-    <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",fontSize:22,color:C.faint,padding:0,marginLeft:12,lineHeight:1}}>x</button>
+    <div>
+      {sub&&<div style={{fontSize:11,color:C.faint,marginBottom:4}}>{sub}</div>}
+      <div style={{fontSize:16,fontWeight:700,color:C.text}}>{title}</div>
+    </div>
+    <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",
+      fontSize:22,color:C.faint,padding:0,marginLeft:12,lineHeight:1}}>x</button>
   </div>;
 }
+
 function SlideOver({children,title,sub,onClose}) {
-  return <div style={{position:"absolute",inset:0,zIndex:200,display:"flex"}} onClick={e=>e.target===e.currentTarget&&onClose()}>
+  return <div style={{position:"absolute",inset:0,zIndex:200,display:"flex"}}
+    onClick={e=>e.target===e.currentTarget&&onClose()}>
     <div style={{flex:1,background:"rgba(0,0,0,0.2)",cursor:"pointer"}} onClick={onClose}/>
-    <div style={{width:500,background:C.surface,overflowY:"auto",borderLeft:`1px solid ${C.border}`,display:"flex",flexDirection:"column",boxShadow:"-4px 0 24px rgba(0,0,0,0.1)"}}>
+    <div style={{width:500,background:C.surface,overflowY:"auto",
+      borderLeft:`1px solid ${C.border}`,display:"flex",flexDirection:"column",
+      boxShadow:"-4px 0 24px rgba(0,0,0,0.1)"}}>
       <div style={{padding:"20px 24px 16px",borderBottom:`1px solid ${C.border}`,flexShrink:0}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-          <div style={{paddingRight:12}}>{sub&&<div style={{fontSize:11,color:C.faint,marginBottom:4}}>{sub}</div>}<div style={{fontSize:15,fontWeight:700,color:C.text,lineHeight:1.35}}>{title}</div></div>
-          <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",fontSize:22,color:C.faint,lineHeight:1,padding:0,flexShrink:0}}>x</button>
+          <div style={{paddingRight:12}}>
+            {sub&&<div style={{fontSize:11,color:C.faint,marginBottom:4}}>{sub}</div>}
+            <div style={{fontSize:15,fontWeight:700,color:C.text,lineHeight:1.35}}>{title}</div>
+          </div>
+          <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",
+            fontSize:22,color:C.faint,lineHeight:1,padding:0,flexShrink:0}}>x</button>
         </div>
       </div>
       <div style={{padding:"20px 24px",flex:1}}>{children}</div>
@@ -236,200 +261,194 @@ function SlideOver({children,title,sub,onClose}) {
   </div>;
 }
 
-// ─── Tenant Form ──────────────────────────────────────────────────────────────
-
-function TenantForm({tenant, propertyId, onSave, onClose}) {
-  const [form, setForm] = useState(tenant || {
-    propertyId: propertyId||PROPERTIES[0].id,
-    companyName:"", unit:"", leaseEnd:"", contacts:[{name:"",email:"",phone:""}]
-  });
-
-  function updateContact(i, field, val) {
-    const updated = form.contacts.map((c,idx)=>idx===i?{...c,[field]:val}:c);
-    setForm(f=>({...f,contacts:updated}));
-  }
-  function addContact() {
-    setForm(f=>({...f,contacts:[...f.contacts,{name:"",email:"",phone:""}]}));
-  }
-  function removeContact(i) {
-    setForm(f=>({...f,contacts:f.contacts.filter((_,idx)=>idx!==i)}));
-  }
-
-  return (
-    <Overlay onClose={onClose}>
-      <OverlayHeader title={tenant?"Edit Tenant":"Add Tenant"} onClose={onClose}/>
-      <div style={{display:"flex",flexDirection:"column",gap:14}}>
-        {!tenant&&<FSelect label="Property" value={form.propertyId} onChange={v=>setForm(f=>({...f,propertyId:v}))}
-          options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} - ${p.name}`}))}/>}
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
-          <FInput label="Company name" value={form.companyName} onChange={v=>setForm(f=>({...f,companyName:v}))} placeholder="Acme Corp"/>
-          <FInput label="Unit / Suite" value={form.unit} onChange={v=>setForm(f=>({...f,unit:v}))} placeholder="Suite 100"/>
-          <FInput label="Lease end date" value={form.leaseEnd} onChange={v=>setForm(f=>({...f,leaseEnd:v}))} type="date"/>
-        </div>
-
-        {/* Contacts */}
-        <div>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-            <ULabel>Contacts</ULabel>
-            <button onClick={addContact} style={{fontSize:11,background:C.bg,border:`1px solid ${C.border}`,borderRadius:6,padding:"3px 10px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>+ Add contact</button>
-          </div>
-          {form.contacts.map((c,i)=>(
-            <div key={i} style={{background:C.bg,border:`1px solid ${C.border}`,borderRadius:8,padding:"12px",marginBottom:8}}>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
-                <FInput label="Name" value={c.name} onChange={v=>updateContact(i,"name",v)} placeholder="John Smith"/>
-                <FInput label="Phone" value={c.phone} onChange={v=>updateContact(i,"phone",v)} placeholder="(734) 555-0100"/>
-              </div>
-              <div style={{display:"flex",gap:8,alignItems:"flex-end"}}>
-                <div style={{flex:1}}><FInput label="Email" value={c.email} onChange={v=>updateContact(i,"email",v)} placeholder="john@acme.com"/></div>
-                {form.contacts.length>1&&<button onClick={()=>removeContact(i)} style={{fontSize:11,background:"#fff0f0",border:"1px solid #ffcccc",borderRadius:6,padding:"8px 10px",cursor:"pointer",color:"#e00",fontFamily:"var(--font-sans)",flexShrink:0,marginBottom:0}}>Remove</button>}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <PrimaryBtn full disabled={!form.companyName.trim()} onClick={()=>onSave({...form,id:tenant?.id||"t"+uid()})}>
-          {tenant?"Save changes":"Add tenant"}
-        </PrimaryBtn>
-      </div>
-    </Overlay>
-  );
-}
-
-// ─── Tenants Section ──────────────────────────────────────────────────────────
-
-function TenantsSection({propertyId, tenants, onAdd, onEdit, onDelete}) {
-  const propTenants = tenants.filter(t=>t.propertyId===propertyId);
-  return (
-    <div style={{marginTop:28}}>
-      <div style={{marginBottom:10}}>
-        <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.09em",textTransform:"uppercase",color:C.faint}}>Tenants</div>
-      </div>
-      {propTenants.length===0
-        ? <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:"20px 18px",textAlign:"center",fontSize:13,color:C.faint}}>No tenants on file for this property.</div>
-        : <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
-            {propTenants.map((t,i)=>(
-              <div key={t.id} style={{padding:"14px 18px",borderBottom:i<propTenants.length-1?`1px solid ${C.border}`:"none"}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:14,fontWeight:700,color:C.text}}>{t.companyName}{t.unit&&<span style={{fontSize:12,fontWeight:400,color:C.muted,marginLeft:8}}>{t.unit}</span>}</div>
-                    {t.leaseEnd&&<div style={{fontSize:11,color:C.faint,marginTop:2}}>Lease ends: {fmtDate(t.leaseEnd)}</div>}
-                    {(t.contacts||[]).length>0&&<div style={{marginTop:8,display:"flex",flexDirection:"column",gap:4}}>
-                      {t.contacts.map((c,ci)=>(
-                        <div key={ci} style={{display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
-                          {c.name&&<span style={{fontSize:12,fontWeight:500,color:C.text}}>{c.name}</span>}
-                          {c.email&&<a href={`mailto:${c.email}`} style={{fontSize:12,color:"#0070f3",textDecoration:"none"}}>{c.email}</a>}
-                          {c.phone&&<span style={{fontSize:12,color:C.muted}}>{c.phone}</span>}
-                        </div>
-                      ))}
-                    </div>}
-                  </div>
-                  <div style={{display:"flex",gap:6,flexShrink:0,marginLeft:12}}>
-                    <button onClick={()=>onEdit(t)} style={{fontSize:11,background:C.bg,border:`1px solid ${C.border}`,borderRadius:6,padding:"4px 10px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>Edit</button>
-                    <button onClick={()=>onDelete(t.id)} style={{fontSize:11,background:"#fff0f0",border:"1px solid #ffcccc",borderRadius:6,padding:"4px 10px",cursor:"pointer",color:"#e00",fontFamily:"var(--font-sans)"}}>Remove</button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>}
-    </div>
-  );
-}
-
 // ─── AI helpers ───────────────────────────────────────────────────────────────
 
 function parsePDF({pdfBase64,propertyId,inspectionId,overrideDate,overrideInspector},setLoading,onResult) {
   setLoading(true);
   const prompt=`You are reviewing a SnapInspect property inspection report for Dembs Development Inc.
+
 Extract ALL actionable repair and maintenance items from this inspection.
+
 RULES:
-- Extract when Condition = "Yes" AND the item name describes a problem
+- Extract when Condition = "Yes" AND the item name describes a problem (repair, damage, needs painting, needs cleaning, etc.)
 - Extract when Condition = "Yes" AND there is a comment
 - Extract when Condition = "Satisfactory" but comment describes an issue
 - Extract ALL items from the Comment Section at the end
 - SKIP: Condition = "No", "N/A", or blank
 - SKIP: "Overhead Doors Tested", "Dock Leveler Tested", "Handicap spaces properly striped", "Irrigation system turned off" when Yes with no damage comment
 - SKIP: "Dumpster Coral", "Dumpster Pad", "Dumpster Gates" when Yes with no damage comment
+
 For each item return:
 - description: item name + comment combined into one clear actionable sentence
 - category: one of ${CATEGORIES.join(", ")}
 - priority: Critical/High/Medium/Low
 - location: specific location if mentioned, else ""
+- photoNote: ""
+
 Also extract from header: propertyName, inspectorName, inspectionDate (YYYY-MM-DD format)
-Respond ONLY with valid JSON, no markdown:
-{"propertyName":"","inspectorName":"","inspectionDate":"","items":[{"description":"","category":"","priority":"","location":""}]}`;
-  fetch("/api/anthropic",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,messages:[{role:"user",content:[{type:"document",source:{type:"base64",media_type:"application/pdf",data:pdfBase64}},{type:"text",text:prompt}]}]})})
-  .then(r=>r.json()).then(data=>{
+
+Respond ONLY with valid JSON, no markdown, no explanation:
+{"propertyName":"","inspectorName":"","inspectionDate":"","items":[{"description":"","category":"","priority":"","location":"","photoNote":""}]}`;
+
+  fetch("/api/anthropic",{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,
+      messages:[{role:"user",content:[
+        {type:"document",source:{type:"base64",media_type:"application/pdf",data:pdfBase64}},
+        {type:"text",text:prompt}
+      ]}]
+    })
+  }).then(r=>r.json()).then(data=>{
+    console.log("API response:", JSON.stringify(data).slice(0,300));
     const raw=data.content?.find(b=>b.type==="text")?.text||"{}";
+    console.log("Raw text:", raw.slice(0,300));
     let parsed={items:[]};
-    try { parsed=JSON.parse(raw.replace(/```json|```/g,"").trim()); } catch(e) { console.error("Parse error:",e); }
-    const ts=nowISO(); const dateOnly=today();
+    try { parsed=JSON.parse(raw.replace(/```json|```/g,"").trim()); }
+    catch(e) { console.error("Parse error:", e, raw); }
+    const now=today();
     const newItems=(parsed.items||[]).map(item=>({
       id:"r"+uid(),inspectionId,propertyId,
       description:item.description+(item.location?` (${item.location})`:""),
       category:item.category,priority:item.priority,
-      status:"Not Started",assignee:"",vendor:"",notes:"",
-      createdAt:ts,scheduledDate:"",completedDate:"",
-      statusHistory:[{status:"Not Started",date:dateOnly}],
+      status:"Not Started",assignee:"",vendor:"",
+      notes:item.photoNote||"",
+      createdAt:now,scheduledDate:"",completedDate:"",
+      statusHistory:[{status:"Not Started",date:now}],
     }));
-    onResult({items:newItems,date:overrideDate||parsed.inspectionDate||dateOnly,inspector:overrideInspector||parsed.inspectorName||"",detectedProperty:parsed.propertyName});
+    onResult({
+      items:newItems,
+      date:overrideDate||parsed.inspectionDate||now,
+      inspector:overrideInspector||parsed.inspectorName||"",
+      detectedProperty:parsed.propertyName,
+    });
     setLoading(false);
-  }).catch(e=>{setLoading(false);console.error("Fetch error:",e);alert("Failed to parse PDF.");});
+  }).catch(e=>{setLoading(false);console.error("Fetch error:",e);alert("Failed to parse PDF. Check your connection.");});
 }
 
 function genAISummary(prop,propItems,cb,setLoading) {
   setLoading(true);
   const open=propItems.filter(i=>i.status!=="Completed");
-  fetch("/api/anthropic",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:180,messages:[{role:"user",content:`Write a 2-3 sentence maintenance status summary for ${prop.name}. Open: ${open.length}. Critical: ${open.filter(i=>i.priority==="Critical").length}. Items: ${propItems.slice(0,5).map(i=>i.description).join("; ")}. Plain professional prose, no bullets.`}]})})
-  .then(r=>r.json()).then(data=>{cb(data.content?.find(b=>b.type==="text")?.text||"");setLoading(false);}).catch(()=>setLoading(false));
+  fetch("/api/anthropic",{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:180,
+      messages:[{role:"user",content:`Write a 2-3 sentence maintenance status summary for ${prop.name}. Open: ${open.length}. Critical: ${open.filter(i=>i.priority==="Critical").length}. Items: ${propItems.slice(0,5).map(i=>i.description).join("; ")}. Plain professional prose, no bullets.`}]
+    })
+  }).then(r=>r.json()).then(data=>{
+    cb(data.content?.find(b=>b.type==="text")?.text||"");
+    setLoading(false);
+  }).catch(()=>setLoading(false));
 }
 
-// ─── Quote Modal ──────────────────────────────────────────────────────────────
+// ─── Quote Request ────────────────────────────────────────────────────────────
 
-function QuoteModal({item,onClose}) {
-  const prop=PROPERTIES.find(p=>p.id===item.propertyId);
-  const categoryVendors=(VENDORS[item.category]||[]).filter(v=>v.name!=="TBD");
-  const [selVendor,setSelVendor]=useState("");
-  const [selEmail,setSelEmail]=useState("");
-  const vendor=categoryVendors.find(v=>v.name===selVendor);
-  const contacts=vendor?.contacts||[];
-  const subject=`Quote Request - ${item.description.slice(0,60)} - ${prop?.name}`;
-  const body=`Hello,\n\nWe are requesting a quote for the following repair at one of our properties.\n\nPROPERTY: ${prop?.name}\nADDRESS: ${prop?.address}\n\nSCOPE OF WORK: ${item.description}\n\nPRIORITY: ${item.priority}\n\nPlease reply with your quote at your earliest convenience. For questions contact us at ${CONTACT_EMAIL}.\n\nThank you,\nDembs Development Inc.\n${CONTACT_EMAIL}`;
-  const T="#1a1a1a";const M="#555550";const B="#d0cec8";
-  const I={fontFamily:"var(--font-sans)",fontSize:13,width:"100%",borderRadius:7,border:`1px solid ${B}`,background:"#fff",color:T,padding:"8px 10px",boxSizing:"border-box"};
+function QuoteModal({item, onClose}) {
+  const prop = PROPERTIES.find(p=>p.id===item.propertyId);
+  const categoryVendors = VENDORS[item.category] || [];
+  const [vendorName, setVendorName] = useState(categoryVendors[0]?.name!=="TBD" ? categoryVendors[0]?.name : "");
+  const [vendorEmail, setVendorEmail] = useState(categoryVendors[0]?.name!=="TBD" ? categoryVendors[0]?.email : "");
+
+  const subject = `Quote Request - ${item.description.slice(0,60)} - ${prop?.name}`;
+  const body = `Hello,
+
+We are requesting a quote for the following repair at one of our properties.
+
+PROPERTY: ${prop?.name}
+ADDRESS: ${prop?.address}
+
+SCOPE OF WORK: ${item.description}
+
+PRIORITY: ${item.priority}
+
+Please reply to this email with your quote at your earliest convenience. For questions, contact us at ${CONTACT_EMAIL}.
+
+Thank you,
+Dembs Development Inc.
+${CONTACT_EMAIL}`;
+
+  function openEmail() {
+    const mailto = `mailto:${vendorEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.open(mailto);
+  }
+
+  const TEXT="#1a1a1a"; const MUTED="#555550"; const BORDER="#d0cec8";
+  const INPUT={fontFamily:"var(--font-sans)",fontSize:13,width:"100%",borderRadius:7,
+    border:`1px solid ${BORDER}`,background:"#fff",color:TEXT,padding:"8px 10px",boxSizing:"border-box"};
+
   return (
-    <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"absolute",inset:0,zIndex:300,background:"rgba(0,0,0,0.35)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"52px 16px",overflowY:"auto"}}>
-      <div style={{background:"#fff",borderRadius:12,border:`1px solid ${B}`,width:"100%",maxWidth:580,padding:"26px 26px 22px",boxShadow:"0 12px 40px rgba(0,0,0,0.15)"}}>
+    <div onClick={e=>e.target===e.currentTarget&&onClose()}
+      style={{position:"absolute",inset:0,zIndex:300,background:"rgba(0,0,0,0.35)",
+        display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"52px 16px",overflowY:"auto"}}>
+      <div style={{background:"#fff",borderRadius:12,border:`1px solid ${BORDER}`,
+        width:"100%",maxWidth:580,padding:"26px 26px 22px",boxShadow:"0 12px 40px rgba(0,0,0,0.15)"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18}}>
-          <div><div style={{fontSize:16,fontWeight:700,color:T}}>Request Vendor Quote</div><div style={{fontSize:12,color:M,marginTop:3}}>{prop?.name} - {item.category}</div></div>
-          <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",fontSize:22,color:M,padding:0}}>x</button>
+          <div>
+            <div style={{fontSize:16,fontWeight:700,color:TEXT}}>Request Vendor Quote</div>
+            <div style={{fontSize:12,color:MUTED,marginTop:3}}>{prop?.name} - {item.category}</div>
+          </div>
+          <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",fontSize:22,color:MUTED,padding:0}}>x</button>
         </div>
+
         <div style={{background:"#f5f4f1",borderRadius:8,padding:"12px 14px",marginBottom:18}}>
           <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:"#9c9a93",marginBottom:6}}>Scope of Work</div>
-          <div style={{fontSize:14,color:T,lineHeight:1.5}}>{item.description}</div>
-          <div style={{marginTop:8}}><span style={{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:99,background:item.priority==="Critical"?"#fef2f2":item.priority==="High"?"#fefce8":"#eff6ff",color:item.priority==="Critical"?"#b91c1c":item.priority==="High"?"#b45309":"#1d4ed8",border:`1px solid ${item.priority==="Critical"?"#fecaca":item.priority==="High"?"#fde68a":"#bfdbfe"}`}}>{item.priority} Priority</span></div>
+          <div style={{fontSize:14,color:TEXT,lineHeight:1.5}}>{item.description}</div>
+          <div style={{marginTop:8,display:"flex",gap:8}}>
+            <span style={{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:99,
+              background:item.priority==="Critical"?"#fef2f2":item.priority==="High"?"#fefce8":"#eff6ff",
+              color:item.priority==="Critical"?"#b91c1c":item.priority==="High"?"#b45309":"#1d4ed8",
+              border:`1px solid ${item.priority==="Critical"?"#fecaca":item.priority==="High"?"#fde68a":"#bfdbfe"}`}}>
+              {item.priority} Priority
+            </span>
+          </div>
         </div>
-        <div style={{marginBottom:18}}>
-          <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:"#9c9a93",marginBottom:10}}>Vendor</div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-            <div><div style={{fontSize:11,color:M,marginBottom:4}}>Company</div>
-              {categoryVendors.length>0?<select value={selVendor} onChange={e=>{setSelVendor(e.target.value);setSelEmail("");}} style={I}><option value="">Select vendor...</option>{categoryVendors.map(v=><option key={v.name} value={v.name}>{v.name}</option>)}</select>:<input placeholder="No vendors on file" style={{...I,color:"#aaa"}} disabled/>}
+
+        <div style={{marginBottom:14}}>
+          <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:"#9c9a93",marginBottom:8}}>Vendor</div>
+          {categoryVendors.length>0 && categoryVendors[0].name!=="TBD" && (
+            <div style={{marginBottom:10}}>
+              <select value={vendorName} onChange={e=>{
+                const v=categoryVendors.find(v=>v.name===e.target.value);
+                setVendorName(e.target.value);
+                setVendorEmail(v?.email||"");
+              }} style={INPUT}>
+                {categoryVendors.map(v=><option key={v.name} value={v.name}>{v.name}</option>)}
+              </select>
             </div>
-            <div><div style={{fontSize:11,color:M,marginBottom:4}}>Contact email</div>
-              {selVendor&&contacts.length>0?<select value={selEmail} onChange={e=>setSelEmail(e.target.value)} style={I}><option value="">Select contact...</option>{contacts.map(c=><option key={c.email} value={c.email}>{c.person} - {c.email}</option>)}</select>:<input placeholder={selVendor?"No contacts on file":"Select vendor first"} style={{...I,color:"#aaa"}} disabled/>}
+          )}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+            <div>
+              <div style={{fontSize:11,color:MUTED,marginBottom:4}}>Vendor name</div>
+              <input value={vendorName} onChange={e=>setVendorName(e.target.value)}
+                placeholder="Enter vendor name" style={INPUT}/>
+            </div>
+            <div>
+              <div style={{fontSize:11,color:MUTED,marginBottom:4}}>Vendor email</div>
+              <input value={vendorEmail} onChange={e=>setVendorEmail(e.target.value)}
+                placeholder="vendor@example.com" style={INPUT}/>
             </div>
           </div>
         </div>
+
         <div style={{marginBottom:18}}>
           <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:"#9c9a93",marginBottom:8}}>Email Preview</div>
-          <div style={{background:"#f5f4f1",borderRadius:8,padding:"12px 14px",fontSize:12,color:M,lineHeight:1.7,maxHeight:180,overflowY:"auto"}}>
-            <div><strong style={{color:T}}>To:</strong> {selEmail||"(select a vendor email above)"}</div>
-            <div><strong style={{color:T}}>Subject:</strong> {subject}</div>
+          <div style={{background:"#f5f4f1",borderRadius:8,padding:"12px 14px",fontSize:12,color:MUTED,lineHeight:1.7,maxHeight:180,overflowY:"auto"}}>
+            <div><strong style={{color:TEXT}}>To:</strong> {vendorEmail||"(vendor email)"}</div>
+            <div><strong style={{color:TEXT}}>Subject:</strong> {subject}</div>
             <div style={{marginTop:8,whiteSpace:"pre-wrap"}}>{body}</div>
           </div>
         </div>
+
         <div style={{display:"flex",gap:8}}>
-          <button onClick={()=>window.open(`mailto:${selEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`)} disabled={!selEmail} style={{flex:1,fontSize:13,fontWeight:600,borderRadius:8,padding:"10px",background:selEmail?"#1a1a1a":"#d1d0cb",color:selEmail?"#fff":"#9c9a93",border:"none",cursor:selEmail?"pointer":"not-allowed"}}>Open in Email Client</button>
-          <button onClick={onClose} style={{fontSize:13,borderRadius:8,padding:"10px 16px",background:"transparent",color:M,border:`1px solid ${B}`,cursor:"pointer"}}>Cancel</button>
+          <button onClick={openEmail} disabled={!vendorEmail}
+            style={{flex:1,fontSize:13,fontWeight:600,borderRadius:8,padding:"10px",
+              background:vendorEmail?"#1a1a1a":"#d1d0cb",color:vendorEmail?"#fff":"#9c9a93",
+              border:"none",cursor:vendorEmail?"pointer":"not-allowed"}}>
+            Open in Email Client
+          </button>
+          <button onClick={onClose}
+            style={{fontSize:13,borderRadius:8,padding:"10px 16px",
+              background:"transparent",color:MUTED,border:`1px solid ${BORDER}`,cursor:"pointer"}}>
+            Cancel
+          </button>
         </div>
       </div>
     </div>
@@ -438,24 +457,30 @@ function QuoteModal({item,onClose}) {
 
 // ─── Components ───────────────────────────────────────────────────────────────
 
-function PropRow({prop,items,inspections,tenants,isLast,onClick}) {
+function PropRow({prop,items,inspections,isLast,onClick}) {
   const [hov,setHov]=useState(false);
   const pi=items.filter(it=>it.propertyId===prop.id);
   const oi=pi.filter(it=>it.status!=="Completed");
   const cr=oi.filter(it=>it.priority==="Critical").length;
   const ins=inspections.filter(it=>it.propertyId===prop.id).length;
-  const ten=tenants.filter(t=>t.propertyId===prop.id).length;
   return (
-    <div onClick={onClick} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)} style={{display:"flex",alignItems:"center",gap:16,padding:"11px 18px",background:hov?C.bg:C.surface,cursor:"pointer",borderBottom:isLast?"none":"1px solid #eaeaea",transition:"background 0.1s"}}>
+    <div onClick={onClick} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+      style={{display:"flex",alignItems:"center",gap:16,padding:"11px 18px",
+        background:hov?C.bg:C.surface,cursor:"pointer",
+        borderBottom:isLast?"none":"1px solid #eaeaea",transition:"background 0.1s"}}>
       <div style={{flex:1,minWidth:0}}>
-        <div style={{fontSize:15,fontWeight:600,color:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{prop.name}</div>
-        <div style={{fontSize:12,color:C.muted,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{prop.owner}</div>
+        <div style={{fontSize:15,fontWeight:600,color:C.text,
+          overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{prop.name}</div>
+        <div style={{fontSize:12,color:C.muted,marginTop:1,
+          overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{prop.owner}</div>
       </div>
       <div style={{display:"flex",gap:14,alignItems:"center",flexShrink:0}}>
         {cr>0&&<Chip label={`${cr} critical`} tc={PCOLOR.Critical} bg={PBG.Critical} bc={PBDR.Critical}/>}
-        {[[oi.length,"open",oi.length>0?C.text:C.faint],[pi.filter(it=>it.status==="Completed").length,"done",C.faint],[ins,"insp.",C.faint]].map(([n,l,cl])=>(
+        {[[oi.length,"open",oi.length>0?C.text:C.faint],
+          [pi.filter(it=>it.status==="Completed").length,"done",C.faint],
+          [ins,"insp.",C.faint]].map(([n,l,c])=>(
           <div key={l} style={{textAlign:"right",minWidth:28}}>
-            <div style={{fontSize:16,fontWeight:700,color:cl,lineHeight:1}}>{n}</div>
+            <div style={{fontSize:16,fontWeight:700,color:c,lineHeight:1}}>{n}</div>
             <div style={{fontSize:10,color:C.faint,marginTop:2}}>{l}</div>
           </div>
         ))}
@@ -469,19 +494,37 @@ function ItemRow({item,showProperty,onClick,onAdvance}) {
   const prop=PROPERTIES.find(p=>p.id===item.propertyId);
   const next=STATUS_NEXT[item.status];
   return (
-    <div onClick={onClick} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)} style={{display:"flex",alignItems:"center",gap:14,padding:"11px 18px",background:hov?C.bg:C.surface,borderBottom:`1px solid ${C.border}`,cursor:"pointer",transition:"background 0.1s"}}>
+    <div onClick={onClick} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+      style={{display:"flex",alignItems:"center",gap:14,padding:"11px 18px",
+        background:hov?C.bg:C.surface,borderBottom:`1px solid ${C.border}`,
+        cursor:"pointer",transition:"background 0.1s"}}>
       <div style={{flex:1,minWidth:0}}>
-        <div style={{fontSize:14,fontWeight:600,color:C.text,marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.description}</div>
+        <div style={{fontSize:14,fontWeight:600,color:C.text,marginBottom:3,
+          overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.description}</div>
         <div style={{display:"flex",gap:5,alignItems:"center",flexWrap:"wrap"}}>
-          {showProperty&&<><span style={{fontSize:12,color:C.muted}}>{GROUPS[prop?.group]}</span><span style={{color:C.border,fontSize:11}}>·</span></>}
+          {showProperty&&<>
+            <span style={{fontSize:12,color:C.muted}}>{GROUPS[prop?.group]}</span>
+            <span style={{color:C.border,fontSize:11}}>·</span>
+          </>}
           <span style={{fontSize:11,color:C.muted}}>{item.category}</span>
-          {item.assignee&&<><span style={{color:C.border,fontSize:11}}>·</span><span style={{fontSize:11,color:C.muted}}>{item.assignee.split(" ")[0]}</span></>}
-          {item.scheduledDate&&<><span style={{color:C.border,fontSize:11}}>·</span><span style={{fontSize:11,color:C.muted}}>{item.scheduledDate}</span></>}
+          {item.assignee&&<>
+            <span style={{color:C.border,fontSize:11}}>·</span>
+            <span style={{fontSize:11,color:C.muted}}>{item.assignee.split(" ")[0]}</span>
+          </>}
+          {item.scheduledDate&&<>
+            <span style={{color:C.border,fontSize:11}}>·</span>
+            <span style={{fontSize:11,color:C.muted}}>{item.scheduledDate}</span>
+          </>}
         </div>
       </div>
       <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0}}>
-        <PPill p={item.priority}/><SPill s={item.status}/>
-        {next&&<button onClick={e=>{e.stopPropagation();onAdvance();}} style={{fontSize:11,background:"none",border:`1px solid ${C.border}`,borderRadius:6,padding:"3px 10px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)",whiteSpace:"nowrap"}}>{next}</button>}
+        <PPill p={item.priority}/>
+        <SPill s={item.status}/>
+        {next&&<button onClick={e=>{e.stopPropagation();onAdvance();}} style={{
+          fontSize:11,background:"none",border:`1px solid ${C.border}`,borderRadius:6,
+          padding:"3px 10px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)",whiteSpace:"nowrap"}}>
+          {next}
+        </button>}
       </div>
     </div>
   );
@@ -495,44 +538,79 @@ function ItemDetail({item,inspections,onUpdate,onAdvance,onClose}) {
   const insp=inspections.find(i=>i.id===item.inspectionId);
   const next=STATUS_NEXT[item.status];
   function save(){onUpdate(form);setEditing(false);}
+
   return (
-    <SlideOver onClose={onClose} sub={`${GROUPS[prop?.group]} - ${prop?.name}`} title={item.description}>
-      <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:18}}><PPill p={item.priority}/><SPill s={item.status}/><Chip label={item.category} tc={C.muted} bg={C.bg} bc={C.border}/></div>
-      {next&&<button onClick={onAdvance} style={{width:"100%",marginBottom:20,padding:"10px 16px",background:SBG[next],color:SCOLOR[next],border:`1px solid ${SBDR[next]}`,borderRadius:8,cursor:"pointer",fontFamily:"var(--font-sans)",fontSize:13,fontWeight:600}}>Mark as {next}</button>}
-      {!editing?<>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:1,marginBottom:20,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
-          {[["Assignee",item.assignee||"Unassigned"],["Vendor",item.vendor||"-"],["Created",item.createdAt?.slice(0,10)||""],["Scheduled",item.scheduledDate||"-"],["Completed",item.completedDate||"-"],["Inspection",insp?.date||"Manual"]].map(([label,val],i)=>(
+    <SlideOver onClose={onClose}
+      sub={`${GROUPS[prop?.group]} - ${prop?.name}`}
+      title={item.description}>
+
+      <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:18}}>
+        <PPill p={item.priority}/><SPill s={item.status}/>
+        <Chip label={item.category} tc={C.muted} bg={C.bg} bc={C.border}/>
+      </div>
+
+      {next&&<button onClick={onAdvance} style={{width:"100%",marginBottom:20,padding:"10px 16px",
+        background:SBG[next],color:SCOLOR[next],border:`1px solid ${SBDR[next]}`,
+        borderRadius:8,cursor:"pointer",fontFamily:"var(--font-sans)",fontSize:13,fontWeight:600}}>
+        Mark as {next}
+      </button>}
+
+      {!editing ? <>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:1,marginBottom:20,
+          border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
+          {[["Assignee",item.assignee||"Unassigned"],["Vendor",item.vendor||"-"],
+            ["Created",item.createdAt],["Scheduled",item.scheduledDate||"-"],
+            ["Completed",item.completedDate||"-"],["Inspection",insp?.date||"Manual"]
+          ].map(([label,val],i)=>(
             <div key={label} style={{padding:"11px 14px",background:i%2===0?C.bg:C.surface}}>
-              <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:C.faint,marginBottom:4}}>{label}</div>
+              <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",
+                color:C.faint,marginBottom:4}}>{label}</div>
               <div style={{fontSize:14,color:C.text,fontWeight:600}}>{val}</div>
             </div>
           ))}
         </div>
-        {item.notes&&<div style={{background:C.bg,borderRadius:8,padding:"12px 14px",marginBottom:20,borderLeft:`3px solid ${C.borderMid}`}}><ULabel>Notes</ULabel><div style={{fontSize:14,color:C.text,lineHeight:1.7}}>{item.notes}</div></div>}
+
+        {item.notes&&<div style={{background:C.bg,borderRadius:8,padding:"12px 14px",marginBottom:20,
+          borderLeft:`3px solid ${C.borderMid}`}}>
+          <ULabel>Notes</ULabel>
+          <div style={{fontSize:14,color:C.text,lineHeight:1.7}}>{item.notes}</div>
+        </div>}
+
         <ULabel>Status history</ULabel>
         <div style={{marginBottom:20}}>
           {item.statusHistory.map((h,i)=>(
-            <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:i<item.statusHistory.length-1?`1px solid ${C.border}`:"none"}}>
-              <Dot color={SCOLOR[h.status]} size={8}/><span style={{fontSize:14,color:C.text,fontWeight:600,flex:1}}>{h.status}</span><span style={{fontSize:13,color:C.faint}}>{h.date}</span>
+            <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",
+              borderBottom:i<item.statusHistory.length-1?`1px solid ${C.border}`:"none"}}>
+              <Dot color={SCOLOR[h.status]} size={8}/>
+              <span style={{fontSize:14,color:C.text,fontWeight:600,flex:1}}>{h.status}</span>
+              <span style={{fontSize:13,color:C.faint}}>{h.date}</span>
             </div>
           ))}
         </div>
         <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
           <GhostBtn onClick={()=>setEditing(true)}>Edit item</GhostBtn>
-          <button onClick={()=>setShowQuote(true)} style={{fontFamily:"var(--font-sans)",fontSize:13,borderRadius:8,padding:"9px 16px",background:"#eff6ff",color:"#1d4ed8",border:"1px solid #bfdbfe",cursor:"pointer",fontWeight:500}}>Request Quote</button>
+          <button onClick={()=>setShowQuote(true)} style={{fontFamily:"var(--font-sans)",fontSize:13,
+            borderRadius:8,padding:"9px 16px",background:"#eff6ff",
+            color:"#1d4ed8",border:"1px solid #bfdbfe",cursor:"pointer",fontWeight:500}}>
+            Request Quote
+          </button>
         </div>
         {showQuote&&<QuoteModal item={item} onClose={()=>setShowQuote(false)}/>}
-      </>:(
+      </> : (
         <div style={{display:"flex",flexDirection:"column",gap:14}}>
           <FInput label="Description" value={form.description} onChange={v=>setForm(f=>({...f,description:v}))} rows={2}/>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-            <FSelect label="Assignee" value={form.assignee} onChange={v=>setForm(f=>({...f,assignee:v}))} options={[{v:"",l:"Unassigned"},...TEAM.map(t=>({v:t,l:t}))]}/>
+            <FSelect label="Assignee" value={form.assignee} onChange={v=>setForm(f=>({...f,assignee:v}))}
+              options={[{v:"",l:"Unassigned"},...TEAM.map(t=>({v:t,l:t}))]}/>
             <FSelect label="Priority" value={form.priority} onChange={v=>setForm(f=>({...f,priority:v}))} options={PRIORITIES}/>
             <FInput label="Vendor" value={form.vendor} onChange={v=>setForm(f=>({...f,vendor:v}))} placeholder="Optional"/>
             <FInput label="Scheduled date" value={form.scheduledDate} onChange={v=>setForm(f=>({...f,scheduledDate:v}))} type="date"/>
           </div>
           <FInput label="Notes" value={form.notes} onChange={v=>setForm(f=>({...f,notes:v}))} placeholder="Optional..." rows={3}/>
-          <div style={{display:"flex",gap:8,marginTop:4}}><PrimaryBtn onClick={save}>Save changes</PrimaryBtn><GhostBtn onClick={()=>setEditing(false)}>Cancel</GhostBtn></div>
+          <div style={{display:"flex",gap:8,marginTop:4}}>
+            <PrimaryBtn onClick={save}>Save changes</PrimaryBtn>
+            <GhostBtn onClick={()=>setEditing(false)}>Cancel</GhostBtn>
+          </div>
         </div>
       )}
     </SlideOver>
@@ -543,10 +621,15 @@ function AISummaryCard({prop,propItems}) {
   const [text,setText]=useState("");
   const [loading,setLoading]=useState(false);
   return (
-    <div style={{background:C.bg,border:`1px solid ${C.border}`,borderRadius:10,padding:"14px 18px",marginBottom:24}}>
+    <div style={{background:C.bg,border:`1px solid ${C.border}`,borderRadius:10,
+      padding:"14px 18px",marginBottom:24}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:text?10:0}}>
         <ULabel>AI Status Summary</ULabel>
-        <button onClick={()=>genAISummary(prop,propItems,setText,setLoading)} disabled={loading} style={{fontSize:11,background:C.surface,border:`1px solid ${C.border}`,borderRadius:6,padding:"4px 10px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>{loading?"Generating...":text?"Refresh":"Generate"}</button>
+        <button onClick={()=>genAISummary(prop,propItems,setText,setLoading)} disabled={loading}
+          style={{fontSize:11,background:C.surface,border:`1px solid ${C.border}`,borderRadius:6,
+            padding:"4px 10px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>
+          {loading?"Generating...":text?"Refresh":"Generate"}
+        </button>
       </div>
       {text&&<p style={{fontSize:13,color:C.text,margin:0,lineHeight:1.7}}>{text}</p>}
     </div>
@@ -562,72 +645,128 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}) {
   const [loading,setLoading]=useState(false);
   const [preview,setPreview]=useState(null);
   const [dragOver,setDragOver]=useState(false);
+
   function handleFile(file) {
     if(!file||file.type!=="application/pdf"){alert("Please upload a PDF.");return;}
     setFileName(file.name);
     const r=new FileReader();
     r.onload=e=>{
       const base64=e.target.result.split(",")[1];
-      const sizeInMB=(base64.length*0.75)/(1024*1024);
-      if(sizeInMB>4){alert(`PDF is ${sizeInMB.toFixed(1)}MB - compress at smallpdf.com first.`);return;}
+      const sizeInMB = (base64.length * 0.75) / (1024 * 1024);
+      if(sizeInMB > 4) {
+        alert(`This PDF is ${sizeInMB.toFixed(1)}MB which may be too large. Try compressing it at smallpdf.com first, then re-upload.`);
+        return;
+      }
       setPdfBase64(base64);
     };
     r.readAsDataURL(file);
   }
+
   const prop=PROPERTIES.find(p=>p.id===propertyId);
+
   if(preview) return (
     <Overlay onClose={onClose}>
-      <OverlayHeader title="Review extracted items" sub={`${preview.items.length} items from ${fileName}`} onClose={onClose}/>
-      {preview.detectedProperty&&<div style={{fontSize:12,color:C.muted,background:C.bg,padding:"8px 12px",borderRadius:8,border:`1px solid ${C.border}`,marginBottom:14}}>PDF property: <strong style={{color:C.text}}>{preview.detectedProperty}</strong> - {prop?.name}</div>}
-      <div style={{maxHeight:420,overflowY:"auto",marginBottom:16,border:`1px solid ${C.border}`,borderRadius:10}}>
+      <OverlayHeader title="Review extracted items"
+        sub={`${preview.items.length} items from ${fileName}`} onClose={onClose}/>
+      {preview.detectedProperty&&<div style={{fontSize:12,color:C.muted,background:C.bg,
+        padding:"8px 12px",borderRadius:8,border:`1px solid ${C.border}`,marginBottom:14}}>
+        PDF property: <strong style={{color:C.text}}>{preview.detectedProperty}</strong> - {prop?.name}
+      </div>}
+      <div style={{maxHeight:420,overflowY:"auto",marginBottom:16,
+        border:`1px solid ${C.border}`,borderRadius:10}}>
         {preview.items.map((item,i)=>(
-          <div key={i} style={{padding:"11px 16px",background:i%2===0?C.surface:C.bg,borderBottom:i<preview.items.length-1?`1px solid ${C.border}`:"none"}}>
+          <div key={i} style={{padding:"11px 16px",background:i%2===0?C.surface:C.bg,
+            borderBottom:i<preview.items.length-1?`1px solid ${C.border}`:"none"}}>
             <div style={{fontSize:13,fontWeight:500,color:C.text,marginBottom:6,lineHeight:1.4}}>{item.description}</div>
-            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}><PPill p={item.priority}/><Chip label={item.category} tc={C.muted} bg={C.bg} bc={C.border}/></div>
+            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+              <PPill p={item.priority}/>
+              <Chip label={item.category} tc={C.muted} bg={C.bg} bc={C.border}/>
+              {item.notes&&<span style={{fontSize:11,color:C.muted,fontStyle:"italic"}}>{item.notes}</span>}
+            </div>
           </div>
         ))}
       </div>
       <div style={{display:"flex",gap:8}}>
-        <PrimaryBtn onClick={()=>{onSubmit({id:"i"+uid(),propertyId,date:overrideDate||preview.date,inspector:overrideInspector||preview.inspector||"SnapInspect",notes:`SnapInspect PDF: ${fileName}`},preview.items);}}>Confirm and add {preview.items.length} items</PrimaryBtn>
+        <PrimaryBtn onClick={()=>{
+          onSubmit({id:"i"+uid(),propertyId,
+            date:overrideDate||preview.date,
+            inspector:overrideInspector||preview.inspector||"SnapInspect",
+            notes:`SnapInspect PDF: ${fileName}`},
+            preview.items);
+        }}>Confirm and add {preview.items.length} items</PrimaryBtn>
         <GhostBtn onClick={()=>setPreview(null)}>Back</GhostBtn>
       </div>
     </Overlay>
   );
+
   return (
     <Overlay onClose={onClose}>
-      <OverlayHeader title="Import SnapInspect report" sub="Notes and photos extracted automatically" onClose={onClose}/>
+      <OverlayHeader title="Import SnapInspect report"
+        sub="Notes and photos extracted automatically" onClose={onClose}/>
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
-        <div onDragOver={e=>{e.preventDefault();setDragOver(true);}} onDragLeave={()=>setDragOver(false)} onDrop={e=>{e.preventDefault();setDragOver(false);handleFile(e.dataTransfer.files[0]);}} onClick={()=>document.getElementById("pdf-upload-input").click()} style={{border:`2px dashed ${dragOver?C.text:C.borderMid}`,borderRadius:10,padding:"28px 20px",textAlign:"center",cursor:"pointer",background:dragOver?C.bg:"transparent",transition:"all 0.15s"}}>
-          <input id="pdf-upload-input" type="file" accept="application/pdf" style={{display:"none"}} onChange={e=>handleFile(e.target.files[0])}/>
-          {pdfBase64?<><div style={{fontSize:13,fontWeight:600,color:C.text}}>{fileName}</div><div style={{fontSize:11,color:C.faint,marginTop:2}}>Click to change</div></>:<><div style={{fontSize:13,fontWeight:600,color:C.text}}>Drop SnapInspect PDF here</div><div style={{fontSize:11,color:C.faint,marginTop:3}}>or click to browse</div></>}
+        <div onDragOver={e=>{e.preventDefault();setDragOver(true);}}
+          onDragLeave={()=>setDragOver(false)}
+          onDrop={e=>{e.preventDefault();setDragOver(false);handleFile(e.dataTransfer.files[0]);}}
+          onClick={()=>document.getElementById("pdf-upload-input").click()}
+          style={{border:`2px dashed ${dragOver?C.text:C.borderMid}`,borderRadius:10,
+            padding:"28px 20px",textAlign:"center",cursor:"pointer",
+            background:dragOver?C.bg:"transparent",transition:"all 0.15s"}}>
+          <input id="pdf-upload-input" type="file" accept="application/pdf" style={{display:"none"}}
+            onChange={e=>handleFile(e.target.files[0])}/>
+          {pdfBase64?<>
+            <div style={{fontSize:28,marginBottom:6}}>PDF</div>
+            <div style={{fontSize:13,fontWeight:600,color:C.text}}>{fileName}</div>
+            <div style={{fontSize:11,color:C.faint,marginTop:2}}>Click to change</div>
+          </>:<>
+            <div style={{fontSize:22,color:C.faint,marginBottom:8}}>Upload</div>
+            <div style={{fontSize:13,fontWeight:600,color:C.text}}>Drop SnapInspect PDF here</div>
+            <div style={{fontSize:11,color:C.faint,marginTop:3}}>or click to browse</div>
+          </>}
         </div>
-        <FSelect label="Property" value={propertyId} onChange={setPropertyId} options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} - ${p.name}`}))}/>
+        <FSelect label="Property" value={propertyId} onChange={setPropertyId}
+          options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} - ${p.name}`}))}/>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-          <FSelect label="Inspector (optional)" value={overrideInspector} onChange={setOverrideInspector} options={[{v:"",l:"Auto-detect from PDF"},...TEAM.map(t=>({v:t,l:t}))]}/>
+          <FSelect label="Inspector (optional)" value={overrideInspector} onChange={setOverrideInspector}
+            options={[{v:"",l:"Auto-detect from PDF"},...TEAM.map(t=>({v:t,l:t}))]}/>
           <FInput label="Date (optional)" value={overrideDate} onChange={setOverrideDate} type="date"/>
         </div>
-        <PrimaryBtn full disabled={loading||!pdfBase64} onClick={()=>{const id="i"+uid();parsePDF({pdfBase64,propertyId,inspectionId:id,overrideDate,overrideInspector},setLoading,r=>setPreview({...r,inspId:id}));}}>{loading?"Extracting items from PDF...":"Extract repair items"}</PrimaryBtn>
+        <PrimaryBtn full disabled={loading||!pdfBase64}
+          onClick={()=>{const id="i"+uid();parsePDF({pdfBase64,propertyId,inspectionId:id,overrideDate,overrideInspector},setLoading,r=>setPreview({...r,inspId:id}));}}>
+          {loading?"Extracting items from PDF...":"Extract repair items"}
+        </PrimaryBtn>
       </div>
     </Overlay>
   );
 }
 
-function AddItemForm({selectedPropertyId,onSubmit,onClose}) {
-  const [form,setForm]=useState({propertyId:selectedPropertyId||PROPERTIES[0].id,description:"",category:CATEGORIES[0],priority:"Medium",assignee:"",vendor:"",notes:""});
+function AddItemForm({onSubmit,onClose}) {
+  const [form,setForm]=useState({
+    propertyId:PROPERTIES[0].id,description:"",
+    category:CATEGORIES[0],priority:"Medium",assignee:"",vendor:"",notes:""
+  });
   return (
     <Overlay onClose={onClose}>
       <OverlayHeader title="Add repair item" onClose={onClose}/>
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
-        <FSelect label="Property" value={form.propertyId} onChange={v=>setForm(f=>({...f,propertyId:v}))} options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} - ${p.name}`}))}/>
-        <FInput label="Description" value={form.description} onChange={v=>setForm(f=>({...f,description:v}))} placeholder="Describe the repair task clearly..." rows={2}/>
+        <FSelect label="Property" value={form.propertyId} onChange={v=>setForm(f=>({...f,propertyId:v}))}
+          options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} - ${p.name}`}))}/>
+        <FInput label="Description" value={form.description}
+          onChange={v=>setForm(f=>({...f,description:v}))}
+          placeholder="Describe the repair task clearly..." rows={2}/>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
           <FSelect label="Category" value={form.category} onChange={v=>setForm(f=>({...f,category:v}))} options={CATEGORIES}/>
           <FSelect label="Priority" value={form.priority} onChange={v=>setForm(f=>({...f,priority:v}))} options={PRIORITIES}/>
-          <FSelect label="Assignee" value={form.assignee} onChange={v=>setForm(f=>({...f,assignee:v}))} options={[{v:"",l:"Unassigned"},...TEAM.map(t=>({v:t,l:t}))]}/>
+          <FSelect label="Assignee" value={form.assignee} onChange={v=>setForm(f=>({...f,assignee:v}))}
+            options={[{v:"",l:"Unassigned"},...TEAM.map(t=>({v:t,l:t}))]}/>
           <FInput label="Vendor" value={form.vendor} onChange={v=>setForm(f=>({...f,vendor:v}))} placeholder="Optional"/>
         </div>
         <FInput label="Notes" value={form.notes} onChange={v=>setForm(f=>({...f,notes:v}))} placeholder="Optional..." rows={2}/>
-        <PrimaryBtn full disabled={!form.description.trim()} onClick={()=>{const ts=nowISO();onSubmit({id:"r"+uid(),inspectionId:null,...form,status:"Not Started",createdAt:ts,scheduledDate:"",completedDate:"",statusHistory:[{status:"Not Started",date:today()}]});}}>Add item</PrimaryBtn>
+        <PrimaryBtn full disabled={!form.description.trim()} onClick={()=>{
+          const now=today();
+          onSubmit({id:"r"+uid(),inspectionId:null,...form,
+            status:"Not Started",createdAt:now,scheduledDate:"",completedDate:"",
+            statusHistory:[{status:"Not Started",date:now}]});
+        }}>Add item</PrimaryBtn>
       </div>
     </Overlay>
   );
@@ -636,190 +775,205 @@ function AddItemForm({selectedPropertyId,onSubmit,onClose}) {
 // ─── App ──────────────────────────────────────────────────────────────────────
 
 export default function App() {
-  const [loaded,setLoaded]=useState(false);
-  const [saveError,setSaveError]=useState("");
-  const [saving,setSaving]=useState(false);
-  const [inspections,setInspections]=useState([]);
-  const [items,setItems]=useState([]);
-  const [tenants,setTenants]=useState([]);
-  const [view,setView]=useState("portfolio");
-  const [selProp,setSelProp]=useState(null);
-  const [selItem,setSelItem]=useState(null);
-  const [showImport,setShowImport]=useState(false);
-  const [showAdd,setShowAdd]=useState(false);
-  const [tenantForm,setTenantForm]=useState(null);
-  const [fStatus,setFStatus]=useState("All");
-  const [fPriority,setFPriority]=useState("All");
-  const [fCategory,setFCategory]=useState("All");
-  const [fAssignee,setFAssignee]=useState("All");
-  const [search,setSearch]=useState("");
-  const [tenantSearch,setTenantSearch]=useState("");
-  const [tenantSort,setTenantSort]=useState("tenant");
+  const [loaded,setLoaded]           = useState(false);
+  const [saving,setSaving]           = useState(false);
+  const [inspections,setInspections] = useState([]);
+  const [items,setItems]             = useState([]);
+  const [view,setView]               = useState("portfolio");
+  const [selProp,setSelProp]         = useState(null);
+  const [selItem,setSelItem]         = useState(null);
+  const [showImport,setShowImport]   = useState(false);
+  const [showAdd,setShowAdd]         = useState(false);
+  const [fStatus,setFStatus]         = useState("All");
+  const [fPriority,setFPriority]     = useState("All");
+  const [fCategory,setFCategory]     = useState("All");
+  const [fAssignee,setFAssignee]     = useState("All");
+  const [search,setSearch]           = useState("");
 
   useEffect(()=>{
-    loadAll().then(result=>{
-      if(result===null){setSaveError("Could not connect to database.");setLoaded(true);return;}
-      setInspections(result.inspections);setItems(result.items);setTenants(result.tenants);setLoaded(true);
+    loadAll().then(({inspections:insp,items:its})=>{
+      setInspections(insp);
+      setItems(its);
+      setLoaded(true);
     });
   },[]);
 
   async function updateItem(id,changes) {
     const updated=items.map(i=>i.id===id?{...i,...changes}:i);
-    setItems(updated);if(selItem?.id===id)setSelItem(p=>({...p,...changes}));
-    setSaving(true);setSaveError("");
-    const err=await saveItemToDB(updated.find(i=>i.id===id));
-    if(err)setSaveError("Save failed: "+err.message);
+    setItems(updated);
+    if(selItem?.id===id) setSelItem(p=>({...p,...changes}));
+    setSaving(true);
+    await saveItemToDB(updated.find(i=>i.id===id));
     setSaving(false);
   }
   async function advance(item) {
-    const next=STATUS_NEXT[item.status];if(!next)return;
-    const d=today();const h=[...item.statusHistory,{status:next,date:d}];
-    const ch={status:next,statusHistory:h};if(next==="Completed")ch.completedDate=d;
+    const next=STATUS_NEXT[item.status]; if(!next)return;
+    const now=today();
+    const h=[...item.statusHistory,{status:next,date:now}];
+    const ch={status:next,statusHistory:h};
+    if(next==="Completed") ch.completedDate=now;
     await updateItem(item.id,ch);
   }
   async function addInspectionAndItems(insp,newItems) {
-    setSaving(true);setSaveError("");
-    const e1=await saveInspection(insp);
-    if(e1){setSaveError("Failed to save inspection: "+e1.message);setSaving(false);return;}
-    for(const item of newItems){const e2=await saveItemToDB(item);if(e2)setSaveError("Failed to save item: "+e2.message);}
-    setInspections(prev=>[insp,...prev]);setItems(prev=>[...newItems,...prev]);setSaving(false);
+    setSaving(true);
+    await saveInspection(insp);
+    await Promise.all(newItems.map(saveItemToDB));
+    setInspections(prev=>[insp,...prev]);
+    setItems(prev=>[...newItems,...prev]);
+    setSaving(false);
   }
   async function addItem(item) {
-    setSaving(true);setSaveError("");
-    const err=await saveItemToDB(item);
-    if(err){setSaveError("Save failed: "+err.message);setSaving(false);return;}
-    setItems(prev=>[item,...prev]);setSaving(false);
-  }
-  async function saveTenant(tenant) {
-    setSaving(true);setSaveError("");
-    const err=await saveTenantToDB(tenant);
-    if(err){setSaveError("Save failed: "+err.message);setSaving(false);return;}
-    setTenants(prev=>{const exists=prev.find(t=>t.id===tenant.id);return exists?prev.map(t=>t.id===tenant.id?tenant:t):[...prev,tenant];});
-    setTenantForm(null);setSaving(false);
-  }
-  async function deleteTenant(id) {
-    if(!window.confirm("Remove this tenant?"))return;
-    const err=await deleteTenantFromDB(id);
-    if(!err)setTenants(prev=>prev.filter(t=>t.id!==id));
+    setSaving(true);
+    await saveItemToDB(item);
+    setItems(prev=>[item,...prev]);
+    setSaving(false);
   }
 
   const openItems=items.filter(i=>i.status!=="Completed");
-  const critical=items.filter(i=>i.priority==="Critical"&&i.status!=="Completed");
+  const critical =items.filter(i=>i.priority==="Critical"&&i.status!=="Completed");
+
   const filtered=useMemo(()=>items.filter(it=>{
-    if(fStatus!=="All"&&it.status!==fStatus)return false;
-    if(fPriority!=="All"&&it.priority!==fPriority)return false;
-    if(fCategory!=="All"&&it.category!==fCategory)return false;
-    if(fAssignee!=="All"&&it.assignee!==fAssignee)return false;
-    if(selProp&&it.propertyId!==selProp)return false;
-    if(search&&!it.description.toLowerCase().includes(search.toLowerCase()))return false;
+    if(fStatus!=="All"&&it.status!==fStatus) return false;
+    if(fPriority!=="All"&&it.priority!==fPriority) return false;
+    if(fCategory!=="All"&&it.category!==fCategory) return false;
+    if(fAssignee!=="All"&&it.assignee!==fAssignee) return false;
+    if(selProp&&it.propertyId!==selProp) return false;
+    if(search&&!it.description.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   }),[items,fStatus,fPriority,fCategory,fAssignee,selProp,search]);
 
-  const filteredTenants=useMemo(()=>{
-    const filtered=tenants.filter(t=>{
-      if(!tenantSearch)return true;
-      const q=tenantSearch.toLowerCase();
-      const prop=PROPERTIES.find(p=>p.id===t.propertyId);
-      return t.companyName?.toLowerCase().includes(q)
-        ||(t.contacts||[]).some(c=>c.name?.toLowerCase().includes(q)||c.email?.toLowerCase().includes(q))
-        ||prop?.name?.toLowerCase().includes(q)
-        ||prop?.address?.toLowerCase().includes(q);
-    });
-    return [...filtered].sort((a,b)=>{
-      if(tenantSort==="tenant") return (a.companyName||"").localeCompare(b.companyName||"");
-      if(tenantSort==="partnership") {
-        const pa=PROPERTIES.find(p=>p.id===a.propertyId)?.group||"";
-        const pb=PROPERTIES.find(p=>p.id===b.propertyId)?.group||"";
-        return pa.localeCompare(pb)||((a.companyName||"").localeCompare(b.companyName||""));
-      }
-      if(tenantSort==="lease") {
-        if(!a.leaseEnd&&!b.leaseEnd) return 0;
-        if(!a.leaseEnd) return 1;
-        if(!b.leaseEnd) return -1;
-        return a.leaseEnd.localeCompare(b.leaseEnd);
-      }
-      return 0;
-    });
-  },[tenants,tenantSearch,tenantSort]);
+  const NAV=[{id:"portfolio",label:"Portfolio"},{id:"items",label:"All Items"},{id:"inspections",label:"Inspections"}];
 
-  const NAV=[{id:"portfolio",label:"Portfolio"},{id:"items",label:"All Items"},{id:"tenants",label:"Tenants"},{id:"inspections",label:"Inspections"}];
-
-  if(!loaded) return <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:C.bg,fontFamily:"var(--font-sans)",color:C.faint,fontSize:13}}>Loading...</div>;
+  if(!loaded) return (
+    <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",
+      background:C.bg,fontFamily:"var(--font-sans)",color:C.faint,fontSize:13}}>
+      Loading...
+    </div>
+  );
 
   return (
-    <div style={{display:"flex",height:"100vh",width:"100vw",background:C.bg,fontFamily:"var(--font-sans)",overflow:"hidden",position:"relative"}}>
+    <div style={{display:"flex",height:"100vh",width:"100vw",background:C.bg,
+      fontFamily:"var(--font-sans)",overflow:"hidden",position:"relative"}}>
+
+      {/* Sidebar */}
       <div style={{width:220,background:"#000",display:"flex",flexDirection:"column",flexShrink:0,borderRight:"1px solid #1a1a1a"}}>
         <div style={{padding:"20px 20px 16px",display:"flex",alignItems:"center",gap:10}}>
-          <div style={{width:36,height:36,background:"#222",borderRadius:6,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",border:"1px solid #333"}}><span style={{color:"#fff",fontSize:15,fontWeight:800}}>D</span></div>
-          <div><div style={{fontSize:15,fontWeight:800,color:C.sideText,letterSpacing:"-0.02em",lineHeight:1.1}}>PropertyOps</div><div style={{fontSize:9,color:C.sideMuted,letterSpacing:"0.04em",textTransform:"uppercase",marginTop:1}}>Dembs Development</div></div>
+          <div style={{width:36,height:36,background:"#333",borderRadius:4,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+            <span style={{color:"#fff",fontSize:14,fontWeight:800}}>D</span>
+          </div>
+          <div>
+            <div style={{fontSize:15,fontWeight:800,color:C.sideText,letterSpacing:"-0.02em",lineHeight:1.1}}>PropertyOps</div>
+            <div style={{fontSize:9,color:C.sideMuted,letterSpacing:"0.04em",textTransform:"uppercase",marginTop:1}}>Dembs Development</div>
+          </div>
         </div>
         <div style={{height:1,background:"rgba(255,255,255,0.07)",margin:"0 14px 8px"}}/>
         <nav style={{flex:1,padding:"4px 10px"}}>
           {NAV.map(n=>(
-            <button key={n.id} onClick={()=>{setView(n.id);setSelProp(null);}} style={{display:"block",width:"100%",textAlign:"left",padding:"8px 10px",background:view===n.id?"rgba(255,255,255,0.12)":"transparent",border:"none",borderRadius:7,cursor:"pointer",marginBottom:1,fontSize:14,fontWeight:view===n.id?700:400,color:view===n.id?"#ffffff":C.sideMuted,letterSpacing:view===n.id?"-0.01em":"normal",transition:"all 0.1s"}}>{n.label}</button>
+            <button key={n.id} onClick={()=>{setView(n.id);setSelProp(null);}} style={{
+              display:"block",width:"100%",textAlign:"left",padding:"8px 10px",
+              background:view===n.id?"rgba(255,255,255,0.08)":"transparent",
+              border:"none",borderRadius:7,cursor:"pointer",marginBottom:1,
+              fontSize:14,fontWeight:view===n.id?600:400,
+              color:view===n.id?C.sideText:C.sideMuted,transition:"all 0.1s"}}>
+              {n.label}
+            </button>
           ))}
         </nav>
         <div style={{padding:"16px 20px",borderTop:"1px solid rgba(255,255,255,0.08)"}}>
-          {[["48","properties"],[openItems.length,"open items"],[critical.length,"critical"],[tenants.length,"tenants"]].map(([n,l])=>(
+          {[["48","properties"],[openItems.length,"open items"],[critical.length,"critical"]].map(([n,l])=>(
             <div key={l} style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
               <span style={{fontSize:12,color:C.sideMuted}}>{l}</span>
-              <span style={{fontSize:12,fontWeight:700,color:critical.length>0&&l==="critical"?"#fca5a5":C.sideText}}>{n}</span>
+              <span style={{fontSize:12,fontWeight:700,
+                color:critical.length>0&&l==="critical"?"#fca5a5":C.sideText}}>{n}</span>
             </div>
           ))}
-          {saving&&<div style={{fontSize:10,color:"#86efac",marginTop:6}}>Saving...</div>}
-          {saveError&&<div style={{fontSize:10,color:"#fca5a5",marginTop:6,lineHeight:1.4}}>{saveError}</div>}
+          {saving&&<div style={{fontSize:10,color:C.sideMuted,marginTop:6}}>Saving...</div>}
         </div>
       </div>
 
+      {/* Main */}
       <div style={{flex:1,minWidth:0,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-        <div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,padding:"0 24px",height:48,display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0,zIndex:10}}>
+
+        {/* Topbar */}
+        <div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,
+          padding:"0 24px",height:48,display:"flex",alignItems:"center",
+          justifyContent:"space-between",flexShrink:0,zIndex:10}}>
           <div style={{fontSize:16,fontWeight:700,color:C.text,display:"flex",alignItems:"center",gap:6}}>
-            {view==="portfolio"&&selProp?(()=>{const p=PROPERTIES.find(pr=>pr.id===selProp);return<><span onClick={()=>setSelProp(null)} style={{color:C.muted,cursor:"pointer",fontWeight:400,fontSize:13}}>Portfolio</span><span style={{color:C.border,margin:"0 4px"}}>&rsaquo;</span><span>{p?.name}</span></>;})():view==="portfolio"?"Portfolio":view==="items"?"All Items":view==="tenants"?"Tenants":"Inspections"}
+            {view==="portfolio"&&selProp?(()=>{
+              const p=PROPERTIES.find(pr=>pr.id===selProp);
+              return <><span onClick={()=>setSelProp(null)} style={{color:C.muted,cursor:"pointer",fontWeight:400,fontSize:13}}>Portfolio</span>
+                <span style={{color:C.border,margin:"0 4px"}}>&rsaquo;</span><span>{p?.name}</span></>;
+            })():view==="portfolio"?"Portfolio":view==="items"?"All Items":"Inspections"}
           </div>
           <div style={{display:"flex",gap:8}}>
-            {view==="tenants"&&<button onClick={()=>setTenantForm({mode:"add",propertyId:selProp})} style={{fontSize:13,fontWeight:500,background:"transparent",border:`1px solid ${C.border}`,borderRadius:7,padding:"6px 14px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>+ Add tenant</button>}
-            {view!=="tenants"&&<button onClick={()=>setShowAdd(true)} style={{fontSize:13,fontWeight:500,background:"transparent",border:`1px solid ${C.border}`,borderRadius:7,padding:"6px 14px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>+ Add item</button>}
-            {view==="items"&&<button onClick={async()=>{
-              const res=await fetch("/api/export",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items:filtered})});
-              const {file}=await res.json();
-              const bytes=Uint8Array.from(atob(file),c=>c.charCodeAt(0));
-              const blob=new Blob([bytes],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
-              const url=URL.createObjectURL(blob);
-              const a=document.createElement("a");a.href=url;a.download=`PropertyOps_Items_${new Date().toISOString().slice(0,10)}.xlsx`;a.click();
-            }} style={{fontSize:13,fontWeight:500,background:"#f0fff4",border:"1px solid #bbf7d0",borderRadius:7,padding:"6px 14px",cursor:"pointer",color:"#16a34a",fontFamily:"var(--font-sans)"}}>
-              Export to Excel
-            </button>}
-            <button onClick={()=>setShowImport(true)} style={{fontSize:13,fontWeight:600,background:C.text,border:"none",borderRadius:7,padding:"7px 16px",cursor:"pointer",color:"#fff",fontFamily:"var(--font-sans)"}}>+ Import inspection</button>
+            <button onClick={()=>setShowAdd(true)} style={{fontSize:13,fontWeight:500,
+              background:"transparent",border:`1px solid ${C.border}`,borderRadius:7,
+              padding:"6px 14px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>
+              + Add item
+            </button>
+            <button onClick={()=>setShowImport(true)} style={{fontSize:13,fontWeight:600,
+              background:C.text,border:"none",borderRadius:7,padding:"7px 16px",
+              cursor:"pointer",color:"#fff",fontFamily:"var(--font-sans)"}}>
+              + Import inspection
+            </button>
           </div>
         </div>
 
+        {/* Body */}
         <div style={{flex:1,overflowY:"auto",padding:"24px 28px"}}>
 
+          {/* Portfolio */}
           {view==="portfolio"&&!selProp&&<>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:12,marginBottom:24}}>
-              {[{l:"Open Items",v:openItems.length,s:"across portfolio",red:false},{l:"Critical",v:critical.length,s:"immediate action",red:critical.length>0},{l:"Scheduled",v:items.filter(i=>i.status==="Scheduled").length,s:"confirmed with vendors"},{l:"Completed",v:items.filter(i=>i.status==="Completed").length,s:"all time"}].map(k=>(
-                <div key={k.l} style={{background:C.surface,border:`1px solid ${k.red?PBDR.Critical:C.border}`,borderRadius:10,padding:"16px 18px"}}>
-                  <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.06em",textTransform:"uppercase",color:k.red?PCOLOR.Critical:C.faint,marginBottom:8}}>{k.l}</div>
+              {[
+                {l:"Open Items",  v:openItems.length,              s:"across portfolio",      red:false},
+                {l:"Critical",    v:critical.length,               s:"immediate action",      red:critical.length>0},
+                {l:"Scheduled",   v:items.filter(i=>i.status==="Scheduled").length, s:"confirmed with vendors"},
+                {l:"Completed",   v:items.filter(i=>i.status==="Completed").length, s:"all time"},
+              ].map(k=>(
+                <div key={k.l} style={{background:C.surface,border:`1px solid ${k.red?PBDR.Critical:C.border}`,
+                  borderRadius:10,padding:"16px 18px"}}>
+                  <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.06em",textTransform:"uppercase",
+                    color:k.red?PCOLOR.Critical:C.faint,marginBottom:8}}>{k.l}</div>
                   <div style={{fontSize:36,fontWeight:800,color:k.red?PCOLOR.Critical:C.text,lineHeight:1,marginBottom:6}}>{k.v}</div>
                   <div style={{fontSize:12,color:C.muted}}>{k.s}</div>
                 </div>
               ))}
             </div>
-            <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 18px",marginBottom:24,display:"flex",gap:24,flexWrap:"wrap",alignItems:"center"}}>
+
+            <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,
+              padding:"12px 18px",marginBottom:24,display:"flex",gap:24,flexWrap:"wrap",alignItems:"center"}}>
               <span style={{fontSize:10,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:C.faint}}>Status</span>
-              {STATUSES.map(s=>{const n=items.filter(i=>i.status===s).length;return<div key={s} style={{display:"flex",alignItems:"center",gap:6}}><Dot color={SCOLOR[s]} size={7}/><span style={{fontSize:13,color:C.muted}}>{s}</span><span style={{fontSize:14,fontWeight:700,color:C.text}}>{n}</span></div>;})}
+              {STATUSES.map(s=>{
+                const n=items.filter(i=>i.status===s).length;
+                return <div key={s} style={{display:"flex",alignItems:"center",gap:6}}>
+                  <Dot color={SCOLOR[s]} size={7}/>
+                  <span style={{fontSize:13,color:C.muted}}>{s}</span>
+                  <span style={{fontSize:14,fontWeight:700,color:C.text}}>{n}</span>
+                </div>;
+              })}
             </div>
+
             {Object.entries(GROUPS).map(([gkey,gname])=>{
-              const gps=PROPERTIES.filter(p=>p.group===gkey);if(!gps.length)return null;
-              return(<div key={gkey} style={{marginBottom:20}}>
-                <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.06em",textTransform:"uppercase",color:C.faint,marginBottom:8}}>{gname}</div>
-                <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
-                  {gps.map((prop,i)=><PropRow key={prop.id} prop={prop} items={items} inspections={inspections} tenants={tenants} isLast={i===gps.length-1} onClick={()=>{setSelProp(prop.id);setView("portfolio");}}/>)}
+              const gps=PROPERTIES.filter(p=>p.group===gkey);
+              if(!gps.length) return null;
+              return (
+                <div key={gkey} style={{marginBottom:20}}>
+                  <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.06em",textTransform:"uppercase",
+                    color:C.faint,marginBottom:8}}>{gname}</div>
+                  <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
+                    {gps.map((prop,i)=>(
+                      <PropRow key={prop.id} prop={prop} items={items} inspections={inspections}
+                        isLast={i===gps.length-1}
+                        onClick={()=>{setSelProp(prop.id);setView("portfolio");}}/>
+                    ))}
+                  </div>
                 </div>
-              </div>);
+              );
             })}
           </>}
 
+          {/* Property detail */}
           {view==="portfolio"&&selProp&&(()=>{
             const prop=PROPERTIES.find(p=>p.id===selProp);
             const pi=items.filter(i=>i.propertyId===selProp);
@@ -833,133 +987,153 @@ export default function App() {
                   <div style={{fontSize:11,color:C.faint,marginTop:2}}>{prop.owner} - {GROUPS[prop.group]}</div>
                 </div>
                 <div style={{display:"flex",gap:20}}>
-                  {[[oi.length,"open"],[pi.filter(i=>i.status==="Completed").length,"done"],[pInsp.length,"inspections"],[tenants.filter(t=>t.propertyId===selProp).length,"tenants"]].map(([n,l])=>(
-                    <div key={l} style={{textAlign:"right"}}><div style={{fontSize:28,fontWeight:800,color:C.text}}>{n}</div><div style={{fontSize:11,color:C.faint}}>{l}</div></div>
+                  {[[oi.length,"open"],[pi.filter(i=>i.status==="Completed").length,"done"],[pInsp.length,"inspections"]].map(([n,l])=>(
+                    <div key={l} style={{textAlign:"right"}}>
+                      <div style={{fontSize:28,fontWeight:800,color:C.text}}>{n}</div>
+                      <div style={{fontSize:11,color:C.faint}}>{l}</div>
+                    </div>
                   ))}
                 </div>
               </div>
+
               <AISummaryCard prop={prop} propItems={pi}/>
+
               {PRIORITIES.map(p=>{
-                const grp=oi.filter(i=>i.priority===p);if(!grp.length)return null;
-                return(<div key={p} style={{marginBottom:20}}>
-                  <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:8}}><Dot color={PCOLOR[p]} size={7}/><span style={{fontSize:10,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:PCOLOR[p]}}>{p}</span><span style={{fontSize:11,color:C.faint}}>({grp.length})</span></div>
-                  <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>{grp.map(it=><ItemRow key={it.id} item={it} onClick={()=>setSelItem(it)} onAdvance={()=>advance(it)}/>)}</div>
-                </div>);
-              })}
-              {oi.length===0&&<div style={{textAlign:"center",padding:"48px 0",color:C.faint,fontSize:13}}>No open items - this property is clear.</div>}
-              <TenantsSection propertyId={selProp} tenants={tenants} onAdd={(pid)=>setTenantForm({mode:"add",propertyId:pid})} onEdit={(t)=>setTenantForm({mode:"edit",tenant:t})} onDelete={deleteTenant}/>
-              {pInsp.length>0&&<div style={{marginTop:28}}>
-                <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.09em",textTransform:"uppercase",color:C.faint,marginBottom:10}}>Inspection history</div>
-                <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
-                  {pInsp.map((insp,i)=>{const ii=items.filter(it=>it.inspectionId===insp.id);return(
-                    <div key={insp.id} style={{display:"flex",alignItems:"center",gap:14,padding:"12px 18px",borderBottom:i<pInsp.length-1?`1px solid ${C.border}`:"none"}}>
-                      <div style={{flex:1}}><div style={{fontSize:13,fontWeight:500,color:C.text}}>{insp.date}</div><div style={{fontSize:11,color:C.faint,marginTop:2}}>{insp.inspector}</div></div>
-                      <div style={{display:"flex",gap:6}}><Chip label={`${ii.length} items`} tc={SCOLOR.Scheduled} bg={SBG.Scheduled} bc={SBDR.Scheduled}/>{ii.filter(it=>it.status==="Completed").length>0&&<Chip label={`${ii.filter(it=>it.status==="Completed").length} done`} tc={SCOLOR.Completed} bg={SBG.Completed} bc={SBDR.Completed}/>}</div>
+                const grp=oi.filter(i=>i.priority===p);
+                if(!grp.length) return null;
+                return (
+                  <div key={p} style={{marginBottom:20}}>
+                    <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:8}}>
+                      <Dot color={PCOLOR[p]} size={7}/>
+                      <span style={{fontSize:10,fontWeight:700,letterSpacing:"0.08em",
+                        textTransform:"uppercase",color:PCOLOR[p]}}>{p}</span>
+                      <span style={{fontSize:11,color:C.faint}}>({grp.length})</span>
                     </div>
-                  );})}
+                    <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
+                      {grp.map(it=><ItemRow key={it.id} item={it}
+                        onClick={()=>setSelItem(it)} onAdvance={()=>advance(it)}/>)}
+                    </div>
+                  </div>
+                );
+              })}
+              {oi.length===0&&<div style={{textAlign:"center",padding:"48px 0",color:C.faint,fontSize:13}}>
+                No open items - this property is clear.
+              </div>}
+
+              {pInsp.length>0&&<div style={{marginTop:28}}>
+                <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.09em",textTransform:"uppercase",
+                  color:C.faint,marginBottom:10}}>Inspection history</div>
+                <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
+                  {pInsp.map((insp,i)=>{
+                    const ii=items.filter(it=>it.inspectionId===insp.id);
+                    return <div key={insp.id} style={{display:"flex",alignItems:"center",gap:14,padding:"12px 18px",
+                      borderBottom:i<pInsp.length-1?`1px solid ${C.border}`:"none"}}>
+                      <div style={{flex:1}}>
+                        <div style={{fontSize:13,fontWeight:500,color:C.text}}>{insp.date}</div>
+                        <div style={{fontSize:11,color:C.faint,marginTop:2}}>{insp.inspector}</div>
+                      </div>
+                      <div style={{display:"flex",gap:6}}>
+                        <Chip label={`${ii.length} items`} tc={SCOLOR.Scheduled} bg={SBG.Scheduled} bc={SBDR.Scheduled}/>
+                        {ii.filter(it=>it.status==="Completed").length>0&&
+                          <Chip label={`${ii.filter(it=>it.status==="Completed").length} done`}
+                            tc={SCOLOR.Completed} bg={SBG.Completed} bc={SBDR.Completed}/>}
+                      </div>
+                    </div>;
+                  })}
                 </div>
               </div>}
             </>;
           })()}
 
+          {/* All items */}
           {view==="items"&&<>
             <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center",marginBottom:16}}>
-              <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search..." style={{fontFamily:"var(--font-sans)",fontSize:13,padding:"7px 11px",borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:C.text,width:200,outline:"none"}}/>
-              {[[["All",...STATUSES],fStatus,setFStatus,"Status"],[["All",...PRIORITIES],fPriority,setFPriority,"Priority"],[["All",...CATEGORIES],fCategory,setFCategory,"Category"],[["All",...TEAM],fAssignee,setFAssignee,"Assignee"]].map(([opts,val,setter,label])=>(
-                <select key={label} value={val} onChange={e=>setter(e.target.value)} style={{fontFamily:"var(--font-sans)",fontSize:13,padding:"7px 10px",borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:val==="All"?C.muted:C.text}}>
+              <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search..."
+                style={{fontFamily:"var(--font-sans)",fontSize:13,padding:"7px 11px",borderRadius:8,
+                  border:`1px solid ${C.border}`,background:C.surface,color:C.text,width:200,outline:"none"}}/>
+              {[
+                [["All",...STATUSES],   fStatus,   setFStatus,   "Status"  ],
+                [["All",...PRIORITIES], fPriority, setFPriority, "Priority"],
+                [["All",...CATEGORIES],fCategory, setFCategory, "Category"],
+                [["All",...TEAM],       fAssignee, setFAssignee, "Assignee"],
+              ].map(([opts,val,setter,label])=>(
+                <select key={label} value={val} onChange={e=>setter(e.target.value)}
+                  style={{fontFamily:"var(--font-sans)",fontSize:13,padding:"7px 10px",borderRadius:8,
+                    border:`1px solid ${C.border}`,background:C.surface,color:val==="All"?C.muted:C.text}}>
                   {opts.map(o=><option key={o} value={o}>{o==="All"?`All ${label==="Status"?"Statuses":label==="Priority"?"Priorities":label==="Category"?"Categories":label+"s"}`:o}</option>)}
                 </select>
               ))}
               <span style={{fontSize:12,color:C.faint}}>{filtered.length} items</span>
             </div>
-            {filtered.length===0?<div style={{textAlign:"center",padding:"60px 0",color:C.faint,fontSize:13}}>No items match the current filters.</div>:
-            <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>{filtered.map(it=><ItemRow key={it.id} item={it} showProperty onClick={()=>setSelItem(it)} onAdvance={()=>advance(it)}/>)}</div>}
+            {filtered.length===0
+              ?<div style={{textAlign:"center",padding:"60px 0",color:C.faint,fontSize:13}}>No items match the current filters.</div>
+              :<div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
+                {filtered.map(it=><ItemRow key={it.id} item={it} showProperty
+                  onClick={()=>setSelItem(it)} onAdvance={()=>advance(it)}/>)}
+              </div>}
           </>}
 
-          {view==="tenants"&&<>
-            <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:16}}>
-              <input value={tenantSearch} onChange={e=>setTenantSearch(e.target.value)} placeholder="Search tenants..." style={{fontFamily:"var(--font-sans)",fontSize:13,padding:"7px 11px",borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:C.text,width:240,outline:"none"}}/>
-              <select value={tenantSort} onChange={e=>setTenantSort(e.target.value)} style={{fontFamily:"var(--font-sans)",fontSize:13,padding:"7px 10px",borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:C.text}}>
-                <option value="tenant">Sort: Tenant A-Z</option>
-                <option value="partnership">Sort: Partnership</option>
-                <option value="lease">Sort: Lease Expiration</option>
-              </select>
-              <span style={{fontSize:12,color:C.faint}}>{filteredTenants.length} tenants</span>
-            </div>
-            {filteredTenants.length===0?
-            <div style={{textAlign:"center",padding:"60px 0",color:C.faint,fontSize:13}}>{tenants.length===0?"No tenants on file yet. Add your first tenant using the button above.":"No tenants match your search."}</div>:
-            <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
-              {filteredTenants.map((t,i)=>{
-                const prop=PROPERTIES.find(p=>p.id===t.propertyId);
-                return(
-                  <div key={t.id} style={{padding:"14px 18px",borderBottom:i<filteredTenants.length-1?`1px solid ${C.border}`:"none"}}>
-                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                      <div style={{flex:1,minWidth:0}}>
-                        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:5,flexWrap:"wrap"}}>
-                          {prop?.group&&<span style={{fontSize:11,fontWeight:600,padding:"2px 9px",borderRadius:99,background:GROUP_COLOR[prop.group]?.bg,color:GROUP_COLOR[prop.group]?.tc,border:`1px solid ${GROUP_COLOR[prop.group]?.bc}`,whiteSpace:"nowrap"}}>{GROUPS[prop.group]}</span>}
-                          <span style={{fontSize:15,fontWeight:800,color:C.text,letterSpacing:"-0.01em"}}>{t.companyName}</span>
-                          {t.unit&&<span style={{fontSize:12,fontWeight:500,color:C.muted}}>{t.unit}</span>}
-                        </div>
-                        <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
-                          <span style={{fontSize:12,fontWeight:600,color:C.text}}>{prop?.name}</span>
-                          {t.leaseEnd&&<><span style={{fontSize:11,color:C.faint}}>·</span><span style={{fontSize:12,fontWeight:600,color:C.text}}>Exp. {fmtDate(t.leaseEnd)}</span></>}
-                        </div>
-                        {(t.contacts||[]).length>0&&<div style={{marginTop:8,display:"flex",flexDirection:"column",gap:4}}>
-                          {t.contacts.map((c,ci)=>(
-                            <div key={ci} style={{display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
-                              {c.name&&<span style={{fontSize:12,fontWeight:500,color:C.text}}>{c.name}</span>}
-                              {c.email&&<a href={`mailto:${c.email}`} style={{fontSize:12,color:"#0070f3",textDecoration:"none"}}>{c.email}</a>}
-                              {c.phone&&<span style={{fontSize:12,color:C.muted}}>{c.phone}</span>}
-                            </div>
-                          ))}
-                        </div>}
-                      </div>
-                      <div style={{display:"flex",gap:6,flexShrink:0,marginLeft:12}}>
-                        <button onClick={()=>setTenantForm({mode:"edit",tenant:t})} style={{fontSize:11,background:C.bg,border:`1px solid ${C.border}`,borderRadius:6,padding:"4px 10px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>Edit</button>
-                        <button onClick={()=>deleteTenant(t.id)} style={{fontSize:11,background:"#fff0f0",border:"1px solid #ffcccc",borderRadius:6,padding:"4px 10px",cursor:"pointer",color:"#e00",fontFamily:"var(--font-sans)"}}>Remove</button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>}
-          </>}
-
+          {/* Inspections */}
           {view==="inspections"&&<>
             <div style={{fontSize:12,color:C.faint,marginBottom:14}}>{inspections.length} inspections logged</div>
-            {inspections.length===0?
-            <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:"48px 24px",textAlign:"center"}}>
-              <div style={{fontSize:15,fontWeight:700,color:C.text,marginBottom:6}}>No inspections yet</div>
-              <div style={{fontSize:13,color:C.muted,marginBottom:20}}>Import your first SnapInspect PDF to get started.</div>
-              <PrimaryBtn onClick={()=>setShowImport(true)}>Import inspection</PrimaryBtn>
-            </div>:
-            <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
-              {inspections.map((insp,i)=>{
-                const prop=PROPERTIES.find(p=>p.id===insp.propertyId);
-                const ii=items.filter(it=>it.inspectionId===insp.id);
-                return(<div key={insp.id} style={{padding:"14px 20px",borderBottom:i<inspections.length-1?`1px solid ${C.border}`:"none"}}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
-                    <div><div style={{fontSize:13,fontWeight:600,color:C.text}}>{prop?.name}</div><div style={{fontSize:11,color:C.faint,marginTop:2}}>{insp.date} - {insp.inspector}</div></div>
-                    <div style={{display:"flex",gap:6}}><Chip label={`${ii.length} items`} tc={SCOLOR.Scheduled} bg={SBG.Scheduled} bc={SBDR.Scheduled}/>{ii.filter(it=>it.status==="Completed").length>0&&<Chip label={`${ii.filter(it=>it.status==="Completed").length} done`} tc={SCOLOR.Completed} bg={SBG.Completed} bc={SBDR.Completed}/>}</div>
-                  </div>
-                  <div style={{fontSize:11,color:C.muted,fontStyle:"italic",marginBottom:8,lineHeight:1.5}}>{insp.notes}</div>
-                  <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-                    {ii.slice(0,5).map(it=>(<button key={it.id} onClick={()=>setSelItem(it)} style={{fontSize:11,background:C.bg,border:`1px solid ${C.border}`,borderRadius:6,padding:"3px 9px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)",maxWidth:220,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{it.description.slice(0,45)}{it.description.length>45?"...":""}</button>))}
-                    {ii.length>5&&<span style={{fontSize:11,color:C.faint,padding:"3px 0"}}>+{ii.length-5} more</span>}
-                  </div>
-                </div>);
-              })}
-            </div>}
+            {inspections.length===0
+              ?<div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,
+                  padding:"48px 24px",textAlign:"center"}}>
+                <div style={{fontSize:15,fontWeight:700,color:C.text,marginBottom:6}}>No inspections yet</div>
+                <div style={{fontSize:13,color:C.muted,marginBottom:20}}>Import your first SnapInspect PDF to get started.</div>
+                <PrimaryBtn onClick={()=>setShowImport(true)}>Import inspection</PrimaryBtn>
+              </div>
+              :<div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
+                {inspections.map((insp,i)=>{
+                  const prop=PROPERTIES.find(p=>p.id===insp.propertyId);
+                  const ii=items.filter(it=>it.inspectionId===insp.id);
+                  return <div key={insp.id} style={{padding:"14px 20px",
+                    borderBottom:i<inspections.length-1?`1px solid ${C.border}`:"none"}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+                      <div>
+                        <div style={{fontSize:13,fontWeight:600,color:C.text}}>{prop?.name}</div>
+                        <div style={{fontSize:11,color:C.faint,marginTop:2}}>{insp.date} - {insp.inspector}</div>
+                      </div>
+                      <div style={{display:"flex",gap:6}}>
+                        <Chip label={`${ii.length} items`} tc={SCOLOR.Scheduled} bg={SBG.Scheduled} bc={SBDR.Scheduled}/>
+                        {ii.filter(it=>it.status==="Completed").length>0&&
+                          <Chip label={`${ii.filter(it=>it.status==="Completed").length} done`}
+                            tc={SCOLOR.Completed} bg={SBG.Completed} bc={SBDR.Completed}/>}
+                      </div>
+                    </div>
+                    <div style={{fontSize:11,color:C.muted,fontStyle:"italic",marginBottom:8,lineHeight:1.5}}>
+                      {insp.notes}
+                    </div>
+                    <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+                      {ii.slice(0,5).map(it=>(
+                        <button key={it.id} onClick={()=>setSelItem(it)}
+                          style={{fontSize:11,background:C.bg,border:`1px solid ${C.border}`,
+                            borderRadius:6,padding:"3px 9px",cursor:"pointer",color:C.muted,
+                            fontFamily:"var(--font-sans)",maxWidth:220,
+                            overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                          {it.description.slice(0,45)}{it.description.length>45?"...":""}
+                        </button>
+                      ))}
+                      {ii.length>5&&<span style={{fontSize:11,color:C.faint,padding:"3px 0"}}>+{ii.length-5} more</span>}
+                    </div>
+                  </div>;
+                })}
+              </div>}
           </>}
         </div>
       </div>
 
-      {selItem&&<ItemDetail item={selItem} inspections={inspections} onUpdate={ch=>updateItem(selItem.id,ch)} onAdvance={()=>advance(selItem)} onClose={()=>setSelItem(null)}/>}
-      {showImport&&<ImportForm selectedPropertyId={selProp} onSubmit={(insp,its)=>{addInspectionAndItems(insp,its);setShowImport(false);}} onClose={()=>setShowImport(false)}/>}
-      {showAdd&&<AddItemForm selectedPropertyId={selProp} onSubmit={it=>{addItem(it);setShowAdd(false);}} onClose={()=>setShowAdd(false)}/>}
-      {tenantForm&&<TenantForm tenant={tenantForm.mode==="edit"?tenantForm.tenant:null} propertyId={tenantForm.mode==="add"?tenantForm.propertyId:null} onSave={saveTenant} onClose={()=>setTenantForm(null)}/>}
+      {/* Overlays */}
+      {selItem&&<ItemDetail item={selItem} inspections={inspections}
+        onUpdate={ch=>updateItem(selItem.id,ch)} onAdvance={()=>advance(selItem)}
+        onClose={()=>setSelItem(null)}/>}
+      {showImport&&<ImportForm selectedPropertyId={selProp}
+        onSubmit={(insp,its)=>{addInspectionAndItems(insp,its);setShowImport(false);}}
+        onClose={()=>setShowImport(false)}/>}
+      {showAdd&&<AddItemForm
+        onSubmit={it=>{addItem(it);setShowAdd(false);}}
+        onClose={()=>setShowAdd(false)}/>}
     </div>
   );
 }
-
 
