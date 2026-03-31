@@ -358,7 +358,7 @@ function TenantsSection({propertyId, tenants, onAdd, onEdit, onDelete}) {
 
 // ─── AI helpers ───────────────────────────────────────────────────────────────
 
-async function parsePDF({pdfBase64,propertyId,inspectionId,overrideDate,overrideInspector},setLoading,onResult) {
+function parsePDF({pdfBase64,propertyId,inspectionId,overrideDate,overrideInspector},setLoading,onResult) {
   setLoading(true);
   const prompt=`You are reviewing a SnapInspect property inspection report for Dembs Development Inc.
 Extract ALL actionable repair and maintenance items from this inspection.
@@ -378,15 +378,7 @@ For each item return:
 Also extract from header: propertyName, inspectorName, inspectionDate (YYYY-MM-DD format)
 Respond ONLY with valid JSON, no markdown:
 {"propertyName":"","inspectorName":"","inspectionDate":"","items":[{"description":"","category":"","priority":"","location":""}]}`;
-  (async()=>{try{
-      const keyRes=await fetch("/api/key");const{key}=await keyRes.json();
-      const bytes=Uint8Array.from(atob(pdfBase64),c=>c.charCodeAt(0));
-      const blob=new Blob([bytes],{type:"application/pdf"});
-      const form=new FormData();form.append("file",blob,"inspection.pdf");form.append("purpose","assistants");
-      const uploadRes=await fetch("https://api.anthropic.com/v1/files",{method:"POST",headers:{"x-api-key":key,"anthropic-version":"2023-06-01","anthropic-beta":"files-api-2025-04-14"},body:form});
-      const uploadData=await uploadRes.json();const fileId=uploadData.id;
-      const msgRes=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"x-api-key":key,"anthropic-version":"2023-06-01","anthropic-beta":"files-api-2025-04-14","content-type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,messages:[{role:"user",content:[{type:"document",source:{type:"file",file_id:fileId}},{type:"text",text:prompt}]}]})});
-      Promise.resolve(msgRes.json())
+  fetch("/api/anthropic",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,messages:[{role:"user",content:[{type:"document",source:{type:"base64",media_type:"application/pdf",data:pdfBase64}},{type:"text",text:prompt}]}]})})
   .then(r=>r.json()).then(data=>{
     const raw=data.content?.find(b=>b.type==="text")?.text||"{}";
     let parsed={items:[]};
@@ -402,8 +394,7 @@ Respond ONLY with valid JSON, no markdown:
     }));
     onResult({items:newItems,date:overrideDate||parsed.inspectionDate||dateOnly,inspector:overrideInspector||parsed.inspectorName||"",detectedProperty:parsed.propertyName});
     setLoading(false);
-    }
-  } catch(e){setLoading(false);console.error("Fetch error:",e);alert("Failed to parse PDF.");}
+  }).catch(e=>{setLoading(false);console.error("Fetch error:",e);alert("Failed to parse PDF.");});
 }
 
 function genAISummary(prop,propItems,cb,setLoading) {
@@ -517,7 +508,7 @@ function ItemRow({item,showProperty,onClick,onAdvance}) {
   );
 }
 
-function ItemDetail({item,inspections,onUpdate,onAdvance,onDelete,onClose}) {
+function ItemDetail({item,inspections,onUpdate,onAdvance,onClose}) {
   const [editing,setEditing]=useState(false);
   const [form,setForm]=useState({...item});
   const [showQuote,setShowQuote]=useState(false);
@@ -548,7 +539,7 @@ function ItemDetail({item,inspections,onUpdate,onAdvance,onDelete,onClose}) {
           ))}
         </div>
         <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-          <GhostBtn onClick={()=>setEditing(true)}>Edit item</GhostBtn><button onClick={()=>onDelete(item.id)} style={{fontFamily:"var(--font-sans)",fontSize:13,borderRadius:8,padding:"9px 16px",background:"#fff0f0",color:"#e00",border:"1px solid #ffcccc",cursor:"pointer"}}>Delete item</button>
+          <GhostBtn onClick={()=>setEditing(true)}>Edit item</GhostBtn><button onClick={()=>deleteItem(item.id)} style={{fontFamily:"var(--font-sans)",fontSize:13,borderRadius:8,padding:"9px 16px",background:"#fff0f0",color:"#e00",border:"1px solid #ffcccc",cursor:"pointer"}}>Delete item</button>
           <button onClick={()=>setShowQuote(true)} style={{fontFamily:"var(--font-sans)",fontSize:13,borderRadius:8,padding:"9px 16px",background:"#eff6ff",color:"#1d4ed8",border:"1px solid #bfdbfe",cursor:"pointer",fontWeight:500}}>Request Quote</button>
         </div>
         {showQuote&&<QuoteModal item={item} onClose={()=>setShowQuote(false)}/>}
@@ -720,13 +711,12 @@ export default function App() {
     if(err){setSaveError("Save failed: "+err.message);setSaving(false);return;}
     setItems(prev=>[item,...prev]);setSaving(false);
   }
-  async function deleteItem_UNUSED(id) {
+  async function deleteItem(id) {
   if(!window.confirm('Delete this item? This cannot be undone.')) return;
   const {error} = await sb.from('items').delete().eq('id',id);
   if(!error){setItems(prev=>prev.filter(i=>i.id!==id));setSelItem(null);}else setSaveError('Delete failed: '+error.message);
 }
-async function deleteItem(id){if(!window.confirm('Delete this item? This cannot be undone.'))return;const{error}=await sb.from('items').delete().eq('id',id);if(!error){setItems(prev=>prev.filter(i=>i.id!==id));setSelItem(null);}else setSaveError('Delete failed: '+error.message);}
-  async function saveTenant(tenant) {
+async function saveTenant(tenant) {
     setSaving(true);setSaveError("");
     const err=await saveTenantToDB(tenant);
     if(err){setSaveError("Save failed: "+err.message);setSaving(false);return;}
@@ -980,18 +970,13 @@ async function deleteItem(id){if(!window.confirm('Delete this item? This cannot 
         </div>
       </div>
 
-      {selItem&&<ItemDetail item={selItem} inspections={inspections} onUpdate={ch=>updateItem(selItem.id,ch)} onAdvance={()=>advance(selItem)} onDelete={deleteItem} onClose={()=>setSelItem(null)}/>}
+      {selItem&&<ItemDetail item={selItem} inspections={inspections} onUpdate={ch=>updateItem(selItem.id,ch)} onAdvance={()=>advance(selItem)} onClose={()=>setSelItem(null)}/>}
       {showImport&&<ImportForm selectedPropertyId={selProp} onSubmit={(insp,its)=>{addInspectionAndItems(insp,its);setShowImport(false);}} onClose={()=>setShowImport(false)}/>}
       {showAdd&&<AddItemForm selectedPropertyId={selProp} onSubmit={it=>{addItem(it);setShowAdd(false);}} onClose={()=>setShowAdd(false)}/>}
       {tenantForm&&<TenantForm tenant={tenantForm.mode==="edit"?tenantForm.tenant:null} propertyId={tenantForm.mode==="add"?tenantForm.propertyId:null} onSave={saveTenant} onClose={()=>setTenantForm(null)}/>}
     </div>
   );
 }
-
-
-
-
-
 
 
 
