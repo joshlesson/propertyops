@@ -358,7 +358,7 @@ function TenantsSection({propertyId, tenants, onAdd, onEdit, onDelete}) {
 
 // ─── AI helpers ───────────────────────────────────────────────────────────────
 
-function parsePDF({pdfBase64,propertyId,inspectionId,overrideDate,overrideInspector},setLoading,onResult) {
+async function parsePDF({pdfBase64,propertyId,inspectionId,overrideDate,overrideInspector},setLoading,onResult) {
   setLoading(true);
   const prompt=`You are reviewing a SnapInspect property inspection report for Dembs Development Inc.
 Extract ALL actionable repair and maintenance items from this inspection.
@@ -394,7 +394,8 @@ Respond ONLY with valid JSON, no markdown:
     }));
     onResult({items:newItems,date:overrideDate||parsed.inspectionDate||dateOnly,inspector:overrideInspector||parsed.inspectorName||"",detectedProperty:parsed.propertyName});
     setLoading(false);
-  }).catch(e=>{setLoading(false);console.error("Fetch error:",e);alert("Failed to parse PDF.");});
+    }
+  } catch(e){setLoading(false);console.error("Fetch error:",e);alert("Failed to parse PDF.");}
 }
 
 function genAISummary(prop,propItems,cb,setLoading) {
