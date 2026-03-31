@@ -711,12 +711,13 @@ export default function App() {
     if(err){setSaveError("Save failed: "+err.message);setSaving(false);return;}
     setItems(prev=>[item,...prev]);setSaving(false);
   }
-  async function deleteItem(id) {
+  async function deleteItem_UNUSED(id) {
   if(!window.confirm('Delete this item? This cannot be undone.')) return;
   const {error} = await sb.from('items').delete().eq('id',id);
   if(!error){setItems(prev=>prev.filter(i=>i.id!==id));setSelItem(null);}else setSaveError('Delete failed: '+error.message);
 }
-async function saveTenant(tenant) {
+async function deleteItem(id){if(!window.confirm('Delete this item? This cannot be undone.'))return;const{error}=await sb.from('items').delete().eq('id',id);if(!error){setItems(prev=>prev.filter(i=>i.id!==id));setSelItem(null);}else setSaveError('Delete failed: '+error.message);}
+  async function saveTenant(tenant) {
     setSaving(true);setSaveError("");
     const err=await saveTenantToDB(tenant);
     if(err){setSaveError("Save failed: "+err.message);setSaving(false);return;}
@@ -977,6 +978,8 @@ async function saveTenant(tenant) {
     </div>
   );
 }
+
+
 
 
 
