@@ -508,7 +508,7 @@ function ItemRow({item,showProperty,onClick,onAdvance}) {
   );
 }
 
-function ItemDetail({item,inspections,onUpdate,onAdvance,onClose}) {
+function ItemDetail({item,inspections,onUpdate,onAdvance,onDelete,onClose}) {
   const [editing,setEditing]=useState(false);
   const [form,setForm]=useState({...item});
   const [showQuote,setShowQuote]=useState(false);
@@ -539,7 +539,7 @@ function ItemDetail({item,inspections,onUpdate,onAdvance,onClose}) {
           ))}
         </div>
         <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-          <GhostBtn onClick={()=>setEditing(true)}>Edit item</GhostBtn><button onClick={()=>deleteItem(item.id)} style={{fontFamily:"var(--font-sans)",fontSize:13,borderRadius:8,padding:"9px 16px",background:"#fff0f0",color:"#e00",border:"1px solid #ffcccc",cursor:"pointer"}}>Delete item</button>
+          <GhostBtn onClick={()=>setEditing(true)}>Edit item</GhostBtn><button onClick={()=>onDelete(item.id)} style={{fontFamily:"var(--font-sans)",fontSize:13,borderRadius:8,padding:"9px 16px",background:"#fff0f0",color:"#e00",border:"1px solid #ffcccc",cursor:"pointer"}}>Delete item</button>
           <button onClick={()=>setShowQuote(true)} style={{fontFamily:"var(--font-sans)",fontSize:13,borderRadius:8,padding:"9px 16px",background:"#eff6ff",color:"#1d4ed8",border:"1px solid #bfdbfe",cursor:"pointer",fontWeight:500}}>Request Quote</button>
         </div>
         {showQuote&&<QuoteModal item={item} onClose={()=>setShowQuote(false)}/>}
@@ -971,13 +971,16 @@ async function deleteItem(id){if(!window.confirm('Delete this item? This cannot 
         </div>
       </div>
 
-      {selItem&&<ItemDetail item={selItem} inspections={inspections} onUpdate={ch=>updateItem(selItem.id,ch)} onAdvance={()=>advance(selItem)} onClose={()=>setSelItem(null)}/>}
+      {selItem&&<ItemDetail item={selItem} inspections={inspections} onUpdate={ch=>updateItem(selItem.id,ch)} onAdvance={()=>advance(selItem)} onDelete={deleteItem} onClose={()=>setSelItem(null)}/>}
       {showImport&&<ImportForm selectedPropertyId={selProp} onSubmit={(insp,its)=>{addInspectionAndItems(insp,its);setShowImport(false);}} onClose={()=>setShowImport(false)}/>}
       {showAdd&&<AddItemForm selectedPropertyId={selProp} onSubmit={it=>{addItem(it);setShowAdd(false);}} onClose={()=>setShowAdd(false)}/>}
       {tenantForm&&<TenantForm tenant={tenantForm.mode==="edit"?tenantForm.tenant:null} propertyId={tenantForm.mode==="add"?tenantForm.propertyId:null} onSave={saveTenant} onClose={()=>setTenantForm(null)}/>}
     </div>
   );
 }
+
+
+
 
 
 
