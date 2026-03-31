@@ -116,134 +116,110 @@ const SBDR   = {"Not Started":"#eaeaea","PO Issued":"#ddd6fe","Scheduled":"#bfdb
 function uid()   { return Math.random().toString(36).slice(2,9); }
 function nowISO(){ return new Date().toISOString(); }
 function today() { return new Date().toISOString().slice(0,10); }
-function fmtDate(iso) {
-  if(!iso) return "";
-  const [y,m,d] = iso.split("-");
-  return `${m}/${d}/${y}`;
-}
+function fmtDate(iso) { if(!iso)return""; const[y,m,d]=iso.split("-"); return`${m}/${d}/${y}`; }
 
 async function doExport(filtered) {
-  const mod = await import('https://cdn.sheetjs.com/xlsx-0.20.1/package/xlsx.mjs');
+  const mod = await import("https://cdn.sheetjs.com/xlsx-0.20.1/package/xlsx.mjs");
   const X = mod.default || mod;
-  const getProp = id => PROPERTIES.find(p => p.id === id);
-  const rows = filtered.map(it => ({
-    Category: it.category || '',
-    Property: getProp(it.propertyId)?.name || '',
-    Partnership: GROUPS[getProp(it.propertyId)?.group] || '',
-    Description: it.description || '',
-    Notes: it.notes || '',
-    Status: it.status || '',
-    Priority: it.priority || '',
-    Assignee: it.assignee || '',
-    Scheduled: it.scheduledDate || '',
-    Created: it.createdAt?.slice(0,10) || '',
+  const getProp = (id) => PROPERTIES.find(p=>p.id===id);
+  const rows = filtered.map(it=>({
+    "Category":    it.category||"",
+    "Property":    getProp(it.propertyId)?.name||"",
+    "Partnership": GROUPS[getProp(it.propertyId)?.group]||"",
+    "Description": it.description||"",
+    "Notes":       it.notes||"",
+    "Status":      it.status||"",
+    "Priority":    it.priority||"",
+    "Assignee":    it.assignee||"",
+    "Scheduled":   it.scheduledDate||"",
+    "Created":     it.createdAt?.slice(0,10)||"",
   }));
   const ws = X.utils.json_to_sheet(rows);
+  ws["!cols"] = [{wch:22},{wch:30},{wch:16},{wch:50},{wch:28},{wch:14},{wch:10},{wch:14},{wch:12},{wch:12}];
   const wb = X.utils.book_new();
-  X.utils.book_append_sheet(wb, ws, 'Action Items');
-  X.writeFile(wb, 'PropertyOps_Items_' + new Date().toISOString().slice(0,10) + '.xlsx');
+  X.utils.book_append_sheet(wb, ws, "Action Items");
+  X.writeFile(wb, "PropertyOps_Items_"+new Date().toISOString().slice(0,10)+".xlsx");
 }
+
 async function loadAll() {
   try {
-    const [r1, r2, r3] = await Promise.all([
-      sb.from("inspections").select("*").order("date", { ascending: false }),
-      sb.from("items").select("*").order("created_at", { ascending: false }),
-      sb.from("tenants").select("*").order("company_name", { ascending: true }),
+    const [r1,r2,r3] = await Promise.all([
+      sb.from("inspections").select("*").order("date",{ascending:false}),
+      sb.from("items").select("*").order("created_at",{ascending:false}),
+      sb.from("tenants").select("*").order("company_name",{ascending:true}),
     ]);
-    if (r1.error) { console.error("inspections error:", r1.error); return null; }
-    if (r2.error) { console.error("items error:", r2.error); return null; }
-    if (r3.error) { console.error("tenants error:", r3.error); }
-    const inspections = (r1.data||[]).map(r=>({ id:r.id, propertyId:r.property_id, date:r.date, inspector:r.inspector, notes:r.notes }));
-    const items = (r2.data||[]).map(r=>({
-      id:r.id, inspectionId:r.inspection_id, propertyId:r.property_id,
-      description:r.description, category:r.category, priority:r.priority,
-      status:r.status, assignee:r.assignee||"", vendor:r.vendor||"", notes:r.notes||"",
-      scheduledDate:r.scheduled_date||"", completedDate:r.completed_date||"",
-      createdAt:r.created_at, statusHistory:r.status_history||[],
+    if(r1.error){console.error("inspections error:",r1.error);return null;}
+    if(r2.error){console.error("items error:",r2.error);return null;}
+    if(r3.error){console.error("tenants error:",r3.error);}
+    const inspections=(r1.data||[]).map(r=>({id:r.id,propertyId:r.property_id,date:r.date,inspector:r.inspector,notes:r.notes}));
+    const items=(r2.data||[]).map(r=>({
+      id:r.id,inspectionId:r.inspection_id,propertyId:r.property_id,
+      description:r.description,category:r.category,priority:r.priority,
+      status:r.status,assignee:r.assignee||"",vendor:r.vendor||"",notes:r.notes||"",
+      scheduledDate:r.scheduled_date||"",completedDate:r.completed_date||"",
+      createdAt:r.created_at,statusHistory:r.status_history||[],
     }));
-    const tenants = (r3.data||[]).map(r=>({
-      id:r.id, propertyId:r.property_id, companyName:r.company_name||"",
-      unit:r.unit||"", leaseEnd:r.lease_end||"",
-      contacts:r.contacts||[],
+    const tenants=(r3.data||[]).map(r=>({
+      id:r.id,propertyId:r.property_id,companyName:r.company_name||"",
+      unit:r.unit||"",leaseEnd:r.lease_end||"",contacts:r.contacts||[],
     }));
-    return { inspections, items, tenants };
-  } catch(e) { console.error("loadAll error:", e); return null; }
+    return {inspections,items,tenants};
+  } catch(e){console.error("loadAll error:",e);return null;}
 }
 
 async function saveInspection(insp) {
-  const { error } = await sb.from("inspections").upsert({
-    id:insp.id, property_id:insp.propertyId, date:insp.date, inspector:insp.inspector, notes:insp.notes,
-  }, { onConflict:"id" });
-  if (error) console.error("saveInspection error:", error);
-  return error;
+  const{error}=await sb.from("inspections").upsert({id:insp.id,property_id:insp.propertyId,date:insp.date,inspector:insp.inspector,notes:insp.notes},{onConflict:"id"});
+  if(error)console.error("saveInspection error:",error); return error;
 }
-
 async function saveItemToDB(item) {
-  const { error } = await sb.from("items").upsert({
-    id:item.id, inspection_id:item.inspectionId||null, property_id:item.propertyId,
-    description:item.description, category:item.category, priority:item.priority,
-    status:item.status, assignee:item.assignee||"", vendor:item.vendor||"", notes:item.notes||"",
-    scheduled_date:item.scheduledDate||"", completed_date:item.completedDate||"",
-    created_at:item.createdAt, status_history:item.statusHistory,
-  }, { onConflict:"id" });
-  if (error) console.error("saveItemToDB error:", error);
-  return error;
+  const{error}=await sb.from("items").upsert({
+    id:item.id,inspection_id:item.inspectionId||null,property_id:item.propertyId,
+    description:item.description,category:item.category,priority:item.priority,
+    status:item.status,assignee:item.assignee||"",vendor:item.vendor||"",notes:item.notes||"",
+    scheduled_date:item.scheduledDate||"",completed_date:item.completedDate||"",
+    created_at:item.createdAt,status_history:item.statusHistory,
+  },{onConflict:"id"});
+  if(error)console.error("saveItemToDB error:",error); return error;
 }
-
 async function saveTenantToDB(tenant) {
-  const { error } = await sb.from("tenants").upsert({
-    id:tenant.id, property_id:tenant.propertyId, company_name:tenant.companyName||"",
-    unit:tenant.unit||"", lease_end:tenant.leaseEnd||null,
-    contacts:tenant.contacts||[],
-  }, { onConflict:"id" });
-  if (error) console.error("saveTenantToDB error:", error);
-  return error;
+  const{error}=await sb.from("tenants").upsert({
+    id:tenant.id,property_id:tenant.propertyId,company_name:tenant.companyName||"",
+    unit:tenant.unit||"",lease_end:tenant.leaseEnd||null,contacts:tenant.contacts||[],
+  },{onConflict:"id"});
+  if(error)console.error("saveTenantToDB error:",error); return error;
 }
-
 async function deleteTenantFromDB(id) {
-  const { error } = await sb.from("tenants").delete().eq("id", id);
-  if (error) console.error("deleteTenant error:", error);
-  return error;
+  const{error}=await sb.from("tenants").delete().eq("id",id);
+  if(error)console.error("deleteTenant error:",error); return error;
 }
 
-function Chip({label,tc,bg,bc}) {
-  return <span style={{fontSize:11,fontWeight:500,padding:"2px 9px",borderRadius:99,background:bg,color:tc,border:`1px solid ${bc}`,whiteSpace:"nowrap"}}>{label}</span>;
-}
-function PPill({p}) { return <Chip label={p} tc={PCOLOR[p]} bg={PBG[p]} bc={PBDR[p]}/>; }
-function SPill({s}) { return <Chip label={s} tc={SCOLOR[s]} bg={SBG[s]} bc={SBDR[s]}/>; }
-function Dot({color,size=7}) {
-  return <span style={{display:"inline-block",width:size,height:size,borderRadius:"50%",background:color,flexShrink:0}}/>;
-}
-function ULabel({children}) {
-  return <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:C.faint,marginBottom:5}}>{children}</div>;
-}
-function PrimaryBtn({children,onClick,disabled,full}) {
-  return <button onClick={disabled?undefined:onClick} style={{fontFamily:"var(--font-sans)",fontSize:13,fontWeight:600,borderRadius:8,padding:"9px 20px",background:disabled?"#d1d0cb":C.text,color:disabled?"#9c9a93":"#fff",border:"none",cursor:disabled?"not-allowed":"pointer",width:full?"100%":"auto"}}>{children}</button>;
-}
-function GhostBtn({children,onClick}) {
-  return <button onClick={onClick} style={{fontFamily:"var(--font-sans)",fontSize:13,borderRadius:8,padding:"9px 16px",background:"transparent",color:C.muted,border:`1px solid ${C.border}`,cursor:"pointer"}}>{children}</button>;
-}
-function FInput({label,value,onChange,type="text",placeholder,rows}) {
+function Chip({label,tc,bg,bc}){return<span style={{fontSize:11,fontWeight:500,padding:"2px 9px",borderRadius:99,background:bg,color:tc,border:`1px solid ${bc}`,whiteSpace:"nowrap"}}>{label}</span>;}
+function PPill({p}){return<Chip label={p} tc={PCOLOR[p]} bg={PBG[p]} bc={PBDR[p]}/>;}
+function SPill({s}){return<Chip label={s} tc={SCOLOR[s]} bg={SBG[s]} bc={SBDR[s]}/>;}
+function Dot({color,size=7}){return<span style={{display:"inline-block",width:size,height:size,borderRadius:"50%",background:color,flexShrink:0}}/>;}
+function ULabel({children}){return<div style={{fontSize:10,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:C.faint,marginBottom:5}}>{children}</div>;}
+function PrimaryBtn({children,onClick,disabled,full}){return<button onClick={disabled?undefined:onClick} style={{fontFamily:"var(--font-sans)",fontSize:13,fontWeight:600,borderRadius:8,padding:"9px 20px",background:disabled?"#d1d0cb":C.text,color:disabled?"#9c9a93":"#fff",border:"none",cursor:disabled?"not-allowed":"pointer",width:full?"100%":"auto"}}>{children}</button>;}
+function GhostBtn({children,onClick}){return<button onClick={onClick} style={{fontFamily:"var(--font-sans)",fontSize:13,borderRadius:8,padding:"9px 16px",background:"transparent",color:C.muted,border:`1px solid ${C.border}`,cursor:"pointer"}}>{children}</button>;}
+function FInput({label,value,onChange,type="text",placeholder,rows}){
   const s={fontFamily:"var(--font-sans)",fontSize:13,width:"100%",borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:C.text,padding:"8px 11px",boxSizing:"border-box",outline:"none",resize:rows?"vertical":"none"};
-  return <div>{label&&<ULabel>{label}</ULabel>}{rows?<textarea value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} rows={rows} style={s}/>:<input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} style={s}/>}</div>;
+  return<div>{label&&<ULabel>{label}</ULabel>}{rows?<textarea value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} rows={rows} style={s}/>:<input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} style={s}/>}</div>;
 }
-function FSelect({label,value,onChange,options}) {
-  return <div>{label&&<ULabel>{label}</ULabel>}<select value={value} onChange={e=>onChange(e.target.value)} style={{fontFamily:"var(--font-sans)",fontSize:13,width:"100%",borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:C.text,padding:"8px 11px"}}>{options.map(o=><option key={o.v??o} value={o.v??o}>{o.l??o}</option>)}</select></div>;
+function FSelect({label,value,onChange,options}){
+  return<div>{label&&<ULabel>{label}</ULabel>}<select value={value} onChange={e=>onChange(e.target.value)} style={{fontFamily:"var(--font-sans)",fontSize:13,width:"100%",borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:C.text,padding:"8px 11px"}}>{options.map(o=><option key={o.v??o} value={o.v??o}>{o.l??o}</option>)}</select></div>;
 }
-
-function Overlay({children,onClose}) {
-  return <div  style={{position:"absolute",inset:0,zIndex:200,background:"rgba(0,0,0,0.3)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"48px 16px",overflowY:"auto"}}>
+function Overlay({children,onClose}){
+  return<div style={{position:"absolute",inset:0,zIndex:200,background:"rgba(0,0,0,0.3)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"48px 16px",overflowY:"auto"}}>
     <div style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,width:"100%",maxWidth:580,padding:"24px 24px 20px",boxShadow:"0 12px 40px rgba(0,0,0,0.15)"}}>{children}</div>
   </div>;
 }
-function OverlayHeader({title,sub,onClose}) {
-  return <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20}}>
+function OverlayHeader({title,sub,onClose}){
+  return<div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20}}>
     <div>{sub&&<div style={{fontSize:11,color:C.faint,marginBottom:4}}>{sub}</div>}<div style={{fontSize:16,fontWeight:700,color:C.text}}>{title}</div></div>
     <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",fontSize:22,color:C.faint,padding:0,marginLeft:12,lineHeight:1}}>x</button>
   </div>;
 }
-function SlideOver({children,title,sub,onClose}) {
-  return <div style={{position:"absolute",inset:0,zIndex:200,display:"flex"}} >
+function SlideOver({children,title,sub,onClose}){
+  return<div style={{position:"absolute",inset:0,zIndex:200,display:"flex"}}>
     <div style={{flex:1,background:"rgba(0,0,0,0.2)",cursor:"pointer"}} onClick={onClose}/>
     <div style={{width:500,background:C.surface,overflowY:"auto",borderLeft:`1px solid ${C.border}`,display:"flex",flexDirection:"column",boxShadow:"-4px 0 24px rgba(0,0,0,0.1)"}}>
       <div style={{padding:"20px 24px 16px",borderBottom:`1px solid ${C.border}`,flexShrink:0}}>
@@ -257,38 +233,21 @@ function SlideOver({children,title,sub,onClose}) {
   </div>;
 }
 
-// ─── Tenant Form ──────────────────────────────────────────────────────────────
-
-function TenantForm({tenant, propertyId, onSave, onClose}) {
-  const [form, setForm] = useState(tenant || {
-    propertyId: propertyId||PROPERTIES[0].id,
-    companyName:"", unit:"", leaseEnd:"", contacts:[{name:"",email:"",phone:""}]
-  });
-
-  function updateContact(i, field, val) {
-    const updated = form.contacts.map((c,idx)=>idx===i?{...c,[field]:val}:c);
-    setForm(f=>({...f,contacts:updated}));
-  }
-  function addContact() {
-    setForm(f=>({...f,contacts:[...f.contacts,{name:"",email:"",phone:""}]}));
-  }
-  function removeContact(i) {
-    setForm(f=>({...f,contacts:f.contacts.filter((_,idx)=>idx!==i)}));
-  }
-
-  return (
+function TenantForm({tenant,propertyId,onSave,onClose}){
+  const[form,setForm]=useState(tenant||{propertyId:propertyId||PROPERTIES[0].id,companyName:"",unit:"",leaseEnd:"",contacts:[{name:"",email:"",phone:""}]});
+  function updateContact(i,field,val){setForm(f=>({...f,contacts:f.contacts.map((c,idx)=>idx===i?{...c,[field]:val}:c)}));}
+  function addContact(){setForm(f=>({...f,contacts:[...f.contacts,{name:"",email:"",phone:""}]}));}
+  function removeContact(i){setForm(f=>({...f,contacts:f.contacts.filter((_,idx)=>idx!==i)}));}
+  return(
     <Overlay onClose={onClose}>
       <OverlayHeader title={tenant?"Edit Tenant":"Add Tenant"} onClose={onClose}/>
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
-        {!tenant&&<FSelect label="Property" value={form.propertyId} onChange={v=>setForm(f=>({...f,propertyId:v}))}
-          options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} - ${p.name}`}))}/>}
+        {!tenant&&<FSelect label="Property" value={form.propertyId} onChange={v=>setForm(f=>({...f,propertyId:v}))} options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} - ${p.name}`}))}/>}
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
           <FInput label="Company name" value={form.companyName} onChange={v=>setForm(f=>({...f,companyName:v}))} placeholder="Acme Corp"/>
           <FInput label="Unit / Suite" value={form.unit} onChange={v=>setForm(f=>({...f,unit:v}))} placeholder="Suite 100"/>
           <FInput label="Lease end date" value={form.leaseEnd} onChange={v=>setForm(f=>({...f,leaseEnd:v}))} type="date"/>
         </div>
-
-        {/* Contacts */}
         <div>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
             <ULabel>Contacts</ULabel>
@@ -302,88 +261,62 @@ function TenantForm({tenant, propertyId, onSave, onClose}) {
               </div>
               <div style={{display:"flex",gap:8,alignItems:"flex-end"}}>
                 <div style={{flex:1}}><FInput label="Email" value={c.email} onChange={v=>updateContact(i,"email",v)} placeholder="john@acme.com"/></div>
-                {form.contacts.length>1&&<button onClick={()=>removeContact(i)} style={{fontSize:11,background:"#fff0f0",border:"1px solid #ffcccc",borderRadius:6,padding:"8px 10px",cursor:"pointer",color:"#e00",fontFamily:"var(--font-sans)",flexShrink:0,marginBottom:0}}>Remove</button>}
+                {form.contacts.length>1&&<button onClick={()=>removeContact(i)} style={{fontSize:11,background:"#fff0f0",border:"1px solid #ffcccc",borderRadius:6,padding:"8px 10px",cursor:"pointer",color:"#e00",fontFamily:"var(--font-sans)",flexShrink:0}}>Remove</button>}
               </div>
             </div>
           ))}
         </div>
-
-        <PrimaryBtn full disabled={!form.companyName.trim()} onClick={()=>onSave({...form,id:tenant?.id||"t"+uid()})}>
-          {tenant?"Save changes":"Add tenant"}
-        </PrimaryBtn>
+        <PrimaryBtn full disabled={!form.companyName.trim()} onClick={()=>onSave({...form,id:tenant?.id||"t"+uid()})}>{tenant?"Save changes":"Add tenant"}</PrimaryBtn>
       </div>
     </Overlay>
   );
 }
 
-// ─── Tenants Section ──────────────────────────────────────────────────────────
-
-function TenantsSection({propertyId, tenants, onAdd, onEdit, onDelete}) {
-  const propTenants = tenants.filter(t=>t.propertyId===propertyId);
-  return (
+function TenantsSection({propertyId,tenants,onEdit,onDelete}){
+  const propTenants=tenants.filter(t=>t.propertyId===propertyId);
+  return(
     <div style={{marginTop:28}}>
-      <div style={{marginBottom:10}}>
-        <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.09em",textTransform:"uppercase",color:C.faint}}>Tenants</div>
-      </div>
+      <div style={{marginBottom:10}}><div style={{fontSize:10,fontWeight:700,letterSpacing:"0.09em",textTransform:"uppercase",color:C.faint}}>Tenants</div></div>
       {propTenants.length===0
-        ? <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:"20px 18px",textAlign:"center",fontSize:13,color:C.faint}}>No tenants on file for this property.</div>
-        : <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
-            {propTenants.map((t,i)=>(
-              <div key={t.id} style={{padding:"14px 18px",borderBottom:i<propTenants.length-1?`1px solid ${C.border}`:"none"}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:14,fontWeight:700,color:C.text}}>{t.companyName}{t.unit&&<span style={{fontSize:12,fontWeight:400,color:C.muted,marginLeft:8}}>{t.unit}</span>}</div>
-                    {t.leaseEnd&&<div style={{fontSize:11,color:C.faint,marginTop:2}}>Lease ends: {fmtDate(t.leaseEnd)}</div>}
-                    {(t.contacts||[]).length>0&&<div style={{marginTop:8,display:"flex",flexDirection:"column",gap:4}}>
-                      {t.contacts.map((c,ci)=>(
-                        <div key={ci} style={{display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
-                          {c.name&&<span style={{fontSize:12,fontWeight:500,color:C.text}}>{c.name}</span>}
-                          {c.email&&<a href={`mailto:${c.email}`} style={{fontSize:12,color:"#0070f3",textDecoration:"none"}}>{c.email}</a>}
-                          {c.phone&&<span style={{fontSize:12,color:C.muted}}>{c.phone}</span>}
-                        </div>
-                      ))}
-                    </div>}
-                  </div>
-                  <div style={{display:"flex",gap:6,flexShrink:0,marginLeft:12}}>
-                    <button onClick={()=>onEdit(t)} style={{fontSize:11,background:C.bg,border:`1px solid ${C.border}`,borderRadius:6,padding:"4px 10px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>Edit</button>
-                    <button onClick={()=>onDelete(t.id)} style={{fontSize:11,background:"#fff0f0",border:"1px solid #ffcccc",borderRadius:6,padding:"4px 10px",cursor:"pointer",color:"#e00",fontFamily:"var(--font-sans)"}}>Remove</button>
-                  </div>
+        ?<div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:"20px 18px",textAlign:"center",fontSize:13,color:C.faint}}>No tenants on file for this property.</div>
+        :<div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
+          {propTenants.map((t,i)=>(
+            <div key={t.id} style={{padding:"14px 18px",borderBottom:i<propTenants.length-1?`1px solid ${C.border}`:"none"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:14,fontWeight:700,color:C.text}}>{t.companyName}{t.unit&&<span style={{fontSize:12,fontWeight:400,color:C.muted,marginLeft:8}}>{t.unit}</span>}</div>
+                  {t.leaseEnd&&<div style={{fontSize:11,color:C.faint,marginTop:2}}>Lease ends: {fmtDate(t.leaseEnd)}</div>}
+                  {(t.contacts||[]).length>0&&<div style={{marginTop:8,display:"flex",flexDirection:"column",gap:4}}>
+                    {t.contacts.map((c,ci)=>(
+                      <div key={ci} style={{display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
+                        {c.name&&<span style={{fontSize:12,fontWeight:500,color:C.text}}>{c.name}</span>}
+                        {c.email&&<a href={`mailto:${c.email}`} style={{fontSize:12,color:"#0070f3",textDecoration:"none"}}>{c.email}</a>}
+                        {c.phone&&<span style={{fontSize:12,color:C.muted}}>{c.phone}</span>}
+                      </div>
+                    ))}
+                  </div>}
+                </div>
+                <div style={{display:"flex",gap:6,flexShrink:0,marginLeft:12}}>
+                  <button onClick={()=>onEdit(t)} style={{fontSize:11,background:C.bg,border:`1px solid ${C.border}`,borderRadius:6,padding:"4px 10px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>Edit</button>
+                  <button onClick={()=>onDelete(t.id)} style={{fontSize:11,background:"#fff0f0",border:"1px solid #ffcccc",borderRadius:6,padding:"4px 10px",cursor:"pointer",color:"#e00",fontFamily:"var(--font-sans)"}}>Remove</button>
                 </div>
               </div>
-            ))}
-          </div>}
+            </div>
+          ))}
+        </div>}
     </div>
   );
 }
 
-// ─── AI helpers ───────────────────────────────────────────────────────────────
-
-function parsePDF({pdfBase64,propertyId,inspectionId,overrideDate,overrideInspector},setLoading,onResult) {
+function parsePDF({pdfBase64,propertyId,inspectionId,overrideDate,overrideInspector},setLoading,onResult){
   setLoading(true);
-  const prompt=`You are reviewing a SnapInspect property inspection report for Dembs Development Inc.
-Extract ALL actionable repair and maintenance items from this inspection.
-RULES:
-- Extract when Condition = "Yes" AND the item name describes a problem
-- Extract when Condition = "Yes" AND there is a comment
-- Extract when Condition = "Satisfactory" but comment describes an issue
-- Extract ALL items from the Comment Section at the end
-- SKIP: Condition = "No", "N/A", or blank
-- SKIP: "Overhead Doors Tested", "Dock Leveler Tested", "Handicap spaces properly striped", "Irrigation system turned off" when Yes with no damage comment
-- SKIP: "Dumpster Coral", "Dumpster Pad", "Dumpster Gates" when Yes with no damage comment
-For each item return:
-- description: item name + comment combined into one clear actionable sentence
-- category: one of ${CATEGORIES.join(", ")}
-- priority: Critical/High/Medium/Low
-- location: specific location if mentioned, else ""
-Also extract from header: propertyName, inspectorName, inspectionDate (YYYY-MM-DD format)
-Respond ONLY with valid JSON, no markdown:
-{"propertyName":"","inspectorName":"","inspectionDate":"","items":[{"description":"","category":"","priority":"","location":""}]}`;
+  const prompt=`You are reviewing a SnapInspect property inspection report for Dembs Development Inc. Extract ALL actionable repair and maintenance items. For each item return description, category (one of ${CATEGORIES.join(", ")}), priority (Critical/High/Medium/Low), location. Also extract propertyName, inspectorName, inspectionDate (YYYY-MM-DD). Respond ONLY with valid JSON: {"propertyName":"","inspectorName":"","inspectionDate":"","items":[{"description":"","category":"","priority":"","location":""}]}`;
   fetch("/api/anthropic",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,messages:[{role:"user",content:[{type:"document",source:{type:"base64",media_type:"application/pdf",data:pdfBase64}},{type:"text",text:prompt}]}]})})
   .then(r=>r.json()).then(data=>{
     const raw=data.content?.find(b=>b.type==="text")?.text||"{}";
     let parsed={items:[]};
-    try { parsed=JSON.parse(raw.replace(/```json|```/g,"").trim()); } catch(e) { console.error("Parse error:",e); }
-    const ts=nowISO(); const dateOnly=today();
+    try{parsed=JSON.parse(raw.replace(/```json|```/g,"").trim());}catch(e){console.error("Parse error:",e);}
+    const ts=nowISO();const dateOnly=today();
     const newItems=(parsed.items||[]).map(item=>({
       id:"r"+uid(),inspectionId,propertyId,
       description:item.description+(item.location?` (${item.location})`:""),
@@ -397,40 +330,33 @@ Respond ONLY with valid JSON, no markdown:
   }).catch(e=>{setLoading(false);console.error("Fetch error:",e);alert("Failed to parse PDF.");});
 }
 
-function genAISummary(prop,propItems,cb,setLoading) {
+function genAISummary(prop,propItems,cb,setLoading){
   setLoading(true);
   const open=propItems.filter(i=>i.status!=="Completed");
   fetch("/api/anthropic",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:180,messages:[{role:"user",content:`Write a 2-3 sentence maintenance status summary for ${prop.name}. Open: ${open.length}. Critical: ${open.filter(i=>i.priority==="Critical").length}. Items: ${propItems.slice(0,5).map(i=>i.description).join("; ")}. Plain professional prose, no bullets.`}]})})
   .then(r=>r.json()).then(data=>{cb(data.content?.find(b=>b.type==="text")?.text||"");setLoading(false);}).catch(()=>setLoading(false));
 }
 
-// ─── Quote Modal ──────────────────────────────────────────────────────────────
-
-function QuoteModal({item,onClose}) {
+function QuoteModal({item,onClose}){
   const prop=PROPERTIES.find(p=>p.id===item.propertyId);
   const categoryVendors=(VENDORS[item.category]||[]).filter(v=>v.name!=="TBD");
-  const [selVendor,setSelVendor]=useState("");
-  const [selEmail,setSelEmail]=useState("");
-  const vendor=categoryVendors.find(v=>v.name===selVendor);
-  const contacts=vendor?.contacts||[];
+  const[selVendor,setSelVendor]=useState("");const[selEmail,setSelEmail]=useState("");
+  const vendor=categoryVendors.find(v=>v.name===selVendor);const contacts=vendor?.contacts||[];
   const subject=`Quote Request - ${item.description.slice(0,60)} - ${prop?.name}`;
   const body=`Hello,\n\nWe are requesting a quote for the following repair at one of our properties.\n\nPROPERTY: ${prop?.name}\nADDRESS: ${prop?.address}\n\nSCOPE OF WORK: ${item.description}\n\nPRIORITY: ${item.priority}\n\nPlease reply with your quote at your earliest convenience. For questions contact us at ${CONTACT_EMAIL}.\n\nThank you,\nDembs Development Inc.\n${CONTACT_EMAIL}`;
   const T="#1a1a1a";const M="#555550";const B="#d0cec8";
   const I={fontFamily:"var(--font-sans)",fontSize:13,width:"100%",borderRadius:7,border:`1px solid ${B}`,background:"#fff",color:T,padding:"8px 10px",boxSizing:"border-box"};
-  return (
-    <div  style={{position:"absolute",inset:0,zIndex:300,background:"rgba(0,0,0,0.35)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"52px 16px",overflowY:"auto"}}>
+  return(
+    <div style={{position:"absolute",inset:0,zIndex:300,background:"rgba(0,0,0,0.35)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"52px 16px",overflowY:"auto"}}>
       <div style={{background:"#fff",borderRadius:12,border:`1px solid ${B}`,width:"100%",maxWidth:580,padding:"26px 26px 22px",boxShadow:"0 12px 40px rgba(0,0,0,0.15)"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18}}>
           <div><div style={{fontSize:16,fontWeight:700,color:T}}>Request Vendor Quote</div><div style={{fontSize:12,color:M,marginTop:3}}>{prop?.name} - {item.category}</div></div>
           <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",fontSize:22,color:M,padding:0}}>x</button>
         </div>
         <div style={{background:"#f5f4f1",borderRadius:8,padding:"12px 14px",marginBottom:18}}>
-          <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:"#9c9a93",marginBottom:6}}>Scope of Work</div>
           <div style={{fontSize:14,color:T,lineHeight:1.5}}>{item.description}</div>
-          <div style={{marginTop:8}}><span style={{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:99,background:item.priority==="Critical"?"#fef2f2":item.priority==="High"?"#fefce8":"#eff6ff",color:item.priority==="Critical"?"#b91c1c":item.priority==="High"?"#b45309":"#1d4ed8",border:`1px solid ${item.priority==="Critical"?"#fecaca":item.priority==="High"?"#fde68a":"#bfdbfe"}`}}>{item.priority} Priority</span></div>
         </div>
         <div style={{marginBottom:18}}>
-          <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:"#9c9a93",marginBottom:10}}>Vendor</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
             <div><div style={{fontSize:11,color:M,marginBottom:4}}>Company</div>
               {categoryVendors.length>0?<select value={selVendor} onChange={e=>{setSelVendor(e.target.value);setSelEmail("");}} style={I}><option value="">Select vendor...</option>{categoryVendors.map(v=><option key={v.name} value={v.name}>{v.name}</option>)}</select>:<input placeholder="No vendors on file" style={{...I,color:"#aaa"}} disabled/>}
@@ -441,7 +367,6 @@ function QuoteModal({item,onClose}) {
           </div>
         </div>
         <div style={{marginBottom:18}}>
-          <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:"#9c9a93",marginBottom:8}}>Email Preview</div>
           <div style={{background:"#f5f4f1",borderRadius:8,padding:"12px 14px",fontSize:12,color:M,lineHeight:1.7,maxHeight:180,overflowY:"auto"}}>
             <div><strong style={{color:T}}>To:</strong> {selEmail||"(select a vendor email above)"}</div>
             <div><strong style={{color:T}}>Subject:</strong> {subject}</div>
@@ -457,16 +382,13 @@ function QuoteModal({item,onClose}) {
   );
 }
 
-// ─── Components ───────────────────────────────────────────────────────────────
-
-function PropRow({prop,items,inspections,tenants,isLast,onClick}) {
-  const [hov,setHov]=useState(false);
+function PropRow({prop,items,inspections,isLast,onClick}){
+  const[hov,setHov]=useState(false);
   const pi=items.filter(it=>it.propertyId===prop.id);
   const oi=pi.filter(it=>it.status!=="Completed");
   const cr=oi.filter(it=>it.priority==="Critical").length;
   const ins=inspections.filter(it=>it.propertyId===prop.id).length;
-  const ten=tenants.filter(t=>t.propertyId===prop.id).length;
-  return (
+  return(
     <div onClick={onClick} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)} style={{display:"flex",alignItems:"center",gap:16,padding:"11px 18px",background:hov?C.bg:C.surface,cursor:"pointer",borderBottom:isLast?"none":"1px solid #eaeaea",transition:"background 0.1s"}}>
       <div style={{flex:1,minWidth:0}}>
         <div style={{fontSize:15,fontWeight:600,color:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{prop.name}</div>
@@ -485,11 +407,11 @@ function PropRow({prop,items,inspections,tenants,isLast,onClick}) {
   );
 }
 
-function ItemRow({item,showProperty,onClick,onAdvance}) {
-  const [hov,setHov]=useState(false);
+function ItemRow({item,showProperty,onClick,onAdvance}){
+  const[hov,setHov]=useState(false);
   const prop=PROPERTIES.find(p=>p.id===item.propertyId);
   const next=STATUS_NEXT[item.status];
-  return (
+  return(
     <div onClick={onClick} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)} style={{display:"flex",alignItems:"center",gap:14,padding:"11px 18px",background:hov?C.bg:C.surface,borderBottom:`1px solid ${C.border}`,cursor:"pointer",transition:"background 0.1s"}}>
       <div style={{flex:1,minWidth:0}}>
         <div style={{fontSize:14,fontWeight:600,color:C.text,marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.description}</div>
@@ -508,15 +430,11 @@ function ItemRow({item,showProperty,onClick,onAdvance}) {
   );
 }
 
-function ItemDetail({item,inspections,onUpdate,onAdvance,onDelete,onClose}) {
-  const [editing,setEditing]=useState(false);
-  const [form,setForm]=useState({...item});
-  const [showQuote,setShowQuote]=useState(false);
-  const prop=PROPERTIES.find(p=>p.id===item.propertyId);
-  const insp=inspections.find(i=>i.id===item.inspectionId);
-  const next=STATUS_NEXT[item.status];
+function ItemDetail({item,inspections,onUpdate,onAdvance,onDelete,onClose}){
+  const[editing,setEditing]=useState(false);const[form,setForm]=useState({...item});const[showQuote,setShowQuote]=useState(false);
+  const prop=PROPERTIES.find(p=>p.id===item.propertyId);const insp=inspections.find(i=>i.id===item.inspectionId);const next=STATUS_NEXT[item.status];
   function save(){onUpdate(form);setEditing(false);}
-  return (
+  return(
     <SlideOver onClose={onClose} sub={`${GROUPS[prop?.group]} - ${prop?.name}`} title={item.description}>
       <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:18}}><PPill p={item.priority}/><SPill s={item.status}/><Chip label={item.category} tc={C.muted} bg={C.bg} bc={C.border}/></div>
       {next&&<button onClick={onAdvance} style={{width:"100%",marginBottom:20,padding:"10px 16px",background:SBG[next],color:SCOLOR[next],border:`1px solid ${SBDR[next]}`,borderRadius:8,cursor:"pointer",fontFamily:"var(--font-sans)",fontSize:13,fontWeight:600}}>Mark as {next}</button>}
@@ -539,7 +457,8 @@ function ItemDetail({item,inspections,onUpdate,onAdvance,onDelete,onClose}) {
           ))}
         </div>
         <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-          <GhostBtn onClick={()=>setEditing(true)}>Edit item</GhostBtn><button onClick={()=>onDelete(item.id)} style={{fontFamily:"var(--font-sans)",fontSize:13,borderRadius:8,padding:"9px 16px",background:"#fff0f0",color:"#e00",border:"1px solid #ffcccc",cursor:"pointer"}}>Delete item</button><button onClick={()=>onDelete(item.id)} style={{fontFamily:"var(--font-sans)",fontSize:13,borderRadius:8,padding:"9px 16px",background:"#fff0f0",color:"#e00",border:"1px solid #ffcccc",cursor:"pointer"}}>Delete item</button>
+          <GhostBtn onClick={()=>setEditing(true)}>Edit item</GhostBtn>
+          <button onClick={()=>onDelete(item.id)} style={{fontFamily:"var(--font-sans)",fontSize:13,borderRadius:8,padding:"9px 16px",background:"#fff0f0",color:"#e00",border:"1px solid #ffcccc",cursor:"pointer"}}>Delete item</button>
           <button onClick={()=>setShowQuote(true)} style={{fontFamily:"var(--font-sans)",fontSize:13,borderRadius:8,padding:"9px 16px",background:"#eff6ff",color:"#1d4ed8",border:"1px solid #bfdbfe",cursor:"pointer",fontWeight:500}}>Request Quote</button>
         </div>
         {showQuote&&<QuoteModal item={item} onClose={()=>setShowQuote(false)}/>}
@@ -560,10 +479,9 @@ function ItemDetail({item,inspections,onUpdate,onAdvance,onDelete,onClose}) {
   );
 }
 
-function AISummaryCard({prop,propItems}) {
-  const [text,setText]=useState("");
-  const [loading,setLoading]=useState(false);
-  return (
+function AISummaryCard({prop,propItems}){
+  const[text,setText]=useState("");const[loading,setLoading]=useState(false);
+  return(
     <div style={{background:C.bg,border:`1px solid ${C.border}`,borderRadius:10,padding:"14px 18px",marginBottom:24}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:text?10:0}}>
         <ULabel>AI Status Summary</ULabel>
@@ -574,29 +492,20 @@ function AISummaryCard({prop,propItems}) {
   );
 }
 
-function ImportForm({selectedPropertyId,onSubmit,onClose}) {
-  const [propertyId,setPropertyId]=useState(selectedPropertyId||PROPERTIES[0].id);
-  const [overrideInspector,setOverrideInspector]=useState("");
-  const [overrideDate,setOverrideDate]=useState("");
-  const [fileName,setFileName]=useState("");
-  const [pdfBase64,setPdfBase64]=useState("");
-  const [loading,setLoading]=useState(false);
-  const [preview,setPreview]=useState(null);
-  const [dragOver,setDragOver]=useState(false);
-  function handleFile(file) {
+function ImportForm({selectedPropertyId,onSubmit,onClose}){
+  const[propertyId,setPropertyId]=useState(selectedPropertyId||PROPERTIES[0].id);
+  const[overrideInspector,setOverrideInspector]=useState("");const[overrideDate,setOverrideDate]=useState("");
+  const[fileName,setFileName]=useState("");const[pdfBase64,setPdfBase64]=useState("");
+  const[loading,setLoading]=useState(false);const[preview,setPreview]=useState(null);const[dragOver,setDragOver]=useState(false);
+  function handleFile(file){
     if(!file||file.type!=="application/pdf"){alert("Please upload a PDF.");return;}
     setFileName(file.name);
     const r=new FileReader();
-    r.onload=e=>{
-      const base64=e.target.result.split(",")[1];
-      const sizeInMB=(base64.length*0.75)/(1024*1024);
-      if(sizeInMB>4){alert(`PDF is ${sizeInMB.toFixed(1)}MB - compress at smallpdf.com first.`);return;}
-      setPdfBase64(base64);
-    };
+    r.onload=e=>{const base64=e.target.result.split(",")[1];const sizeInMB=(base64.length*0.75)/(1024*1024);if(sizeInMB>4){alert(`PDF is ${sizeInMB.toFixed(1)}MB - compress at smallpdf.com first.`);return;}setPdfBase64(base64);};
     r.readAsDataURL(file);
   }
   const prop=PROPERTIES.find(p=>p.id===propertyId);
-  if(preview) return (
+  if(preview)return(
     <Overlay onClose={onClose}>
       <OverlayHeader title="Review extracted items" sub={`${preview.items.length} items from ${fileName}`} onClose={onClose}/>
       {preview.detectedProperty&&<div style={{fontSize:12,color:C.muted,background:C.bg,padding:"8px 12px",borderRadius:8,border:`1px solid ${C.border}`,marginBottom:14}}>PDF property: <strong style={{color:C.text}}>{preview.detectedProperty}</strong> - {prop?.name}</div>}
@@ -614,7 +523,7 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}) {
       </div>
     </Overlay>
   );
-  return (
+  return(
     <Overlay onClose={onClose}>
       <OverlayHeader title="Import SnapInspect report" sub="Notes and photos extracted automatically" onClose={onClose}/>
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
@@ -633,9 +542,9 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}) {
   );
 }
 
-function AddItemForm({selectedPropertyId,onSubmit,onClose}) {
-  const [form,setForm]=useState({propertyId:selectedPropertyId||PROPERTIES[0].id,description:"",category:CATEGORIES[0],priority:"Medium",assignee:"",vendor:"",notes:""});
-  return (
+function AddItemForm({selectedPropertyId,onSubmit,onClose}){
+  const[form,setForm]=useState({propertyId:selectedPropertyId||PROPERTIES[0].id,description:"",category:CATEGORIES[0],priority:"Medium",assignee:"",vendor:"",notes:""});
+  return(
     <Overlay onClose={onClose}>
       <OverlayHeader title="Add repair item" onClose={onClose}/>
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
@@ -654,28 +563,13 @@ function AddItemForm({selectedPropertyId,onSubmit,onClose}) {
   );
 }
 
-// ─── App ──────────────────────────────────────────────────────────────────────
-
-export default function App() {
-  const [loaded,setLoaded]=useState(false);
-  const [saveError,setSaveError]=useState("");
-  const [saving,setSaving]=useState(false);
-  const [inspections,setInspections]=useState([]);
-  const [items,setItems]=useState([]);
-  const [tenants,setTenants]=useState([]);
-  const [view,setView]=useState("portfolio");
-  const [selProp,setSelProp]=useState(null);
-  const [selItem,setSelItem]=useState(null);
-  const [showImport,setShowImport]=useState(false);
-  const [showAdd,setShowAdd]=useState(false);
-  const [tenantForm,setTenantForm]=useState(null);
-  const [fStatus,setFStatus]=useState("All");
-  const [fPriority,setFPriority]=useState("All");
-  const [fCategory,setFCategory]=useState("All");
-  const [fAssignee,setFAssignee]=useState("All");
-  const [search,setSearch]=useState("");
-  const [tenantSearch,setTenantSearch]=useState("");
-  const [tenantSort,setTenantSort]=useState("tenant");
+export default function App(){
+  const[loaded,setLoaded]=useState(false);const[saveError,setSaveError]=useState("");const[saving,setSaving]=useState(false);
+  const[inspections,setInspections]=useState([]);const[items,setItems]=useState([]);const[tenants,setTenants]=useState([]);
+  const[view,setView]=useState("portfolio");const[selProp,setSelProp]=useState(null);const[selItem,setSelItem]=useState(null);
+  const[showImport,setShowImport]=useState(false);const[showAdd,setShowAdd]=useState(false);const[tenantForm,setTenantForm]=useState(null);
+  const[fStatus,setFStatus]=useState("All");const[fPriority,setFPriority]=useState("All");const[fCategory,setFCategory]=useState("All");const[fAssignee,setFAssignee]=useState("All");
+  const[search,setSearch]=useState("");const[tenantSearch,setTenantSearch]=useState("");const[tenantSort,setTenantSort]=useState("tenant");
 
   useEffect(()=>{
     loadAll().then(result=>{
@@ -684,7 +578,7 @@ export default function App() {
     });
   },[]);
 
-  async function updateItem(id,changes) {
+  async function updateItem(id,changes){
     const updated=items.map(i=>i.id===id?{...i,...changes}:i);
     setItems(updated);if(selItem?.id===id)setSelItem(p=>({...p,...changes}));
     setSaving(true);setSaveError("");
@@ -692,40 +586,39 @@ export default function App() {
     if(err)setSaveError("Save failed: "+err.message);
     setSaving(false);
   }
-  async function advance(item) {
+  async function deleteItem(id){
+    if(!window.confirm("Delete this item? This cannot be undone."))return;
+    const{error}=await sb.from("items").delete().eq("id",id);
+    if(!error){setItems(prev=>prev.filter(i=>i.id!==id));setSelItem(null);}
+    else setSaveError("Delete failed: "+error.message);
+  }
+  async function advance(item){
     const next=STATUS_NEXT[item.status];if(!next)return;
     const d=today();const h=[...item.statusHistory,{status:next,date:d}];
     const ch={status:next,statusHistory:h};if(next==="Completed")ch.completedDate=d;
     await updateItem(item.id,ch);
   }
-  async function addInspectionAndItems(insp,newItems) {
+  async function addInspectionAndItems(insp,newItems){
     setSaving(true);setSaveError("");
     const e1=await saveInspection(insp);
     if(e1){setSaveError("Failed to save inspection: "+e1.message);setSaving(false);return;}
     for(const item of newItems){const e2=await saveItemToDB(item);if(e2)setSaveError("Failed to save item: "+e2.message);}
     setInspections(prev=>[insp,...prev]);setItems(prev=>[...newItems,...prev]);setSaving(false);
   }
-  async function addItem(item) {
+  async function addItem(item){
     setSaving(true);setSaveError("");
     const err=await saveItemToDB(item);
     if(err){setSaveError("Save failed: "+err.message);setSaving(false);return;}
     setItems(prev=>[item,...prev]);setSaving(false);
   }
-  async function deleteItem(id) {
-  if(!window.confirm('Delete this item? This cannot be undone.')) return;
-  const {error} = await sb.from('items').delete().eq('id',id);
-  if(!error){setItems(prev=>prev.filter(i=>i.id!==id));setSelItem(null);}else setSaveError('Delete failed: '+error.message);
-}
-async function deleteItem(id){if(!window.confirm('Delete this item? This cannot be undone.'))return;const{error}=await sb.from('items').delete().eq('id',id);if(!error){setItems(prev=>prev.filter(i=>i.id!==id));setSelItem(null);}else setSaveError('Delete failed: '+error.message);}
-  async function deleteItem(id){if(!window.confirm('Delete this item? This cannot be undone.'))return;const{error}=await sb.from('items').delete().eq('id',id);if(!error){setItems(prev=>prev.filter(i=>i.id!==id));setSelItem(null);}else setSaveError('Delete failed: '+error.message);}
-  async function saveTenant(tenant) {
+  async function saveTenant(tenant){
     setSaving(true);setSaveError("");
     const err=await saveTenantToDB(tenant);
     if(err){setSaveError("Save failed: "+err.message);setSaving(false);return;}
     setTenants(prev=>{const exists=prev.find(t=>t.id===tenant.id);return exists?prev.map(t=>t.id===tenant.id?tenant:t):[...prev,tenant];});
     setTenantForm(null);setSaving(false);
   }
-  async function deleteTenant(id) {
+  async function deleteTenant(id){
     if(!window.confirm("Remove this tenant?"))return;
     const err=await deleteTenantFromDB(id);
     if(!err)setTenants(prev=>prev.filter(t=>t.id!==id));
@@ -744,37 +637,24 @@ async function deleteItem(id){if(!window.confirm('Delete this item? This cannot 
   }),[items,fStatus,fPriority,fCategory,fAssignee,selProp,search]);
 
   const filteredTenants=useMemo(()=>{
-    const filtered=tenants.filter(t=>{
+    const f=tenants.filter(t=>{
       if(!tenantSearch)return true;
       const q=tenantSearch.toLowerCase();
       const prop=PROPERTIES.find(p=>p.id===t.propertyId);
-      return t.companyName?.toLowerCase().includes(q)
-        ||(t.contacts||[]).some(c=>c.name?.toLowerCase().includes(q)||c.email?.toLowerCase().includes(q))
-        ||prop?.name?.toLowerCase().includes(q)
-        ||prop?.address?.toLowerCase().includes(q);
+      return t.companyName?.toLowerCase().includes(q)||(t.contacts||[]).some(c=>c.name?.toLowerCase().includes(q)||c.email?.toLowerCase().includes(q))||prop?.name?.toLowerCase().includes(q)||prop?.address?.toLowerCase().includes(q);
     });
-    return [...filtered].sort((a,b)=>{
-      if(tenantSort==="tenant") return (a.companyName||"").localeCompare(b.companyName||"");
-      if(tenantSort==="partnership") {
-        const pa=PROPERTIES.find(p=>p.id===a.propertyId)?.group||"";
-        const pb=PROPERTIES.find(p=>p.id===b.propertyId)?.group||"";
-        return pa.localeCompare(pb)||((a.companyName||"").localeCompare(b.companyName||""));
-      }
-      if(tenantSort==="lease") {
-        if(!a.leaseEnd&&!b.leaseEnd) return 0;
-        if(!a.leaseEnd) return 1;
-        if(!b.leaseEnd) return -1;
-        return a.leaseEnd.localeCompare(b.leaseEnd);
-      }
+    return[...f].sort((a,b)=>{
+      if(tenantSort==="tenant")return(a.companyName||"").localeCompare(b.companyName||"");
+      if(tenantSort==="partnership"){const pa=PROPERTIES.find(p=>p.id===a.propertyId)?.group||"";const pb=PROPERTIES.find(p=>p.id===b.propertyId)?.group||"";return pa.localeCompare(pb)||((a.companyName||"").localeCompare(b.companyName||""));}
+      if(tenantSort==="lease"){if(!a.leaseEnd&&!b.leaseEnd)return 0;if(!a.leaseEnd)return 1;if(!b.leaseEnd)return -1;return a.leaseEnd.localeCompare(b.leaseEnd);}
       return 0;
     });
   },[tenants,tenantSearch,tenantSort]);
 
   const NAV=[{id:"portfolio",label:"Portfolio"},{id:"items",label:"All Items"},{id:"tenants",label:"Tenants"},{id:"inspections",label:"Inspections"}];
+  if(!loaded)return<div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:C.bg,fontFamily:"var(--font-sans)",color:C.faint,fontSize:13}}>Loading...</div>;
 
-  if(!loaded) return <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:C.bg,fontFamily:"var(--font-sans)",color:C.faint,fontSize:13}}>Loading...</div>;
-
-  return (
+  return(
     <div style={{display:"flex",height:"100vh",width:"100vw",background:C.bg,fontFamily:"var(--font-sans)",overflow:"hidden",position:"relative"}}>
       <div style={{width:220,background:"#000",display:"flex",flexDirection:"column",flexShrink:0,borderRight:"1px solid #1a1a1a"}}>
         <div style={{padding:"20px 20px 16px",display:"flex",alignItems:"center",gap:10}}>
@@ -784,7 +664,7 @@ async function deleteItem(id){if(!window.confirm('Delete this item? This cannot 
         <div style={{height:1,background:"rgba(255,255,255,0.07)",margin:"0 14px 8px"}}/>
         <nav style={{flex:1,padding:"4px 10px"}}>
           {NAV.map(n=>(
-            <button key={n.id} onClick={()=>{setView(n.id);setSelProp(null);}} style={{display:"block",width:"100%",textAlign:"left",padding:"8px 10px",background:view===n.id?"rgba(255,255,255,0.12)":"transparent",border:"none",borderRadius:7,cursor:"pointer",marginBottom:1,fontSize:14,fontWeight:view===n.id?700:400,color:view===n.id?"#ffffff":C.sideMuted,letterSpacing:view===n.id?"-0.01em":"normal",transition:"all 0.1s"}}>{n.label}</button>
+            <button key={n.id} onClick={()=>{setView(n.id);setSelProp(null);}} style={{display:"block",width:"100%",textAlign:"left",padding:"8px 10px",background:view===n.id?"rgba(255,255,255,0.12)":"transparent",border:"none",borderRadius:7,cursor:"pointer",marginBottom:1,fontSize:14,fontWeight:view===n.id?700:400,color:view===n.id?"#ffffff":C.sideMuted,transition:"all 0.1s"}}>{n.label}</button>
           ))}
         </nav>
         <div style={{padding:"16px 20px",borderTop:"1px solid rgba(255,255,255,0.08)"}}>
@@ -806,13 +686,13 @@ async function deleteItem(id){if(!window.confirm('Delete this item? This cannot 
           </div>
           <div style={{display:"flex",gap:8}}>
             {view==="tenants"&&<button onClick={()=>setTenantForm({mode:"add",propertyId:selProp})} style={{fontSize:13,fontWeight:500,background:"transparent",border:`1px solid ${C.border}`,borderRadius:7,padding:"6px 14px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>+ Add tenant</button>}
-            {view==="items"&&<button onClick={()=>doExport(filtered)} style={{fontSize:13,fontWeight:500,background:"#f0fff4",border:"1px solid #bbf7d0",borderRadius:7,padding:"6px 14px",cursor:"pointer",color:"#16a34a",fontFamily:"var(--font-sans)"}}>Export to Excel</button>}{view!=="tenants"&&<button onClick={()=>setShowAdd(true)} style={{fontSize:13,fontWeight:500,background:"transparent",border:`1px solid ${C.border}`,borderRadius:7,padding:"6px 14px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>+ Add item</button>}
+            {view!=="tenants"&&<button onClick={()=>setShowAdd(true)} style={{fontSize:13,fontWeight:500,background:"transparent",border:`1px solid ${C.border}`,borderRadius:7,padding:"6px 14px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>+ Add item</button>}
+            {view==="items"&&<button onClick={()=>doExport(filtered)} style={{fontSize:13,fontWeight:500,background:"#f0fff4",border:"1px solid #bbf7d0",borderRadius:7,padding:"6px 14px",cursor:"pointer",color:"#16a34a",fontFamily:"var(--font-sans)"}}>Export to Excel</button>}
             <button onClick={()=>setShowImport(true)} style={{fontSize:13,fontWeight:600,background:C.text,border:"none",borderRadius:7,padding:"7px 16px",cursor:"pointer",color:"#fff",fontFamily:"var(--font-sans)"}}>+ Import inspection</button>
           </div>
         </div>
 
         <div style={{flex:1,overflowY:"auto",padding:"24px 28px"}}>
-
           {view==="portfolio"&&!selProp&&<>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:12,marginBottom:24}}>
               {[{l:"Open Items",v:openItems.length,s:"across portfolio",red:false},{l:"Critical",v:critical.length,s:"immediate action",red:critical.length>0},{l:"Scheduled",v:items.filter(i=>i.status==="Scheduled").length,s:"confirmed with vendors"},{l:"Completed",v:items.filter(i=>i.status==="Completed").length,s:"all time"}].map(k=>(
@@ -832,7 +712,7 @@ async function deleteItem(id){if(!window.confirm('Delete this item? This cannot 
               return(<div key={gkey} style={{marginBottom:20}}>
                 <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.06em",textTransform:"uppercase",color:C.faint,marginBottom:8}}>{gname}</div>
                 <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
-                  {gps.map((prop,i)=><PropRow key={prop.id} prop={prop} items={items} inspections={inspections} tenants={tenants} isLast={i===gps.length-1} onClick={()=>{setSelProp(prop.id);setView("portfolio");}}/>)}
+                  {gps.map((prop,i)=><PropRow key={prop.id} prop={prop} items={items} inspections={inspections} isLast={i===gps.length-1} onClick={()=>{setSelProp(prop.id);setView("portfolio");}}/>)}
                 </div>
               </div>);
             })}
@@ -843,7 +723,7 @@ async function deleteItem(id){if(!window.confirm('Delete this item? This cannot 
             const pi=items.filter(i=>i.propertyId===selProp);
             const oi=pi.filter(i=>i.status!=="Completed");
             const pInsp=inspections.filter(i=>i.propertyId===selProp);
-            return <>
+            return<>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20}}>
                 <div>
                   <div style={{fontSize:26,fontWeight:800,color:C.text,lineHeight:1.2}}>{prop.name}</div>
@@ -865,7 +745,7 @@ async function deleteItem(id){if(!window.confirm('Delete this item? This cannot 
                 </div>);
               })}
               {oi.length===0&&<div style={{textAlign:"center",padding:"48px 0",color:C.faint,fontSize:13}}>No open items - this property is clear.</div>}
-              <TenantsSection propertyId={selProp} tenants={tenants} onAdd={(pid)=>setTenantForm({mode:"add",propertyId:pid})} onEdit={(t)=>setTenantForm({mode:"edit",tenant:t})} onDelete={deleteTenant}/>
+              <TenantsSection propertyId={selProp} tenants={tenants} onEdit={(t)=>setTenantForm({mode:"edit",tenant:t})} onDelete={deleteTenant}/>
               {pInsp.length>0&&<div style={{marginTop:28}}>
                 <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.09em",textTransform:"uppercase",color:C.faint,marginBottom:10}}>Inspection history</div>
                 <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
@@ -895,7 +775,7 @@ async function deleteItem(id){if(!window.confirm('Delete this item? This cannot 
           </>}
 
           {view==="tenants"&&<>
-            <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:16}}>
+            <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:16,flexWrap:"wrap"}}>
               <input value={tenantSearch} onChange={e=>setTenantSearch(e.target.value)} placeholder="Search tenants..." style={{fontFamily:"var(--font-sans)",fontSize:13,padding:"7px 11px",borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:C.text,width:240,outline:"none"}}/>
               <select value={tenantSort} onChange={e=>setTenantSort(e.target.value)} style={{fontFamily:"var(--font-sans)",fontSize:13,padding:"7px 10px",borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:C.text}}>
                 <option value="tenant">Sort: Tenant A-Z</option>
@@ -953,8 +833,7 @@ async function deleteItem(id){if(!window.confirm('Delete this item? This cannot 
             </div>:
             <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
               {inspections.map((insp,i)=>{
-                const prop=PROPERTIES.find(p=>p.id===insp.propertyId);
-                const ii=items.filter(it=>it.inspectionId===insp.id);
+                const prop=PROPERTIES.find(p=>p.id===insp.propertyId);const ii=items.filter(it=>it.inspectionId===insp.id);
                 return(<div key={insp.id} style={{padding:"14px 20px",borderBottom:i<inspections.length-1?`1px solid ${C.border}`:"none"}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
                     <div><div style={{fontSize:13,fontWeight:600,color:C.text}}>{prop?.name}</div><div style={{fontSize:11,color:C.faint,marginTop:2}}>{insp.date} - {insp.inspector}</div></div>
@@ -979,16 +858,3 @@ async function deleteItem(id){if(!window.confirm('Delete this item? This cannot 
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
