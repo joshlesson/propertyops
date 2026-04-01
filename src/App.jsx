@@ -185,7 +185,7 @@ async function uploadPDF(pdfBase64,fileName,inspectionId) {
 async function saveItemToDB(item) {
   const{error}=await sb.from("items").upsert({
     id:item.id,inspection_id:item.inspectionId||null,property_id:item.propertyId,
-    description:item.description,category:item.category,priority:item.priority,
+    description:item.description.replace(/\s*\([^)]*\)\s*$/,"").trim(),category:item.category,priority:item.priority,
     status:item.status,assignee:item.assignee||"",vendor:item.vendor||"",notes:item.notes||"",
     scheduled_date:item.scheduledDate||"",completed_date:item.completedDate||"",
     created_at:item.createdAt,status_history:item.statusHistory,
@@ -330,7 +330,7 @@ function parsePDF({pdfBase64,propertyId,inspectionId,overrideDate,overrideInspec
     const ts=nowISO();const dateOnly=today();
     const newItems=(parsed.items||[]).map(item=>({
       id:"r"+uid(),inspectionId,propertyId,
-      description:item.description+(item.location?` (${item.location})`:""),
+      description:item.description.replace(/\s*\([^)]*\)\s*$/,"").trim()+(item.location?` (${item.location})`:""),
       category:item.category,priority:item.priority,
       status:"Not Started",assignee:"",vendor:"",notes:"",
       createdAt:ts,scheduledDate:"",completedDate:"",
@@ -881,6 +881,7 @@ export default function App(){
     </div>
   );
 }
+
 
 
 
