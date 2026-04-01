@@ -141,6 +141,15 @@ async function doExport(filtered) {
   X.writeFile(wb, "PropertyOps_Items_"+new Date().toISOString().slice(0,10)+".xlsx");
 }
 
+async function uploadQuote(file, itemId) {
+  try {
+    const path = itemId + "/" + file.name;
+    const{error} = await sb.storage.from("quotes").upload(path, file, {contentType: file.type, upsert:true});
+    if(error){console.error("uploadQuote error:",error);return "";}
+    const{data} = sb.storage.from("quotes").getPublicUrl(path);
+    return data.publicUrl||"";
+  } catch(e){console.error("uploadQuote error:",e);return "";}
+}
 async function loadAll() {
   try {
     const [r1,r2,r3] = await Promise.all([
@@ -156,7 +165,7 @@ async function loadAll() {
       id:r.id,inspectionId:r.inspection_id,propertyId:r.property_id,
       description:r.description,category:r.category,priority:r.priority,
       status:r.status,assignee:r.assignee||"",vendor:r.vendor||"",notes:r.notes||"",
-      scheduledDate:r.scheduled_date||"",completedDate:r.completed_date||"",
+      scheduledDate:r.scheduled_date||"",completedDate:r.completed_date||"",quoteUrl:r.quote_url||"",
       createdAt:r.created_at,statusHistory:r.status_history||[],
     }));
     const tenants=(r3.data||[]).map(r=>({
@@ -187,7 +196,7 @@ async function saveItemToDB(item) {
     id:item.id,inspection_id:item.inspectionId||null,property_id:item.propertyId,
     description:item.description.replace(/\s*\([^)]*\)\s*$/,"").trim(),category:item.category,priority:item.priority,
     status:item.status,assignee:item.assignee||"",vendor:item.vendor||"",notes:item.notes||"",
-    scheduled_date:item.scheduledDate||"",completed_date:item.completedDate||"",
+    scheduled_date:item.scheduledDate||"",completed_date:item.completedDate||"",quote_url:item.quoteUrl||"",
     created_at:item.createdAt,status_history:item.statusHistory,
   },{onConflict:"id"});
   if(error)console.error("saveItemToDB error:",error); return error;
@@ -471,6 +480,15 @@ function ItemDetail({item,inspections,onUpdate,onAdvance,onDelete,onClose}){
           <GhostBtn onClick={()=>setEditing(true)}>Edit item</GhostBtn>
           <button onClick={()=>onDelete(item.id)} style={{fontFamily:"var(--font-sans)",fontSize:13,borderRadius:8,padding:"9px 16px",background:"#fff0f0",color:"#e00",border:"1px solid #ffcccc",cursor:"pointer"}}>Delete item</button>
           <button onClick={()=>setShowQuote(true)} style={{fontFamily:"var(--font-sans)",fontSize:13,borderRadius:8,padding:"9px 16px",background:"#eff6ff",color:"#1d4ed8",border:"1px solid #bfdbfe",cursor:"pointer",fontWeight:500}}>Request Quote</button>
+          <label style={{fontFamily:"var(--font-sans)",fontSize:13,borderRadius:8,padding:"9px 16px",background:"#f0fdf4",color:"#16a34a",border:"1px solid #bbf7d0",cursor:"pointer",fontWeight:500}}>
+            Upload Quote
+            <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style={{display:"none"}} onChange={async e=>{
+              const file=e.target.files[0];if(!file)return;
+              const url=await uploadQuote(file,item.id);
+              if(url)onUpdate({...item,quoteUrl:url});
+            }}/>
+          </label>
+          {item.quoteUrl&&<a href={item.quoteUrl} target="_blank" rel="noreferrer" style={{fontFamily:"var(--font-sans)",fontSize:13,borderRadius:8,padding:"9px 16px",background:"#faf5ff",color:"#6d28d9",border:"1px solid #ddd6fe",cursor:"pointer",textDecoration:"none",fontWeight:500}}>View Quote</a>}
         </div>
         {showQuote&&<QuoteModal item={item} onClose={()=>setShowQuote(false)}/>}
       </>:(
