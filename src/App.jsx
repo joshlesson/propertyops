@@ -629,6 +629,13 @@ export default function App(){
     setTenants(prev=>{const exists=prev.find(t=>t.id===tenant.id);return exists?prev.map(t=>t.id===tenant.id?tenant:t):[...prev,tenant];});
     setTenantForm(null);setSaving(false);
   }
+  async function deleteInspection(id){if(!window.confirm('Delete this inspection record? Items from this inspection will remain.'))return;const{error}=await sb.from('inspections').delete().eq('id',id);if(!error)setInspections(prev=>prev.filter(i=>i.id!==id));else setSaveError('Delete failed: '+error.message);}
+  async function deleteInspection(id){
+    if(!window.confirm('Delete this inspection record? Items from this inspection will remain.'))return;
+    const{error}=await sb.from('inspections').delete().eq('id',id);
+    if(!error)setInspections(prev=>prev.filter(i=>i.id!==id));
+    else setSaveError('Delete failed: '+error.message);
+  }
   async function deleteTenant(id){
     if(!window.confirm("Remove this tenant?"))return;
     const err=await deleteTenantFromDB(id);
@@ -848,6 +855,7 @@ export default function App(){
                 return(<div key={insp.id} style={{padding:"14px 20px",borderBottom:i<inspections.length-1?`1px solid ${C.border}`:"none"}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
                     <div><div style={{fontSize:13,fontWeight:600,color:C.text}}>{prop?.name}</div><div style={{fontSize:11,color:C.faint,marginTop:2}}>{insp.date} - {insp.inspector}</div></div>
+                    <button onClick={()=>deleteInspection(insp.id)} style={{fontSize:11,background:"#fff0f0",border:"1px solid #ffcccc",borderRadius:6,padding:"4px 10px",cursor:"pointer",color:"#e00",fontFamily:"var(--font-sans)",flexShrink:0,marginLeft:8}}>Delete</button>
                     <div style={{display:"flex",gap:6}}><Chip label={`${ii.length} items`} tc={SCOLOR.Scheduled} bg={SBG.Scheduled} bc={SBDR.Scheduled}/>{ii.filter(it=>it.status==="Completed").length>0&&<Chip label={`${ii.filter(it=>it.status==="Completed").length} done`} tc={SCOLOR.Completed} bg={SBG.Completed} bc={SBDR.Completed}/>}</div>
                   </div>
                   <div style={{fontSize:11,color:C.muted,fontStyle:"italic",marginBottom:8,lineHeight:1.5}}>{insp.notes}</div>
@@ -873,3 +881,5 @@ export default function App(){
     </div>
   );
 }
+
+
