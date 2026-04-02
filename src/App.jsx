@@ -444,7 +444,7 @@ function ItemRow({item,showProperty,onClick,onAdvance}){
       </div>
       <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0}}>
         <PPill p={item.priority}/><SPill s={item.status}/>
-        {next&&<button onClick={e=>{e.stopPropagation();onAdvance();}} style={{fontSize:11,background:"none",border:`1px solid ${C.border}`,borderRadius:6,padding:"3px 10px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)",whiteSpace:"nowrap"}}>{next}</button>}
+
       </div>
     </div>
   );
@@ -899,6 +899,7 @@ export default function App(){
     </div>
   );
 }
+
 
 
 
