@@ -213,9 +213,9 @@ async function deleteTenantFromDB(id) {
   if(error)console.error("deleteTenant error:",error); return error;
 }
 
-function Chip({label,tc,bg,bc}){return<span style={{fontSize:11,fontWeight:500,padding:"2px 9px",borderRadius:99,background:bg,color:tc,border:`1px solid ${bc}`,whiteSpace:"nowrap"}}>{label}</span>;}
-function PPill({p}){return<Chip label={p} tc={PCOLOR[p]} bg={PBG[p]} bc={PBDR[p]}/>;}
-function SPill({s}){return<Chip label={s} tc={SCOLOR[s]} bg={SBG[s]} bc={SBDR[s]}/>;}
+function Chip({label,tc,bg,bc,large}){return<span style={{fontSize:large?12:11,fontWeight:large?700:500,padding:large?"4px 12px":"2px 9px",borderRadius:99,background:bg,color:tc,border:`1px solid ${bc}`,whiteSpace:"nowrap",letterSpacing:large?"-0.01em":"normal"}}>{label}</span>;}
+function PPill({p}){return<Chip label={p} tc={PCOLOR[p]} bg={PBG[p]} bc={PBDR[p]} large/>;}
+function SPill({s}){return<Chip label={s} tc={SCOLOR[s]} bg={SBG[s]} bc={SBDR[s]} large/>;}
 function Dot({color,size=7}){return<span style={{display:"inline-block",width:size,height:size,borderRadius:"50%",background:color,flexShrink:0}}/>;}
 function ULabel({children}){return<div style={{fontSize:10,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:C.faint,marginBottom:5}}>{children}</div>;}
 function PrimaryBtn({children,onClick,disabled,full}){return<button onClick={disabled?undefined:onClick} style={{fontFamily:"var(--font-sans)",fontSize:13,fontWeight:600,borderRadius:8,padding:"9px 20px",background:disabled?"#d1d0cb":C.text,color:disabled?"#9c9a93":"#fff",border:"none",cursor:disabled?"not-allowed":"pointer",width:full?"100%":"auto"}}>{children}</button>;}
