@@ -427,10 +427,9 @@ function PropRow({prop,items,inspections,isLast,onClick}){
   );
 }
 
-function ItemRow({item,showProperty,onClick,onAdvance}){
+function ItemRow({item,showProperty,onClick}){
   const[hov,setHov]=useState(false);
   const prop=PROPERTIES.find(p=>p.id===item.propertyId);
-  const next=STATUS_NEXT[item.status];
   return(
     <div onClick={onClick} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)} style={{display:"flex",alignItems:"center",gap:14,padding:"11px 18px",background:hov?C.bg:C.surface,borderBottom:`1px solid ${C.border}`,cursor:"pointer",transition:"background 0.1s"}}>
       <div style={{flex:1,minWidth:0}}>
@@ -475,20 +474,27 @@ function ItemDetail({item,inspections,onUpdate,onAdvance,onDelete,onClose}){
             </div>
           ))}
         </div>
-        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-          <GhostBtn onClick={()=>setEditing(true)}>Edit item</GhostBtn>
-          <button onClick={()=>onDelete(item.id)} style={{fontFamily:"var(--font-sans)",fontSize:13,borderRadius:8,padding:"9px 16px",background:"#fff0f0",color:"#e00",border:"1px solid #ffcccc",cursor:"pointer"}}>Delete item</button>
-          <button onClick={()=>setShowQuote(true)} style={{fontFamily:"var(--font-sans)",fontSize:13,borderRadius:8,padding:"9px 16px",background:"#eff6ff",color:"#1d4ed8",border:"1px solid #bfdbfe",cursor:"pointer",fontWeight:500}}>Request Quote</button>
-          <label style={{fontFamily:"var(--font-sans)",fontSize:13,borderRadius:8,padding:"9px 16px",background:"#f0fdf4",color:"#16a34a",border:"1px solid #bbf7d0",cursor:"pointer",fontWeight:500}}>
-            Upload Quote
+
+        {/* Primary actions */}
+        <div style={{display:"flex",gap:8,marginBottom:10}}>
+          <button onClick={()=>setShowQuote(true)} style={{flex:1,fontFamily:"var(--font-sans)",fontSize:13,fontWeight:600,borderRadius:8,padding:"10px 16px",background:C.text,color:"#fff",border:"none",cursor:"pointer"}}>Request Quote</button>
+          <label style={{flex:1,fontFamily:"var(--font-sans)",fontSize:13,fontWeight:600,borderRadius:8,padding:"10px 16px",background:C.text,color:"#fff",border:"none",cursor:"pointer",textAlign:"center"}}>
+            {item.quoteUrl?"Replace Quote":"Upload Quote"}
             <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style={{display:"none"}} onChange={async e=>{
               const file=e.target.files[0];if(!file)return;
               const url=await uploadQuote(file,item.id);
               if(url)onUpdate({...item,quoteUrl:url});
             }}/>
           </label>
-          {item.quoteUrl&&<a href={item.quoteUrl} target="_blank" rel="noreferrer" style={{fontFamily:"var(--font-sans)",fontSize:13,borderRadius:8,padding:"9px 16px",background:"#faf5ff",color:"#6d28d9",border:"1px solid #ddd6fe",cursor:"pointer",textDecoration:"none",fontWeight:500}}>View Quote</a>}
+          {item.quoteUrl&&<a href={item.quoteUrl} target="_blank" rel="noreferrer" style={{fontFamily:"var(--font-sans)",fontSize:13,fontWeight:600,borderRadius:8,padding:"10px 16px",background:"#faf5ff",color:"#6d28d9",border:"1px solid #ddd6fe",cursor:"pointer",textDecoration:"none",whiteSpace:"nowrap"}}>View Quote</a>}
         </div>
+
+        {/* Secondary actions */}
+        <div style={{display:"flex",gap:16,alignItems:"center",paddingTop:4}}>
+          <button onClick={()=>setEditing(true)} style={{fontFamily:"var(--font-sans)",fontSize:12,background:"none",border:"none",cursor:"pointer",color:C.muted,padding:0,textDecoration:"underline",textUnderlineOffset:3}}>Edit item</button>
+          <button onClick={()=>onDelete(item.id)} style={{fontFamily:"var(--font-sans)",fontSize:12,background:"none",border:"none",cursor:"pointer",color:"#e00",padding:0,textDecoration:"underline",textUnderlineOffset:3}}>Delete item</button>
+        </div>
+
         {showQuote&&<QuoteModal item={item} onClose={()=>setShowQuote(false)}/>}
       </>:(
         <div style={{display:"flex",flexDirection:"column",gap:14}}>
@@ -775,7 +781,7 @@ export default function App(){
                 const grp=oi.filter(i=>i.priority===p);if(!grp.length)return null;
                 return(<div key={p} style={{marginBottom:20}}>
                   <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:8}}><Dot color={PCOLOR[p]} size={7}/><span style={{fontSize:10,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:PCOLOR[p]}}>{p}</span><span style={{fontSize:11,color:C.faint}}>({grp.length})</span></div>
-                  <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>{grp.map(it=><ItemRow key={it.id} item={it} onClick={()=>setSelItem(it)} onAdvance={()=>advance(it)}/>)}</div>
+                  <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>{grp.map(it=><ItemRow key={it.id} item={it} onClick={()=>setSelItem(it)}/>)}</div>
                 </div>);
               })}
               {oi.length===0&&<div style={{textAlign:"center",padding:"48px 0",color:C.faint,fontSize:13}}>No open items - this property is clear.</div>}
@@ -805,7 +811,7 @@ export default function App(){
               <span style={{fontSize:12,color:C.faint}}>{filtered.length} items</span>
             </div>
             {filtered.length===0?<div style={{textAlign:"center",padding:"60px 0",color:C.faint,fontSize:13}}>No items match the current filters.</div>:
-            <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>{filtered.map(it=><ItemRow key={it.id} item={it} showProperty onClick={()=>setSelItem(it)} onAdvance={()=>advance(it)}/>)}</div>}
+            <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>{filtered.map(it=><ItemRow key={it.id} item={it} showProperty onClick={()=>setSelItem(it)}/>)}</div>}
           </>}
 
           {view==="tenants"&&<>
