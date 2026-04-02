@@ -444,7 +444,6 @@ function ItemRow({item,showProperty,onClick,onAdvance}){
       </div>
       <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0}}>
         <PPill p={item.priority}/><SPill s={item.status}/>
-
       </div>
     </div>
   );
@@ -460,7 +459,7 @@ function ItemDetail({item,inspections,onUpdate,onAdvance,onDelete,onClose}){
       {next&&<button onClick={onAdvance} style={{width:"100%",marginBottom:20,padding:"10px 16px",background:SBG[next],color:SCOLOR[next],border:`1px solid ${SBDR[next]}`,borderRadius:8,cursor:"pointer",fontFamily:"var(--font-sans)",fontSize:13,fontWeight:600}}>Mark as {next}</button>}
       {!editing?<>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:1,marginBottom:20,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
-          {[["Assignee",item.assignee||"Unassigned"],["Vendor",item.vendor||"-"],["Created",item.createdAt?.slice(0,10)||""],["Scheduled",item.scheduledDate||"-"],["Completed",item.completedDate||"-"],["Inspection",insp?.date||"Manual"]].map(([label,val],i)=>(
+          {[["Assignee",item.assignee||"Unassigned"],["Vendor",item.vendor||"-"],["Created",insp?.date||item.createdAt?.slice(0,10)||""],["Scheduled",item.scheduledDate||"-"],["Completed",item.completedDate||"-"],["Inspection",insp?.date||"Manual"]].map(([label,val],i)=>(
             <div key={label} style={{padding:"11px 14px",background:i%2===0?C.bg:C.surface}}>
               <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",color:C.faint,marginBottom:4}}>{label}</div>
               <div style={{fontSize:14,color:C.text,fontWeight:600}}>{val}</div>
@@ -647,7 +646,6 @@ export default function App(){
     setTenants(prev=>{const exists=prev.find(t=>t.id===tenant.id);return exists?prev.map(t=>t.id===tenant.id?tenant:t):[...prev,tenant];});
     setTenantForm(null);setSaving(false);
   }
-  async function deleteInspection(id){if(!window.confirm('Delete this inspection record? Items from this inspection will remain.'))return;const{error}=await sb.from('inspections').delete().eq('id',id);if(!error)setInspections(prev=>prev.filter(i=>i.id!==id));else setSaveError('Delete failed: '+error.message);}
   async function deleteInspection(id){
     if(!window.confirm('Delete this inspection record? Items from this inspection will remain.'))return;
     const{error}=await sb.from('inspections').delete().eq('id',id);
@@ -899,9 +897,3 @@ export default function App(){
     </div>
   );
 }
-
-
-
-
-
-
