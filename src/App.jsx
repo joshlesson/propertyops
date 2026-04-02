@@ -456,7 +456,7 @@ function ItemDetail({item,inspections,onUpdate,onAdvance,onDelete,onClose}){
   function save(){onUpdate(form);setEditing(false);}
   return(
     <SlideOver onClose={onClose} sub={`${GROUPS[prop?.group]} - ${prop?.name}`} title={item.description}>
-      <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:18}}><PPill p={item.priority}/><SPill s={item.status}/><Chip label={item.category} tc={C.muted} bg={C.bg} bc={C.border}/></div>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:18,alignItems:"flex-end"}}><div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2}}><span style={{fontSize:10,color:"#9ca3af",fontWeight:500,textTransform:"uppercase",letterSpacing:"0.05em"}}>Priority</span><PPill p={item.priority}/></div><div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2}}><span style={{fontSize:10,color:"#9ca3af",fontWeight:500,textTransform:"uppercase",letterSpacing:"0.05em"}}>Status</span><SPill s={item.status}/></div><div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2}}><span style={{fontSize:10,color:"#9ca3af",fontWeight:500,textTransform:"uppercase",letterSpacing:"0.05em"}}>Category</span><Chip label={item.category} tc={C.muted} bg={C.bg} bc={C.border}/></div>
       {next&&<button onClick={onAdvance} style={{width:"100%",marginBottom:20,padding:"10px 16px",background:SBG[next],color:SCOLOR[next],border:`1px solid ${SBDR[next]}`,borderRadius:8,cursor:"pointer",fontFamily:"var(--font-sans)",fontSize:13,fontWeight:600}}>Mark as {next}</button>}
       {!editing?<>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:1,marginBottom:20,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
