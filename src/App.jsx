@@ -632,9 +632,119 @@ function AddItemForm({selectedPropertyId,onSubmit,onClose}){
 
 function ExcelImportForm({onSubmit,onClose}){
   const[step,setStep]=useState("upload");// upload | preview
-  const[rows,setRows]=useState([]);
   const[parsed,setParsed]=useState([]);
   const[error,setError]=useState("");
+  const[sheetNames,setSheetNames]=useState([]);
+  const[selSheet,setSelSheet]=useState("");
+  const[wbRef,setWbRef]=useState(null);
+  const[xlsxRef,setXlsxRef]=useState(null);
+
+  function matchProperty(propName){
+    if(!propName)return null;
+    const lower=propName.toLowerCase().trim();
+    // exact name match
+    let m=PROPERTIES.find(p=>p.name.toLowerCase()===lower);if(m)return m;
+    // address contains match
+    m=PROPERTIES.find(p=>p.address.toLowerCase().includes(lower)&&lower.length>3);if(m)return m;
+    // name contains match
+    m=PROPERTIES.find(p=>p.name.toLowerCase().includes(lower)&&lower.length>3);if(m)return m;
+    // partial number match (e.g. "45701" matches "45701 Mast St.")
+    if(/^\d+/.test(lower)){m=PROPERTIES.find(p=>p.name.toLowerCase().startsWith(lower));if(m)return m;m=PROPERTIES.find(p=>p.id.toLowerCase()===lower);if(m)return m;}
+    return null;
+  }
+
+  function matchAssignee(raw){
+    if(!raw)return"";
+    const lower=raw.toLowerCase().trim();
+    // exact match
+    let m=TEAM.find(t=>t.toLowerCase()===lower);if(m)return m;
+    // first name match
+    m=TEAM.find(t=>t.split(" ")[0].toLowerCase()===lower);if(m)return m;
+    // last name match
+    m=TEAM.find(t=>t.split(" ").pop().toLowerCase()===lower);if(m)return m;
+    return"";
+  }
+
+  function parseSheet(X,ws){
+    // Get all rows as arrays to auto-detect header row
+    const allRows=X.utils.sheet_to_json(ws,{header:1,defval:""});
+    if(!allRows.length)return[];
+
+    // Find the header row: look for a row containing recognizable column names
+    const KNOWN_HEADERS=["trade / category","category","property","issue / item","description","repair item","prop #","status","notes"];
+    let headerIdx=-1;
+    for(let i=0;i<Math.min(10,allRows.length);i++){
+      const cells=allRows[i].map(c=>(c||"").toString().toLowerCase().trim());
+      const matches=cells.filter(c=>KNOWN_HEADERS.some(h=>c===h||c.includes(h)));
+      if(matches.length>=2){headerIdx=i;break;}
+    }
+    if(headerIdx===-1)return[];
+
+    const headers=allRows[headerIdx].map(c=>(c||"").toString().trim());
+    const dataRows=allRows.slice(headerIdx+1);
+
+    // Build column index map — normalize to canonical names
+    const colMap={};
+    headers.forEach((h,i)=>{
+      const lc=h.toLowerCase();
+      if(lc==="trade / category"||lc==="category")colMap.category=i;
+      else if(lc==="property"||lc==="property address")colMap.property=i;
+      else if(lc==="prop #")colMap.propId=i;
+      else if(lc==="issue / item"||lc==="description"||lc==="repair item")colMap.description=i;
+      else if(lc==="notes"||lc==="comments")colMap.notes=i;
+      else if(lc==="status")colMap.status=i;
+      else if(lc==="priority")colMap.priority=i;
+      else if(lc==="start date"||lc==="scheduled")colMap.scheduled=i;
+      else if(lc==="responsible"||lc==="assignee")colMap.assignee=i;
+      else if(lc==="close")colMap.close=i;
+    });
+
+    const get=(row,key)=>{const i=colMap[key];if(i==null)return"";const v=row[i];if(v==null)return"";if(typeof v==="object"&&v.text)return v.text;return v.toString().trim();};
+
+    const ts=nowISO();
+    return dataRows.map(row=>{
+      const desc=get(row,"description");
+      if(!desc)return null;
+
+      // Skip section divider rows (e.g. "  Building  (11 items)")
+      if(/^\s+\S.*\(\d+\s+items?\)\s*$/.test((row[0]||"").toString()))return null;
+
+      const propRaw=get(row,"property");
+      const propIdRaw=get(row,"propId");
+      const match=matchProperty(propIdRaw)||matchProperty(propRaw);
+
+      const catRaw=get(row,"category");
+      const validCat=CATEGORIES.find(c=>c.toLowerCase()===catRaw.toLowerCase())||"Other";
+
+      const priRaw=get(row,"priority");
+      const validPri=PRIORITIES.find(p=>p.toLowerCase()===priRaw.toLowerCase())||"Medium";
+
+      const stRaw=get(row,"status");
+      const validStatus=STATUSES.find(s=>s.toLowerCase()===stRaw.toLowerCase())||(stRaw.toLowerCase()==="open"?"Not Started":stRaw.toLowerCase()==="closed"||stRaw.toLowerCase()==="done"?"Completed":"Not Started");
+
+      const assigneeRaw=get(row,"assignee");
+      const validAssignee=matchAssignee(assigneeRaw);
+
+      const schedRaw=get(row,"scheduled");
+      let schedDate="";
+      if(schedRaw){const d=new Date(schedRaw);if(!isNaN(d.getTime()))schedDate=d.toISOString().slice(0,10);}
+
+      const closeRaw=get(row,"close");
+      let completedDate="";
+      if(closeRaw){const d=new Date(closeRaw);if(!isNaN(d.getTime()))completedDate=d.toISOString().slice(0,10);}
+      if(validStatus==="Completed"&&!completedDate)completedDate=today();
+
+      return{
+        id:"r"+uid(),inspectionId:null,
+        propertyId:match?.id||"",propertyMatch:match?.name||"",propertyInput:propRaw||propIdRaw,
+        description:desc,category:validCat,priority:validPri,status:validStatus,
+        assignee:validAssignee,vendor:"",
+        notes:get(row,"notes"),
+        scheduledDate:schedDate,completedDate,quoteUrl:"",createdAt:ts,
+        statusHistory:[{status:validStatus,date:today()}],
+      };
+    }).filter(Boolean);
+  }
 
   async function handleFile(e){
     const file=e.target.files?.[0];if(!file)return;
@@ -644,43 +754,27 @@ function ExcelImportForm({onSubmit,onClose}){
       const X=mod.default||mod;
       const buf=await file.arrayBuffer();
       const wb=X.read(buf,{type:"array"});
-      const ws=wb.Sheets[wb.SheetNames[0]];
-      const data=X.utils.sheet_to_json(ws,{defval:""});
-      if(!data.length){setError("Spreadsheet is empty.");return;}
-      setRows(data);
-      const items=data.map(row=>{
-        const propName=(row["Property"]||"").toString().trim();
-        const match=PROPERTIES.find(p=>p.name.toLowerCase()===propName.toLowerCase())||PROPERTIES.find(p=>p.name.toLowerCase().includes(propName.toLowerCase())&&propName.length>3);
-        const cat=(row["Category"]||"").toString().trim();
-        const validCat=CATEGORIES.find(c=>c.toLowerCase()===cat.toLowerCase())||"Other";
-        const pri=(row["Priority"]||"").toString().trim();
-        const validPri=PRIORITIES.find(p=>p.toLowerCase()===pri.toLowerCase())||"Medium";
-        const st=(row["Status"]||"").toString().trim();
-        const validStatus=STATUSES.find(s=>s.toLowerCase()===st.toLowerCase())||"Not Started";
-        const assignee=(row["Assignee"]||"").toString().trim();
-        const validAssignee=TEAM.find(t=>t.toLowerCase()===assignee.toLowerCase())||"";
-        const sched=(row["Scheduled"]||"").toString();
-        let schedDate="";
-        if(sched){
-          const d=new Date(sched);
-          if(!isNaN(d.getTime()))schedDate=d.toISOString().slice(0,10);
-        }
-        const ts=nowISO();
-        return{
-          id:"r"+uid(),inspectionId:null,
-          propertyId:match?.id||"",propertyMatch:match?.name||"",propertyInput:propName,
-          description:(row["Description"]||"").toString().trim(),
-          category:validCat,priority:validPri,status:validStatus,
-          assignee:validAssignee,vendor:"",
-          notes:(row["Notes"]||"").toString().trim(),
-          scheduledDate:schedDate,completedDate:validStatus==="Completed"?today():"",
-          quoteUrl:"",createdAt:ts,
-          statusHistory:[{status:validStatus,date:today()}],
-        };
-      }).filter(it=>it.description);
-      setParsed(items);
-      setStep("preview");
+      setXlsxRef(X);setWbRef(wb);
+
+      // If multiple sheets, let user pick; otherwise parse first sheet
+      const names=wb.SheetNames.filter(n=>n.toLowerCase()!=="summary");
+      if(names.length>1){
+        setSheetNames(names);setSelSheet(names[0]);
+        const items=parseSheet(X,wb.Sheets[names[0]]);
+        setParsed(items);
+        setStep("preview");
+      }else{
+        const items=parseSheet(X,wb.Sheets[wb.SheetNames[0]]);
+        if(!items.length){setError("No items found. Check that the spreadsheet has recognizable column headers.");return;}
+        setParsed(items);
+        setStep("preview");
+      }
     }catch(err){setError("Failed to parse file: "+err.message);}
+  }
+
+  function switchSheet(name){
+    setSelSheet(name);
+    if(xlsxRef&&wbRef){setParsed(parseSheet(xlsxRef,wbRef.Sheets[name]));}
   }
 
   function updateParsedProp(idx,propId){
@@ -695,12 +789,15 @@ function ExcelImportForm({onSubmit,onClose}){
       <OverlayHeader title="Import from Excel" sub={step==="preview"?`${parsed.length} items parsed, ${valid.length} ready to import`:""} onClose={onClose}/>
       {step==="upload"&&<div>
         <div style={{background:C.bg,border:`2px dashed ${C.borderMid}`,borderRadius:10,padding:"40px 20px",textAlign:"center",marginBottom:16}}>
-          <div style={{fontSize:13,color:C.muted,marginBottom:12}}>Upload an .xlsx file with columns: Category, Property, Description, Notes, Status, Priority, Assignee, Scheduled</div>
+          <div style={{fontSize:13,color:C.muted,marginBottom:12}}>Upload an .xlsx file. Supported columns include Trade / Category, Property, Issue / Item, Notes, Status, Priority, Assignee, Scheduled, and more.</div>
           <input type="file" accept=".xlsx,.xls" onChange={handleFile} style={{fontFamily:"var(--font-sans)",fontSize:13}}/>
         </div>
         {error&&<div style={{color:"#e00",fontSize:13,marginTop:8}}>{error}</div>}
       </div>}
       {step==="preview"&&<div>
+        {sheetNames.length>1&&<div style={{display:"flex",gap:6,marginBottom:14}}>
+          {sheetNames.map(n=><button key={n} onClick={()=>switchSheet(n)} style={{fontSize:12,fontWeight:selSheet===n?600:400,padding:"5px 12px",borderRadius:6,border:`1px solid ${selSheet===n?C.text:C.border}`,background:selSheet===n?C.text:"transparent",color:selSheet===n?"#fff":C.muted,cursor:"pointer",fontFamily:"var(--font-sans)"}}>{n}</button>)}
+        </div>}
         {unmatched.length>0&&<div style={{background:"#fff8ee",border:"1px solid #fde68a",borderRadius:8,padding:"10px 14px",marginBottom:14,fontSize:12,color:"#92400e"}}>
           {unmatched.length} item{unmatched.length>1?"s":""} could not be matched to a property. Please select the correct property below or they will be skipped.
         </div>}
