@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
+import * as pdfjsLib from "pdfjs-dist";
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.mjs",import.meta.url).href;
 
 const sb = createClient(
   "https://rvpacnokfnvwscxvjsou.supabase.co",
@@ -118,6 +120,23 @@ function nowISO(){ return new Date().toISOString(); }
 function today() { return new Date().toISOString().slice(0,10); }
 function fmtDate(iso) { if(!iso)return""; const[y,m,d]=iso.split("-"); return`${m}/${d}/${y}`; }
 function leaseExpiringSoon(iso,days=90){if(!iso)return false;const end=new Date(iso+"T00:00:00");const now=new Date();const diff=(end-now)/(1000*60*60*24);return diff>=0&&diff<=days;}
+
+async function compressPdfToImages(base64){
+  const bin=atob(base64);const bytes=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+  const pdf=await pdfjsLib.getDocument({data:bytes}).promise;
+  const images=[];
+  for(let p=1;p<=pdf.numPages;p++){
+    const page=await pdf.getPage(p);
+    const scale=1.5;const vp=page.getViewport({scale});
+    const canvas=document.createElement("canvas");
+    canvas.width=vp.width;canvas.height=vp.height;
+    await page.render({canvasContext:canvas.getContext("2d"),viewport:vp}).promise;
+    const dataUrl=canvas.toDataURL("image/jpeg",0.7);
+    images.push(dataUrl.split(",")[1]);
+  }
+  return images;
+}
 
 async function doExport(filtered) {
   const mod = await import("https://cdn.sheetjs.com/xlsx-0.20.1/package/xlsx.mjs");
@@ -329,10 +348,13 @@ function TenantsSection({propertyId,tenants,onEdit,onDelete}){
   );
 }
 
-function parsePDF({pdfBase64,propertyId,inspectionId,overrideDate,overrideInspector},setLoading,onResult){
+function parsePDF({pdfBase64,pdfImages,propertyId,inspectionId,overrideDate,overrideInspector},setLoading,onResult){
   setLoading(true);
   const prompt=`You are reviewing a SnapInspect property inspection report for Dembs Development Inc. Extract ALL actionable repair and maintenance items. For each item return description, category (one of ${CATEGORIES.join(", ")}), priority (Critical/High/Medium/Low), location. Also extract propertyName, inspectorName, inspectionDate (YYYY-MM-DD). Respond ONLY with valid JSON: {"propertyName":"","inspectorName":"","inspectionDate":"","items":[{"description":"","category":"","priority":"","location":""}]}`;
-  fetch("/api/anthropic",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,messages:[{role:"user",content:[{type:"document",source:{type:"base64",media_type:"application/pdf",data:pdfBase64}},{type:"text",text:prompt}]}]})})
+  const contentBlocks=pdfImages
+    ?[...pdfImages.map(img=>({type:"image",source:{type:"base64",media_type:"image/jpeg",data:img}})),{type:"text",text:prompt}]
+    :[{type:"document",source:{type:"base64",media_type:"application/pdf",data:pdfBase64}},{type:"text",text:prompt}];
+  fetch("/api/anthropic",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,messages:[{role:"user",content:contentBlocks}]})})
   .then(r=>r.json()).then(data=>{
     const raw=data.content?.find(b=>b.type==="text")?.text||"{}";
     let parsed={items:[]};
@@ -532,11 +554,21 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}){
   const[overrideInspector,setOverrideInspector]=useState("");const[overrideDate,setOverrideDate]=useState("");
   const[fileName,setFileName]=useState("");const[pdfBase64,setPdfBase64]=useState("");
   const[loading,setLoading]=useState(false);const[preview,setPreview]=useState(null);const[dragOver,setDragOver]=useState(false);
+  const[pdfImages,setPdfImages]=useState(null);const[compressing,setCompressing]=useState(false);
   function handleFile(file){
     if(!file||file.type!=="application/pdf"){alert("Please upload a PDF.");return;}
-    setFileName(file.name);
+    setFileName(file.name);setPdfImages(null);
     const r=new FileReader();
-    r.onload=e=>{const base64=e.target.result.split(",")[1];const sizeInMB=(base64.length*0.75)/(1024*1024);if(sizeInMB>4){alert(`PDF is ${sizeInMB.toFixed(1)}MB - compress at smallpdf.com first.`);return;}setPdfBase64(base64);};
+    r.onload=async e=>{
+      const base64=e.target.result.split(",")[1];
+      const sizeInMB=(base64.length*0.75)/(1024*1024);
+      if(sizeInMB>4){
+        setCompressing(true);
+        try{const images=await compressPdfToImages(base64);setPdfImages(images);setPdfBase64(base64);}
+        catch(err){console.error("Compression error:",err);alert("Failed to compress PDF.");}
+        setCompressing(false);
+      }else{setPdfBase64(base64);}
+    };
     r.readAsDataURL(file);
   }
   const prop=PROPERTIES.find(p=>p.id===propertyId);
@@ -564,14 +596,14 @@ function ImportForm({selectedPropertyId,onSubmit,onClose}){
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
         <div onDragOver={e=>{e.preventDefault();setDragOver(true);}} onDragLeave={()=>setDragOver(false)} onDrop={e=>{e.preventDefault();setDragOver(false);handleFile(e.dataTransfer.files[0]);}} onClick={()=>document.getElementById("pdf-upload-input").click()} style={{border:`2px dashed ${dragOver?C.text:C.borderMid}`,borderRadius:10,padding:"28px 20px",textAlign:"center",cursor:"pointer",background:dragOver?C.bg:"transparent",transition:"all 0.15s"}}>
           <input id="pdf-upload-input" type="file" accept="application/pdf" style={{display:"none"}} onChange={e=>handleFile(e.target.files[0])}/>
-          {pdfBase64?<><div style={{fontSize:13,fontWeight:600,color:C.text}}>{fileName}</div><div style={{fontSize:11,color:C.faint,marginTop:2}}>Click to change</div></>:<><div style={{fontSize:13,fontWeight:600,color:C.text}}>Drop SnapInspect PDF here</div><div style={{fontSize:11,color:C.faint,marginTop:3}}>or click to browse</div></>}
+          {compressing?<><div style={{fontSize:13,fontWeight:600,color:"#e65100"}}>Compressing large PDF...</div><div style={{fontSize:11,color:C.faint,marginTop:2}}>This may take a moment</div></>:pdfBase64?<><div style={{fontSize:13,fontWeight:600,color:C.text}}>{fileName}</div><div style={{fontSize:11,color:C.faint,marginTop:2}}>{pdfImages?`Compressed to ${pdfImages.length} page image${pdfImages.length===1?"":"s"} — `:""}Click to change</div></>:<><div style={{fontSize:13,fontWeight:600,color:C.text}}>Drop SnapInspect PDF here</div><div style={{fontSize:11,color:C.faint,marginTop:3}}>or click to browse</div></>}
         </div>
         <FSelect label="Property" value={propertyId} onChange={setPropertyId} options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} - ${p.name}`}))}/>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
           <FSelect label="Inspector (optional)" value={overrideInspector} onChange={setOverrideInspector} options={[{v:"",l:"Auto-detect from PDF"},...TEAM.map(t=>({v:t,l:t}))]}/>
           <FInput label="Date (optional)" value={overrideDate} onChange={setOverrideDate} type="date"/>
         </div>
-        <PrimaryBtn full disabled={loading||!pdfBase64} onClick={()=>{const id="i"+uid();parsePDF({pdfBase64,propertyId,inspectionId:id,overrideDate,overrideInspector},setLoading,r=>setPreview({...r,inspId:id}));}}>{loading?"Extracting items from PDF...":"Extract repair items"}</PrimaryBtn>
+        <PrimaryBtn full disabled={loading||compressing||!pdfBase64} onClick={()=>{const id="i"+uid();parsePDF({pdfBase64:pdfImages?null:pdfBase64,pdfImages,propertyId,inspectionId:id,overrideDate,overrideInspector},setLoading,r=>setPreview({...r,inspId:id}));}}>{loading?"Extracting items from PDF...":compressing?"Compressing PDF...":"Extract repair items"}</PrimaryBtn>
       </div>
     </Overlay>
   );
