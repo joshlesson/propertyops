@@ -630,11 +630,119 @@ function AddItemForm({selectedPropertyId,onSubmit,onClose}){
   );
 }
 
+function ExcelImportForm({onSubmit,onClose}){
+  const[step,setStep]=useState("upload");// upload | preview
+  const[rows,setRows]=useState([]);
+  const[parsed,setParsed]=useState([]);
+  const[error,setError]=useState("");
+
+  async function handleFile(e){
+    const file=e.target.files?.[0];if(!file)return;
+    setError("");
+    try{
+      const mod=await import("https://cdn.sheetjs.com/xlsx-0.20.1/package/xlsx.mjs");
+      const X=mod.default||mod;
+      const buf=await file.arrayBuffer();
+      const wb=X.read(buf,{type:"array"});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const data=X.utils.sheet_to_json(ws,{defval:""});
+      if(!data.length){setError("Spreadsheet is empty.");return;}
+      setRows(data);
+      const items=data.map(row=>{
+        const propName=(row["Property"]||"").toString().trim();
+        const match=PROPERTIES.find(p=>p.name.toLowerCase()===propName.toLowerCase())||PROPERTIES.find(p=>p.name.toLowerCase().includes(propName.toLowerCase())&&propName.length>3);
+        const cat=(row["Category"]||"").toString().trim();
+        const validCat=CATEGORIES.find(c=>c.toLowerCase()===cat.toLowerCase())||"Other";
+        const pri=(row["Priority"]||"").toString().trim();
+        const validPri=PRIORITIES.find(p=>p.toLowerCase()===pri.toLowerCase())||"Medium";
+        const st=(row["Status"]||"").toString().trim();
+        const validStatus=STATUSES.find(s=>s.toLowerCase()===st.toLowerCase())||"Not Started";
+        const assignee=(row["Assignee"]||"").toString().trim();
+        const validAssignee=TEAM.find(t=>t.toLowerCase()===assignee.toLowerCase())||"";
+        const sched=(row["Scheduled"]||"").toString();
+        let schedDate="";
+        if(sched){
+          const d=new Date(sched);
+          if(!isNaN(d.getTime()))schedDate=d.toISOString().slice(0,10);
+        }
+        const ts=nowISO();
+        return{
+          id:"r"+uid(),inspectionId:null,
+          propertyId:match?.id||"",propertyMatch:match?.name||"",propertyInput:propName,
+          description:(row["Description"]||"").toString().trim(),
+          category:validCat,priority:validPri,status:validStatus,
+          assignee:validAssignee,vendor:"",
+          notes:(row["Notes"]||"").toString().trim(),
+          scheduledDate:schedDate,completedDate:validStatus==="Completed"?today():"",
+          quoteUrl:"",createdAt:ts,
+          statusHistory:[{status:validStatus,date:today()}],
+        };
+      }).filter(it=>it.description);
+      setParsed(items);
+      setStep("preview");
+    }catch(err){setError("Failed to parse file: "+err.message);}
+  }
+
+  function updateParsedProp(idx,propId){
+    setParsed(prev=>prev.map((it,i)=>i===idx?{...it,propertyId:propId,propertyMatch:PROPERTIES.find(p=>p.id===propId)?.name||""}:it));
+  }
+
+  const unmatched=parsed.filter(it=>!it.propertyId);
+  const valid=parsed.filter(it=>it.propertyId&&it.description);
+
+  return(
+    <Overlay onClose={onClose}>
+      <OverlayHeader title="Import from Excel" sub={step==="preview"?`${parsed.length} items parsed, ${valid.length} ready to import`:""} onClose={onClose}/>
+      {step==="upload"&&<div>
+        <div style={{background:C.bg,border:`2px dashed ${C.borderMid}`,borderRadius:10,padding:"40px 20px",textAlign:"center",marginBottom:16}}>
+          <div style={{fontSize:13,color:C.muted,marginBottom:12}}>Upload an .xlsx file with columns: Category, Property, Description, Notes, Status, Priority, Assignee, Scheduled</div>
+          <input type="file" accept=".xlsx,.xls" onChange={handleFile} style={{fontFamily:"var(--font-sans)",fontSize:13}}/>
+        </div>
+        {error&&<div style={{color:"#e00",fontSize:13,marginTop:8}}>{error}</div>}
+      </div>}
+      {step==="preview"&&<div>
+        {unmatched.length>0&&<div style={{background:"#fff8ee",border:"1px solid #fde68a",borderRadius:8,padding:"10px 14px",marginBottom:14,fontSize:12,color:"#92400e"}}>
+          {unmatched.length} item{unmatched.length>1?"s":""} could not be matched to a property. Please select the correct property below or they will be skipped.
+        </div>}
+        <div style={{maxHeight:400,overflowY:"auto",border:`1px solid ${C.border}`,borderRadius:8,marginBottom:16}}>
+          <table style={{width:"100%",borderCollapse:"collapse",fontSize:12,fontFamily:"var(--font-sans)"}}>
+            <thead><tr style={{background:C.bg,position:"sticky",top:0}}>
+              {["Property","Description","Category","Priority","Status","Assignee"].map(h=><th key={h} style={{padding:"8px 10px",textAlign:"left",fontWeight:700,fontSize:10,textTransform:"uppercase",letterSpacing:"0.06em",color:C.faint,borderBottom:`1px solid ${C.border}`}}>{h}</th>)}
+            </tr></thead>
+            <tbody>{parsed.map((it,i)=><tr key={i} style={{borderBottom:`1px solid ${C.border}`,background:!it.propertyId?"#fff8ee":"transparent"}}>
+              <td style={{padding:"6px 10px"}}>{it.propertyId
+                ?<span style={{color:"#16a34a",fontWeight:500}}>{it.propertyMatch}</span>
+                :<select value={it.propertyId} onChange={e=>updateParsedProp(i,e.target.value)} style={{fontSize:11,padding:"3px 6px",borderRadius:4,border:"1px solid #fde68a",background:"#fffbeb",fontFamily:"var(--font-sans)"}}>
+                  <option value="">-- Select property --</option>
+                  {PROPERTIES.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>}
+                {!it.propertyId&&it.propertyInput&&<div style={{fontSize:10,color:"#92400e",marginTop:2}}>"{it.propertyInput}"</div>}
+              </td>
+              <td style={{padding:"6px 10px",maxWidth:180,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{it.description}</td>
+              <td style={{padding:"6px 10px"}}>{it.category}</td>
+              <td style={{padding:"6px 10px"}}><span style={{color:PCOLOR[it.priority]}}>{it.priority}</span></td>
+              <td style={{padding:"6px 10px"}}><span style={{color:SCOLOR[it.status]}}>{it.status}</span></td>
+              <td style={{padding:"6px 10px"}}>{it.assignee}</td>
+            </tr>)}</tbody>
+          </table>
+        </div>
+        <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
+          <GhostBtn onClick={()=>{setStep("upload");setParsed([]);setRows([]);}}>Back</GhostBtn>
+          <PrimaryBtn disabled={valid.length===0} onClick={()=>{
+            const final=valid.map(({propertyMatch,propertyInput,...rest})=>rest);
+            onSubmit(final);
+          }}>Import {valid.length} item{valid.length!==1?"s":""}</PrimaryBtn>
+        </div>
+      </div>}
+    </Overlay>
+  );
+}
+
 export default function App(){
   const[loaded,setLoaded]=useState(false);const[saveError,setSaveError]=useState("");const[saving,setSaving]=useState(false);
   const[inspections,setInspections]=useState([]);const[items,setItems]=useState([]);const[tenants,setTenants]=useState([]);
   const[view,setView]=useState("portfolio");const[selProp,setSelProp]=useState(null);const[selItem,setSelItem]=useState(null);
-  const[showImport,setShowImport]=useState(false);const[showAdd,setShowAdd]=useState(false);const[tenantForm,setTenantForm]=useState(null);
+  const[showImport,setShowImport]=useState(false);const[showAdd,setShowAdd]=useState(false);const[tenantForm,setTenantForm]=useState(null);const[showExcelImport,setShowExcelImport]=useState(false);
   const[fStatus,setFStatus]=useState("All");const[fPriority,setFPriority]=useState("All");const[fCategory,setFCategory]=useState("All");const[fAssignee,setFAssignee]=useState("All");const[fPartnership,setFPartnership]=useState("All");const[fProperty,setFProperty]=useState("All");
   const[search,setSearch]=useState("");const[tenantSearch,setTenantSearch]=useState("");const[tenantSort,setTenantSort]=useState("tenant");
 
@@ -762,6 +870,7 @@ export default function App(){
           <div style={{display:"flex",gap:8}}>
             {view==="tenants"&&<button onClick={()=>setTenantForm({mode:"add",propertyId:selProp})} style={{fontSize:13,fontWeight:500,background:"transparent",border:`1px solid ${C.border}`,borderRadius:7,padding:"6px 14px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>+ Add tenant</button>}
             {view!=="tenants"&&<button onClick={()=>setShowAdd(true)} style={{fontSize:13,fontWeight:500,background:"transparent",border:`1px solid ${C.border}`,borderRadius:7,padding:"6px 14px",cursor:"pointer",color:C.muted,fontFamily:"var(--font-sans)"}}>+ Add item</button>}
+            {view==="items"&&<button onClick={()=>setShowExcelImport(true)} style={{fontSize:13,fontWeight:500,background:"#f0f7ff",border:"1px solid #bfdbfe",borderRadius:7,padding:"6px 14px",cursor:"pointer",color:"#0070f3",fontFamily:"var(--font-sans)"}}>Import from Excel</button>}
             {view==="items"&&<button onClick={()=>doExport(filtered)} style={{fontSize:13,fontWeight:500,background:"#f0fff4",border:"1px solid #bbf7d0",borderRadius:7,padding:"6px 14px",cursor:"pointer",color:"#16a34a",fontFamily:"var(--font-sans)"}}>Export to Excel</button>}
             <button onClick={()=>setShowImport(true)} style={{fontSize:13,fontWeight:600,background:C.text,border:"none",borderRadius:7,padding:"7px 16px",cursor:"pointer",color:"#fff",fontFamily:"var(--font-sans)"}}>+ Import inspection</button>
           </div>
@@ -944,6 +1053,7 @@ export default function App(){
       {showImport&&<ImportForm selectedPropertyId={selProp} onSubmit={(insp,its)=>{addInspectionAndItems(insp,its);setShowImport(false);}} onClose={()=>setShowImport(false)}/>}
       {showAdd&&<AddItemForm selectedPropertyId={selProp} onSubmit={it=>{addItem(it);setShowAdd(false);}} onClose={()=>setShowAdd(false)}/>}
       {tenantForm&&<TenantForm tenant={tenantForm.mode==="edit"?tenantForm.tenant:null} propertyId={tenantForm.mode==="add"?tenantForm.propertyId:null} onSave={saveTenant} onClose={()=>setTenantForm(null)}/>}
+      {showExcelImport&&<ExcelImportForm onSubmit={async(newItems)=>{setSaving(true);setSaveError("");for(const item of newItems){const e=await saveItemToDB(item);if(e){setSaveError("Failed to save item: "+e.message);}}setItems(prev=>[...newItems,...prev]);setSaving(false);setShowExcelImport(false);}} onClose={()=>setShowExcelImport(false)}/>}
     </div>
   );
 }
