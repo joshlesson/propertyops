@@ -603,7 +603,7 @@ export default function App(){
   const[inspections,setInspections]=useState([]);const[items,setItems]=useState([]);const[tenants,setTenants]=useState([]);
   const[view,setView]=useState("portfolio");const[selProp,setSelProp]=useState(null);const[selItem,setSelItem]=useState(null);
   const[showImport,setShowImport]=useState(false);const[showAdd,setShowAdd]=useState(false);const[tenantForm,setTenantForm]=useState(null);
-  const[fStatus,setFStatus]=useState("All");const[fPriority,setFPriority]=useState("All");const[fCategory,setFCategory]=useState("All");const[fAssignee,setFAssignee]=useState("All");
+  const[fStatus,setFStatus]=useState("All");const[fPriority,setFPriority]=useState("All");const[fCategory,setFCategory]=useState("All");const[fAssignee,setFAssignee]=useState("All");const[fPartnership,setFPartnership]=useState("All");
   const[search,setSearch]=useState("");const[tenantSearch,setTenantSearch]=useState("");const[tenantSort,setTenantSort]=useState("tenant");
 
   useEffect(()=>{
@@ -672,10 +672,11 @@ export default function App(){
     if(fPriority!=="All"&&it.priority!==fPriority)return false;
     if(fCategory!=="All"&&it.category!==fCategory)return false;
     if(fAssignee!=="All"&&it.assignee!==fAssignee)return false;
+    if(fPartnership!=="All"){const prop=PROPERTIES.find(p=>p.id===it.propertyId);if(!prop||prop.group!==fPartnership)return false;}
     if(selProp&&it.propertyId!==selProp)return false;
     if(search&&!it.description.toLowerCase().includes(search.toLowerCase()))return false;
     return true;
-  }),[items,fStatus,fPriority,fCategory,fAssignee,selProp,search]);
+  }),[items,fStatus,fPriority,fCategory,fAssignee,fPartnership,selProp,search]);
 
   const filteredTenants=useMemo(()=>{
     const f=tenants.filter(t=>{
@@ -809,6 +810,10 @@ export default function App(){
                   {opts.map(o=><option key={o} value={o}>{o==="All"?`All ${label==="Status"?"Statuses":label==="Priority"?"Priorities":label==="Category"?"Categories":label+"s"}`:o}</option>)}
                 </select>
               ))}
+              <select value={fPartnership} onChange={e=>setFPartnership(e.target.value)} style={{fontFamily:"var(--font-sans)",fontSize:13,padding:"7px 10px",borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:fPartnership==="All"?C.muted:C.text}}>
+                <option value="All">All Partnerships</option>
+                {Object.entries(GROUPS).map(([k,v])=><option key={k} value={k}>{v}</option>)}
+              </select>
               <span style={{fontSize:12,color:C.faint}}>{filtered.length} items</span>
             </div>
             {filtered.length===0?<div style={{textAlign:"center",padding:"60px 0",color:C.faint,fontSize:13}}>No items match the current filters.</div>:
