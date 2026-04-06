@@ -117,6 +117,7 @@ function uid()   { return Math.random().toString(36).slice(2,9); }
 function nowISO(){ return new Date().toISOString(); }
 function today() { return new Date().toISOString().slice(0,10); }
 function fmtDate(iso) { if(!iso)return""; const[y,m,d]=iso.split("-"); return`${m}/${d}/${y}`; }
+function leaseExpiringSoon(iso,days=90){if(!iso)return false;const end=new Date(iso+"T00:00:00");const now=new Date();const diff=(end-now)/(1000*60*60*24);return diff>=0&&diff<=days;}
 
 async function doExport(filtered) {
   const mod = await import("https://cdn.sheetjs.com/xlsx-0.20.1/package/xlsx.mjs");
@@ -300,12 +301,12 @@ function TenantsSection({propertyId,tenants,onEdit,onDelete}){
       {propTenants.length===0
         ?<div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:"20px 18px",textAlign:"center",fontSize:13,color:C.faint}}>No tenants on file for this property.</div>
         :<div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
-          {propTenants.map((t,i)=>(
-            <div key={t.id} style={{padding:"14px 18px",borderBottom:i<propTenants.length-1?`1px solid ${C.border}`:"none"}}>
+          {propTenants.map((t,i)=>{const expSoon=leaseExpiringSoon(t.leaseEnd);return(
+            <div key={t.id} style={{padding:"14px 18px",borderBottom:i<propTenants.length-1?`1px solid ${C.border}`:"none",background:expSoon?"#fff8e1":undefined}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{fontSize:14,fontWeight:700,color:C.text}}>{t.companyName}{t.unit&&<span style={{fontSize:12,fontWeight:400,color:C.muted,marginLeft:8}}>{t.unit}</span>}</div>
-                  {t.leaseEnd&&<div style={{fontSize:11,color:C.faint,marginTop:2}}>Lease ends: {fmtDate(t.leaseEnd)}</div>}
+                  {t.leaseEnd&&<div style={{fontSize:11,color:expSoon?"#e65100":C.faint,fontWeight:expSoon?600:400,marginTop:2}}>{expSoon&&"⚠ "}Lease ends: {fmtDate(t.leaseEnd)}</div>}
                   {(t.contacts||[]).length>0&&<div style={{marginTop:8,display:"flex",flexDirection:"column",gap:4}}>
                     {t.contacts.map((c,ci)=>(
                       <div key={ci} style={{display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
@@ -322,7 +323,7 @@ function TenantsSection({propertyId,tenants,onEdit,onDelete}){
                 </div>
               </div>
             </div>
-          ))}
+          );})}
         </div>}
     </div>
   );
@@ -829,8 +830,9 @@ export default function App(){
             <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
               {filteredTenants.map((t,i)=>{
                 const prop=PROPERTIES.find(p=>p.id===t.propertyId);
+                const expSoon=leaseExpiringSoon(t.leaseEnd);
                 return(
-                  <div key={t.id} style={{padding:"14px 18px",borderBottom:i<filteredTenants.length-1?`1px solid ${C.border}`:"none"}}>
+                  <div key={t.id} style={{padding:"14px 18px",borderBottom:i<filteredTenants.length-1?`1px solid ${C.border}`:"none",background:expSoon?"#fff8e1":undefined}}>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                       <div style={{flex:1,minWidth:0}}>
                         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:5,flexWrap:"wrap"}}>
@@ -840,7 +842,7 @@ export default function App(){
                         </div>
                         <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
                           <span style={{fontSize:12,fontWeight:600,color:C.text}}>{prop?.name}</span>
-                          {t.leaseEnd&&<><span style={{fontSize:11,color:C.faint}}>·</span><span style={{fontSize:12,fontWeight:600,color:C.text}}>Exp. {fmtDate(t.leaseEnd)}</span></>}
+                          {t.leaseEnd&&<><span style={{fontSize:11,color:C.faint}}>·</span><span style={{fontSize:12,fontWeight:600,color:expSoon?"#e65100":C.text}}>{expSoon?"⚠ ":""}Exp. {fmtDate(t.leaseEnd)}</span></>}
                         </div>
                         {(t.contacts||[]).length>0&&<div style={{marginTop:8,display:"flex",flexDirection:"column",gap:4}}>
                           {t.contacts.map((c,ci)=>(
