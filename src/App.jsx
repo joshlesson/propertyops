@@ -639,17 +639,62 @@ function ExcelImportForm({onSubmit,onClose}){
   const[wbRef,setWbRef]=useState(null);
   const[xlsxRef,setXlsxRef]=useState(null);
 
-  function matchProperty(propName){
+  function resolveGroup(portfolioRaw){
+    if(!portfolioRaw)return null;
+    const lower=portfolioRaw.toLowerCase().trim();
+    // exact match on GROUPS values
+    const exact=Object.entries(GROUPS).find(([,v])=>v.toLowerCase()===lower);
+    if(exact)return exact[0];
+    // partial / alias matches for known spreadsheet names
+    for(const[k,v]of Object.entries(GROUPS)){
+      if(v.toLowerCase().includes(lower)||lower.includes(v.toLowerCase()))return k;
+    }
+    // specific aliases: spreadsheet uses "DRM" for "Dembs Roth", "Livonia" for "Livonia Group", "Jagar" for "2925 Jagar"
+    const aliases={"drm":"FDEMBS","dembs roth":"FDEMBS","livonia":"FLIVGR","jagar":"2925","2925 jagar":"2925"};
+    if(aliases[lower])return aliases[lower];
+    return null;
+  }
+
+  function matchProperty(propName,groupKey){
     if(!propName)return null;
     const lower=propName.toLowerCase().trim();
-    // exact name match
-    let m=PROPERTIES.find(p=>p.name.toLowerCase()===lower);if(m)return m;
-    // address contains match
-    m=PROPERTIES.find(p=>p.address.toLowerCase().includes(lower)&&lower.length>3);if(m)return m;
-    // name contains match
-    m=PROPERTIES.find(p=>p.name.toLowerCase().includes(lower)&&lower.length>3);if(m)return m;
-    // partial number match (e.g. "45701" matches "45701 Mast St.")
-    if(/^\d+/.test(lower)){m=PROPERTIES.find(p=>p.name.toLowerCase().startsWith(lower));if(m)return m;m=PROPERTIES.find(p=>p.id.toLowerCase()===lower);if(m)return m;}
+    // strip tenant name after em dash: "44064 Plymouth Oaks Blvd — Alfing" -> "44064 Plymouth Oaks Blvd"
+    const addrPart=lower.split(/\s*[—–-]\s*/)[0].trim();
+    // candidates narrowed by group if available
+    const candidates=groupKey?PROPERTIES.filter(p=>p.group===groupKey):PROPERTIES;
+    const all=PROPERTIES;// fallback pool
+
+    // exact name match within group
+    let m=candidates.find(p=>p.name.toLowerCase()===lower)||candidates.find(p=>p.name.toLowerCase()===addrPart);if(m)return m;
+    // exact name match across all
+    m=all.find(p=>p.name.toLowerCase()===lower)||all.find(p=>p.name.toLowerCase()===addrPart);if(m)return m;
+
+    // address number match: extract leading number from the spreadsheet value and match against property addresses
+    const numMatch=addrPart.match(/^(\d+)/);
+    if(numMatch){
+      const num=numMatch[1];
+      // within group: address starts with this number
+      m=candidates.find(p=>p.address.toLowerCase().startsWith(num));if(m)return m;
+      m=candidates.find(p=>p.name.toLowerCase().startsWith(num));if(m)return m;
+      // across all
+      m=all.find(p=>p.address.toLowerCase().startsWith(num));if(m)return m;
+      m=all.find(p=>p.name.toLowerCase().startsWith(num));if(m)return m;
+    }
+
+    // address substring match
+    if(addrPart.length>3){
+      m=candidates.find(p=>p.address.toLowerCase().includes(addrPart));if(m)return m;
+      m=candidates.find(p=>p.name.toLowerCase().includes(addrPart));if(m)return m;
+      m=all.find(p=>p.address.toLowerCase().includes(addrPart));if(m)return m;
+    }
+
+    // prop ID match
+    m=candidates.find(p=>p.id.toLowerCase()===lower);if(m)return m;
+    m=all.find(p=>p.id.toLowerCase()===lower);if(m)return m;
+
+    // if group is known but property value is a tenant name (no number), and group has only one property, use it
+    if(groupKey&&!numMatch&&candidates.length===1)return candidates[0];
+
     return null;
   }
 
@@ -690,6 +735,7 @@ function ExcelImportForm({onSubmit,onClose}){
       if(lc==="trade / category"||lc==="category")colMap.category=i;
       else if(lc==="property"||lc==="property address")colMap.property=i;
       else if(lc==="prop #")colMap.propId=i;
+      else if(lc==="portfolio"||lc==="partnership"||lc==="pmt co")colMap.portfolio=i;
       else if(lc==="issue / item"||lc==="description"||lc==="repair item")colMap.description=i;
       else if(lc==="notes"||lc==="comments")colMap.notes=i;
       else if(lc==="status")colMap.status=i;
@@ -711,7 +757,9 @@ function ExcelImportForm({onSubmit,onClose}){
 
       const propRaw=get(row,"property");
       const propIdRaw=get(row,"propId");
-      const match=matchProperty(propIdRaw)||matchProperty(propRaw);
+      const portfolioRaw=get(row,"portfolio");
+      const groupKey=resolveGroup(portfolioRaw);
+      const match=matchProperty(propIdRaw,groupKey)||matchProperty(propRaw,groupKey);
 
       const catRaw=get(row,"category");
       const validCat=CATEGORIES.find(c=>c.toLowerCase()===catRaw.toLowerCase())||"Other";
