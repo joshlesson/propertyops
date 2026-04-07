@@ -9,7 +9,7 @@ const sb = createClient(
 );
 
 const TEAM       = ["Kenny Perkins","Josh Lesson","Rob Stout","Spencer Vankirk","Dylan Dembs"];
-const CATEGORIES = ["Signage","Structural","Concrete / Hardscape","Painting / Finishes","Dock / Loading","Roofing","HVAC","Plumbing","Electrical","Landscaping","Safety","Other"];
+const CATEGORIES = ["Signage","Structural","Concrete / Hardscape","Painting / Finishes","Dock / Loading","Roofing","HVAC","Plumbing","Electrical","Landscaping","Safety","Parking Lot","Other"];
 const PRIORITIES = ["Critical","High","Medium","Low"];
 const CONTACT_EMAIL = "management@dembsroth.com";
 
@@ -762,7 +762,27 @@ function ExcelImportForm({onSubmit,onClose}){
       const match=matchProperty(propIdRaw,groupKey)||matchProperty(propRaw,groupKey);
 
       const catRaw=get(row,"category");
-      const validCat=CATEGORIES.find(c=>c.toLowerCase()===catRaw.toLowerCase())||"Other";
+      const validCat=CATEGORIES.find(c=>c.toLowerCase()===catRaw.toLowerCase())||inferCategory(get(row,"description"));
+
+      function inferCategory(desc){
+        const d=desc.toLowerCase();
+        const rules=[
+          ["Parking Lot",/\b(parking\s*lot|asphalt|pothol|striping|seal\s*coat|pav(e|ing)|park\s*lot)\b/],
+          ["Signage",/\b(sign(s|age)?|banner|letter(s|ing)?|placard)\b/],
+          ["Structural",/\b(structur|beam|column|wall\s*crack|foundation|masonry|brick|block|tuck\s*point|lintel|steel|joist)\b/],
+          ["Concrete / Hardscape",/\b(concret|sidewalk|curb|hardscape|stoop|step|flatwork|apron)\b/],
+          ["Painting / Finishes",/\b(paint|stain|finish|coat(ing)?|rust|prime|primer|caulk|seal(ant)?|bollard.*paint|fascia|soffit)\b/],
+          ["Dock / Loading",/\b(dock|loading|leveler|bumper|overhead\s*door|roll.up|coil.*door|dock\s*(door|seal|plate|light))\b/],
+          ["Roofing",/\b(roof|shingle|membrane|flashing|gutter|downspout|drain|leak.*roof|roof.*leak|ponding|skylight|cap\s*sheet)\b/],
+          ["HVAC",/\b(hvac|furnace|heat(er|ing)?|cool(ing)?|a\/?c\b|air\s*condition|thermostat|duct|condenser|compressor|rtu|rooftop\s*unit|boiler)\b/],
+          ["Plumbing",/\b(plumb|pipe|faucet|toilet|drain|sewer|water\s*heater|valve|spigot|hose\s*bib|backflow|sump|ejector)\b/],
+          ["Electrical",/\b(electri|wir(e|ing)|outlet|panel|breaker|circuit|light(s|ing|pole)?|ballast|fixture|switch|volt|amp|meter|transformer|receptacle)\b/],
+          ["Landscaping",/\b(landscap|tree|shrub|mulch|mow|grass|weed|trim|prun|irrigation|sprinkler|bush|planting|flower|sod|grade|erosion|drain.*yard)\b/],
+          ["Safety",/\b(safety|fire\s*(ext|alarm|door|escape|sprinkler)|handicap|ada\b|emergency|exit\s*(sign|light)|extinguish|smoke\s*detect|handrail|guardrail|trip\s*hazard)\b/],
+        ];
+        for(const[cat,re]of rules)if(re.test(d))return cat;
+        return"Other";
+      }
 
       const priRaw=get(row,"priority");
       const validPri=PRIORITIES.find(p=>p.toLowerCase()===priRaw.toLowerCase())||"Medium";
