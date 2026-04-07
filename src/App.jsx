@@ -554,8 +554,10 @@ function ImportForm({selectedPropertyId,onSubmit,onDone,onClose}){
   const[propertyId,setPropertyId]=useState(selectedPropertyId||PROPERTIES[0].id);
   const[overrideInspector,setOverrideInspector]=useState("");const[overrideDate,setOverrideDate]=useState("");
   const[files,setFiles]=useState([]);// [{name,base64,images}]
-  const[loading,setLoading]=useState(false);const[results,setResults]=useState(null);// [{fileName,base64,items,date,inspector,detectedProperty}]
-  const[dragOver,setDragOver]=useState(false);const[progress,setProgress]=useState({current:0,total:0,status:""});
+  const[processing,setProcessing]=useState(false);
+  const[dragOver,setDragOver]=useState(false);
+  const[progress,setProgress]=useState({current:0,total:0,status:""});
+  const[done,setDone]=useState(null);// [{fileName,itemCount,error}]
   async function readFile(file){
     return new Promise((resolve,reject)=>{
       const r=new FileReader();
@@ -583,61 +585,39 @@ function ImportForm({selectedPropertyId,onSubmit,onDone,onClose}){
   }
   function removeFile(name){setFiles(prev=>prev.filter(f=>f.name!==name));}
   function parsePDFAsync(params){
-    return new Promise((resolve,reject)=>{
+    return new Promise((resolve)=>{
       parsePDF(params,()=>{},resolve);
     });
   }
-  async function extractAll(){
-    setLoading(true);const allResults=[];
+  async function processAll(){
+    setProcessing(true);const summary=[];
     for(let i=0;i<files.length;i++){
       const f=files[i];
-      setProgress({current:i+1,total:files.length,status:`Extracting from ${f.name}...`});
+      setProgress({current:i+1,total:files.length,status:`Processing ${i+1} of ${files.length}: ${f.name}`});
       try{
         const id="i"+uid();
         const r=await parsePDFAsync({pdfBase64:f.images?null:f.base64,pdfImages:f.images,propertyId,inspectionId:id,overrideDate,overrideInspector});
-        allResults.push({fileName:f.name,base64:f.base64,inspId:id,items:r.items,date:r.date,inspector:r.inspector,detectedProperty:r.detectedProperty});
-      }catch(e){console.error("Extract error:",f.name,e);allResults.push({fileName:f.name,base64:f.base64,inspId:null,items:[],date:"",inspector:"",detectedProperty:"",error:true});}
+        if(r.error||!r.items.length){summary.push({fileName:f.name,itemCount:0,error:r.error||false});continue;}
+        const url=await uploadPDF(f.base64,f.name,id);
+        await onSubmit({id,propertyId,date:overrideDate||r.date,inspector:overrideInspector||r.inspector||"SnapInspect",notes:"SnapInspect PDF: "+f.name,pdfUrl:url},r.items);
+        summary.push({fileName:f.name,itemCount:r.items.length,error:false});
+      }catch(e){console.error("Process error:",f.name,e);summary.push({fileName:f.name,itemCount:0,error:true});}
     }
-    setResults(allResults);setLoading(false);setProgress({current:0,total:0,status:""});
+    setProcessing(false);setDone(summary);
   }
-  const totalItems=results?results.reduce((s,r)=>s+r.items.length,0):0;
-  const prop=PROPERTIES.find(p=>p.id===propertyId);
-  if(results)return(
+  if(done)return(
     <Overlay onClose={onClose}>
-      <OverlayHeader title="Review extracted items" sub={`${totalItems} items from ${results.length} PDF${results.length!==1?"s":""}`} onClose={onClose}/>
-      <div style={{maxHeight:460,overflowY:"auto",marginBottom:16}}>
-        {results.map((r,ri)=>(
-          <div key={ri} style={{marginBottom:ri<results.length-1?16:0}}>
-            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
-              <span style={{fontSize:13,fontWeight:700,color:C.text}}>{r.fileName}</span>
-              <span style={{fontSize:11,color:C.faint}}>{r.items.length} items</span>
-              {r.error&&<span style={{fontSize:11,color:"#e00",fontWeight:600}}>Failed</span>}
-              {r.detectedProperty&&<span style={{fontSize:11,color:C.muted}}>- {r.detectedProperty}</span>}
-            </div>
-            <div style={{border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
-              {r.items.map((item,i)=>(
-                <div key={i} style={{padding:"11px 16px",background:i%2===0?C.surface:C.bg,borderBottom:i<r.items.length-1?`1px solid ${C.border}`:"none"}}>
-                  <div style={{fontSize:13,fontWeight:500,color:C.text,marginBottom:6,lineHeight:1.4}}>{item.description}</div>
-                  <div style={{display:"flex",gap:6,flexWrap:"wrap"}}><PPill p={item.priority}/><Chip label={item.category} tc={C.muted} bg={C.bg} bc={C.border}/></div>
-                </div>
-              ))}
-              {r.items.length===0&&!r.error&&<div style={{padding:"16px",fontSize:12,color:C.faint,textAlign:"center"}}>No items extracted</div>}
-            </div>
+      <OverlayHeader title="Import complete" sub={`${done.reduce((s,d)=>s+d.itemCount,0)} items from ${done.filter(d=>!d.error&&d.itemCount>0).length} inspections`} onClose={onClose}/>
+      <div style={{border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden",marginBottom:16}}>
+        {done.map((d,i)=>(
+          <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",fontSize:13,background:i%2===0?C.surface:C.bg,borderBottom:i<done.length-1?`1px solid ${C.border}`:"none"}}>
+            <span style={{color:C.text,fontWeight:500}}>{d.fileName}</span>
+            {d.error?<span style={{fontSize:12,color:"#e00",fontWeight:600}}>Failed</span>:
+            <span style={{fontSize:12,color:"#16a34a",fontWeight:600}}>{d.itemCount} items imported</span>}
           </div>
         ))}
       </div>
-      <div style={{display:"flex",gap:8}}>
-        <PrimaryBtn disabled={totalItems===0} onClick={async()=>{
-          for(const r of results){
-            if(!r.items.length||r.error)continue;
-            const id=r.inspId||"i"+uid();
-            const url=await uploadPDF(r.base64,r.fileName,id);
-            await onSubmit({id,propertyId,date:overrideDate||r.date,inspector:overrideInspector||r.inspector||"SnapInspect",notes:"SnapInspect PDF: "+r.fileName,pdfUrl:url},r.items);
-          }
-          if(onDone)onDone();
-        }}>Confirm and add {totalItems} items</PrimaryBtn>
-        <GhostBtn onClick={()=>setResults(null)}>Back</GhostBtn>
-      </div>
+      <PrimaryBtn full onClick={()=>{if(onDone)onDone();}}>Done</PrimaryBtn>
     </Overlay>
   );
   return(
@@ -646,9 +626,9 @@ function ImportForm({selectedPropertyId,onSubmit,onDone,onClose}){
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
         <div onDragOver={e=>{e.preventDefault();setDragOver(true);}} onDragLeave={()=>setDragOver(false)} onDrop={e=>{e.preventDefault();setDragOver(false);handleFiles(e.dataTransfer.files);}} onClick={()=>document.getElementById("pdf-upload-input").click()} style={{border:`2px dashed ${dragOver?C.text:C.borderMid}`,borderRadius:10,padding:"28px 20px",textAlign:"center",cursor:"pointer",background:dragOver?C.bg:"transparent",transition:"all 0.15s"}}>
           <input id="pdf-upload-input" type="file" accept="application/pdf" multiple style={{display:"none"}} onChange={e=>{handleFiles(e.target.files);e.target.value="";}}/>
-          {progress.status&&!loading?<><div style={{fontSize:13,fontWeight:600,color:"#e65100"}}>{progress.status}</div><div style={{fontSize:11,color:C.faint,marginTop:2}}>Reading file {progress.current} of {progress.total}</div></>:<><div style={{fontSize:13,fontWeight:600,color:C.text}}>{files.length?`${files.length} PDF${files.length!==1?"s":""} selected — click to add more`:"Drop SnapInspect PDFs here"}</div><div style={{fontSize:11,color:C.faint,marginTop:3}}>{files.length?"or drag additional files":"or click to browse — select multiple files"}</div></>}
+          {progress.status&&!processing?<><div style={{fontSize:13,fontWeight:600,color:"#e65100"}}>{progress.status}</div><div style={{fontSize:11,color:C.faint,marginTop:2}}>Reading file {progress.current} of {progress.total}</div></>:<><div style={{fontSize:13,fontWeight:600,color:C.text}}>{files.length?`${files.length} PDF${files.length!==1?"s":""} selected — click to add more`:"Drop SnapInspect PDFs here"}</div><div style={{fontSize:11,color:C.faint,marginTop:3}}>{files.length?"or drag additional files":"or click to browse — select multiple files"}</div></>}
         </div>
-        {files.length>0&&<div style={{border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden",maxHeight:160,overflowY:"auto"}}>
+        {files.length>0&&!processing&&<div style={{border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden",maxHeight:160,overflowY:"auto"}}>
           {files.map((f,i)=>(
             <div key={f.name} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 14px",fontSize:12,background:i%2===0?C.surface:C.bg,borderBottom:i<files.length-1?`1px solid ${C.border}`:"none"}}>
               <span style={{color:C.text,fontWeight:500}}>{f.name}</span>
@@ -659,16 +639,19 @@ function ImportForm({selectedPropertyId,onSubmit,onDone,onClose}){
             </div>
           ))}
         </div>}
-        <FSelect label="Property" value={propertyId} onChange={setPropertyId} options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} - ${p.name}`}))}/>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-          <FSelect label="Inspector (optional)" value={overrideInspector} onChange={setOverrideInspector} options={[{v:"",l:"Auto-detect from PDF"},...TEAM.map(t=>({v:t,l:t}))]}/>
-          <FInput label="Date (optional)" value={overrideDate} onChange={setOverrideDate} type="date"/>
-        </div>
-        {loading&&<div style={{background:C.bg,borderRadius:8,padding:"12px 14px",border:`1px solid ${C.border}`}}>
-          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{fontSize:12,fontWeight:600,color:C.text}}>{progress.status}</span><span style={{fontSize:11,color:C.faint}}>{progress.current}/{progress.total}</span></div>
+        {!processing&&<>
+          <FSelect label="Property" value={propertyId} onChange={setPropertyId} options={PROPERTIES.map(p=>({v:p.id,l:`${GROUPS[p.group]} - ${p.name}`}))}/>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+            <FSelect label="Inspector (optional)" value={overrideInspector} onChange={setOverrideInspector} options={[{v:"",l:"Auto-detect from PDF"},...TEAM.map(t=>({v:t,l:t}))]}/>
+            <FInput label="Date (optional)" value={overrideDate} onChange={setOverrideDate} type="date"/>
+          </div>
+        </>}
+        {processing&&<div style={{background:C.bg,borderRadius:8,padding:"16px 14px",border:`1px solid ${C.border}`}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}><span style={{fontSize:13,fontWeight:600,color:C.text}}>{progress.status}</span><span style={{fontSize:12,color:C.faint}}>{progress.current}/{progress.total}</span></div>
           <div style={{height:6,background:C.border,borderRadius:3,overflow:"hidden"}}><div style={{height:"100%",background:C.accent,borderRadius:3,transition:"width 0.3s",width:`${(progress.current/progress.total)*100}%`}}/></div>
+          <div style={{fontSize:11,color:C.muted,marginTop:8}}>Extracting items, uploading PDF, and saving to database...</div>
         </div>}
-        <PrimaryBtn full disabled={loading||!files.length} onClick={extractAll}>{loading?`Extracting ${progress.current} of ${progress.total}...`:`Extract from ${files.length} PDF${files.length!==1?"s":""}`}</PrimaryBtn>
+        <PrimaryBtn full disabled={processing||!files.length} onClick={processAll}>{processing?`Processing ${progress.current} of ${progress.total}...`:`Import ${files.length} PDF${files.length!==1?"s":""}`}</PrimaryBtn>
       </div>
     </Overlay>
   );
