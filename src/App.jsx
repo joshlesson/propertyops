@@ -458,7 +458,7 @@ function ItemRow({item,showProperty,onClick}){
       <div style={{flex:1,minWidth:0}}>
         <div style={{fontSize:14,fontWeight:600,color:C.text,marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.description}</div>
         <div style={{display:"flex",gap:5,alignItems:"center",flexWrap:"wrap"}}>
-          {showProperty&&<><span style={{fontSize:12,color:C.muted}}>{GROUPS[prop?.group]}</span><span style={{color:C.border,fontSize:11}}>·</span></>}
+          {showProperty&&prop?.name&&<><span style={{fontSize:12,color:C.muted}}>{prop.name}</span><span style={{color:C.border,fontSize:11}}>·</span></>}
           <span style={{fontSize:11,color:C.muted}}>{item.category}</span>
           {item.assignee&&<><span style={{color:C.border,fontSize:11}}>·</span><span style={{fontSize:11,color:C.muted}}>{item.assignee.split(" ")[0]}</span></>}
           {item.scheduledDate&&<><span style={{color:C.border,fontSize:11}}>·</span><span style={{fontSize:11,color:C.muted}}>{item.scheduledDate}</span></>}
