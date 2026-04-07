@@ -450,11 +450,12 @@ function PropRow({prop,items,inspections,isLast,onClick}){
   );
 }
 
-function ItemRow({item,showProperty,onClick}){
+function ItemRow({item,showProperty,onClick,selectable,selected,onToggle}){
   const[hov,setHov]=useState(false);
   const prop=PROPERTIES.find(p=>p.id===item.propertyId);
   return(
-    <div onClick={onClick} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)} style={{display:"flex",alignItems:"center",gap:14,padding:"11px 18px",background:hov?C.bg:C.surface,borderBottom:`1px solid ${C.border}`,cursor:"pointer",transition:"background 0.1s"}}>
+    <div onClick={onClick} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)} style={{display:"flex",alignItems:"center",gap:14,padding:"11px 18px",background:selected?C.accent+"11":hov?C.bg:C.surface,borderBottom:`1px solid ${C.border}`,cursor:"pointer",transition:"background 0.1s"}}>
+      {selectable&&<input type="checkbox" checked={!!selected} onChange={e=>{e.stopPropagation();onToggle(item.id);}} onClick={e=>e.stopPropagation()} style={{accentColor:C.accent,width:16,height:16,flexShrink:0,cursor:"pointer"}}/>}
       <div style={{flex:1,minWidth:0}}>
         <div style={{fontSize:14,fontWeight:600,color:C.text,marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.description}</div>
         <div style={{display:"flex",gap:5,alignItems:"center",flexWrap:"wrap"}}>
@@ -917,6 +918,7 @@ export default function App(){
   const[showImport,setShowImport]=useState(false);const[showAdd,setShowAdd]=useState(false);const[tenantForm,setTenantForm]=useState(null);const[showExcelImport,setShowExcelImport]=useState(false);
   const[fStatus,setFStatus]=useState("All");const[fPriority,setFPriority]=useState("All");const[fCategory,setFCategory]=useState("All");const[fAssignee,setFAssignee]=useState("All");const[fPartnership,setFPartnership]=useState("All");const[fProperty,setFProperty]=useState("All");
   const[search,setSearch]=useState("");const[tenantSearch,setTenantSearch]=useState("");const[tenantSort,setTenantSort]=useState("tenant");
+  const[selected,setSelected]=useState(new Set());const[bulkCat,setBulkCat]=useState("");
 
   useEffect(()=>{
     loadAll().then(result=>{
@@ -1134,8 +1136,25 @@ export default function App(){
               </select>
               <span style={{fontSize:12,color:C.faint}}>{filtered.length} items</span>
             </div>
+            {selected.size>0&&<div style={{display:"flex",gap:10,alignItems:"center",marginBottom:12,padding:"10px 14px",background:C.accent+"11",border:`1px solid ${C.accent}44`,borderRadius:10}}>
+              <span style={{fontSize:13,fontWeight:600,color:C.text}}>{selected.size} selected</span>
+              <select value={bulkCat} onChange={e=>setBulkCat(e.target.value)} style={{fontFamily:"var(--font-sans)",fontSize:13,padding:"6px 10px",borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:bulkCat?C.text:C.muted}}>
+                <option value="">Change category to...</option>
+                {CATEGORIES.map(c=><option key={c} value={c}>{c}</option>)}
+              </select>
+              <PrimaryBtn disabled={!bulkCat||saving} onClick={async()=>{
+                setSaving(true);setSaveError("");
+                const ids=[...selected];
+                const updated=items.map(i=>ids.includes(i.id)?{...i,category:bulkCat}:i);
+                setItems(updated);
+                for(const id of ids){const err=await saveItemToDB(updated.find(i=>i.id===id));if(err){setSaveError("Bulk save failed: "+err.message);break;}}
+                setSaving(false);setSelected(new Set());setBulkCat("");
+              }}>Apply</PrimaryBtn>
+              <GhostBtn onClick={()=>{setSelected(new Set());setBulkCat("");}}>Cancel</GhostBtn>
+              <span style={{marginLeft:"auto",fontSize:11,color:C.muted,cursor:"pointer"}} onClick={()=>{setSelected(new Set(filtered.map(i=>i.id)));}}> Select all {filtered.length}</span>
+            </div>}
             {filtered.length===0?<div style={{textAlign:"center",padding:"60px 0",color:C.faint,fontSize:13}}>No items match the current filters.</div>:
-            <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>{filtered.map(it=><ItemRow key={it.id} item={it} showProperty onClick={()=>setSelItem(it)}/>)}</div>}
+            <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>{filtered.map(it=><ItemRow key={it.id} item={it} showProperty selectable selected={selected.has(it.id)} onToggle={id=>setSelected(prev=>{const s=new Set(prev);s.has(id)?s.delete(id):s.add(id);return s;})} onClick={()=>setSelItem(it)}/>)}</div>}
           </>}
 
           {view==="tenants"&&<>
