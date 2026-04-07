@@ -111,9 +111,9 @@ const C = {
 const PCOLOR = {Critical:"#e00",High:"#f5a623",Medium:"#0070f3",Low:"#50c878"};
 const PBG    = {Critical:"#fff0f0",High:"#fff8ee",Medium:"#f0f7ff",Low:"#f0fff4"};
 const PBDR   = {Critical:"#ffcccc",High:"#fde68a",Medium:"#bfdbfe",Low:"#bbf7d0"};
-const SCOLOR = {"Not Started":"#666666","PO Issued":"#7c3aed","Scheduled":"#0070f3","In Progress":"#f5a623","Completed":"#16a34a"};
-const SBG    = {"Not Started":"#fafafa","PO Issued":"#f5f3ff","Scheduled":"#f0f7ff","In Progress":"#fff8ee","Completed":"#f0fff4"};
-const SBDR   = {"Not Started":"#eaeaea","PO Issued":"#ddd6fe","Scheduled":"#bfdbfe","In Progress":"#fde68a","Completed":"#bbf7d0"};
+const SCOLOR = {"Not Started":"#a8a8a0","PO Issued":"#fff","Scheduled":"#0070f3","In Progress":"#fff","Completed":"#fff"};
+const SBG    = {"Not Started":"#f5f5f3","PO Issued":"#7c3aed","Scheduled":"#f0f7ff","In Progress":"#e67e00","Completed":"#16a34a"};
+const SBDR   = {"Not Started":"#e8e8e4","PO Issued":"#7c3aed","Scheduled":"#bfdbfe","In Progress":"#e67e00","Completed":"#16a34a"};
 
 function uid()   { return Math.random().toString(36).slice(2,9); }
 function nowISO(){ return new Date().toISOString(); }
