@@ -9,7 +9,7 @@ const sb = createClient(
 );
 
 const TEAM       = ["Kenny Perkins","Josh Lesson","Rob Stout","Spencer Vankirk","Dylan Dembs"];
-const CATEGORIES = ["Signage","Structural","Concrete / Hardscape","Painting / Finishes","Dock / Loading","Roofing","HVAC","Plumbing","Electrical","Landscaping","Safety","Parking Lot","Other"];
+const CATEGORIES = ["Signage","Structural","Concrete / Hardscape","Painting / Finishes","Dock / Loading","Roofing","HVAC","Plumbing","Electrical","Landscaping","Safety","Parking Lot","Doors","Soffits / Panel Boards","Other"];
 const PRIORITIES = ["Critical","High","Medium","Low"];
 const CONTACT_EMAIL = "management@dembsroth.com";
 
@@ -772,7 +772,9 @@ function ExcelImportForm({onSubmit,onClose}){
           ["Signage",/\b(sign(s|age)?|banner|letter(s|ing)?|placard)\b/],
           ["Structural",/\b(structur|beam|column|wall\s*crack|foundation|masonry|brick|block|tuck\s*point|lintel|steel|joist)\b/],
           ["Concrete / Hardscape",/\b(concret|sidewalk|curb|hardscape|stoop|step|flatwork|apron)\b/],
-          ["Painting / Finishes",/\b(paint|stain|finish|coat(ing)?|rust|prime|primer|caulk|seal(ant)?|bollard.*paint|fascia|soffit)\b/],
+          ["Soffits / Panel Boards",/\b(soffit|fascia|panel\s*board|panelboard|eave)\b/],
+          ["Doors",/\b(door|entry|exit|storefront|glass\s*door)\b/],
+          ["Painting / Finishes",/\b(paint|stain|finish|coat(ing)?|rust|prime|primer|caulk|seal(ant)?|bollard.*paint)\b/],
           ["Dock / Loading",/\b(dock|loading|leveler|bumper|overhead\s*door|roll.up|coil.*door|dock\s*(door|seal|plate|light))\b/],
           ["Roofing",/\b(roof|shingle|membrane|flashing|gutter|downspout|drain|leak.*roof|roof.*leak|ponding|skylight|cap\s*sheet)\b/],
           ["HVAC",/\b(hvac|furnace|heat(er|ing)?|cool(ing)?|a\/?c\b|air\s*condition|thermostat|duct|condenser|compressor|rtu|rooftop\s*unit|boiler)\b/],

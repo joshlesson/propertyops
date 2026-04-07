@@ -12,7 +12,9 @@ function inferCategory(desc) {
     ["Signage",        /\b(sign(s|age)?|banner|letter(s|ing)?|placard)\b/],
     ["Structural",     /\b(structur|beam|column|wall\s*crack|foundation|masonry|brick|block|tuck\s*point|lintel|steel|joist)\b/],
     ["Concrete / Hardscape", /\b(concret|sidewalk|curb|hardscape|stoop|step|flatwork|apron)\b/],
-    ["Painting / Finishes",  /\b(paint|stain|finish|coat(ing)?|rust|prime|primer|caulk|seal(ant)?|bollard.*paint|fascia|soffit)\b/],
+    ["Soffits / Panel Boards", /\b(soffit|fascia|panel\s*board|panelboard|eave)\b/],
+    ["Doors",          /\b(door|entry|exit|storefront|glass\s*door)\b/],
+    ["Painting / Finishes",  /\b(paint|stain|finish|coat(ing)?|rust|prime|primer|caulk|seal(ant)?|bollard.*paint)\b/],
     ["Dock / Loading", /\b(dock|loading|leveler|bumper|overhead\s*door|roll.up|coil.*door|dock\s*(door|seal|plate|light))\b/],
     ["Roofing",        /\b(roof|shingle|membrane|flashing|gutter|downspout|drain|leak.*roof|roof.*leak|ponding|skylight|cap\s*sheet)\b/],
     ["HVAC",           /\b(hvac|furnace|heat(er|ing)?|cool(ing)?|a\/?c\b|air\s*condition|thermostat|duct|condenser|compressor|rtu|rooftop\s*unit|boiler)\b/],
@@ -26,22 +28,21 @@ function inferCategory(desc) {
 }
 
 async function main() {
-  // Fetch all items that are currently "Other"
+  // Fetch all items to re-evaluate categories
   const { data: items, error } = await sb
     .from("items")
-    .select("id, description, category")
-    .eq("category", "Other");
+    .select("id, description, category");
 
   if (error) { console.error("Fetch error:", error); process.exit(1); }
 
-  console.log(`Found ${items.length} items with category "Other"`);
+  console.log(`Found ${items.length} total items`);
 
   let updated = 0;
   let skipped = 0;
 
   for (const item of items) {
     const newCat = inferCategory(item.description || "");
-    if (newCat === "Other") { skipped++; continue; }
+    if (newCat === item.category || newCat === "Other") { skipped++; continue; }
 
     const { error: upErr } = await sb
       .from("items")
@@ -51,7 +52,7 @@ async function main() {
     if (upErr) {
       console.error(`  FAIL [${item.id}]: ${upErr.message}`);
     } else {
-      console.log(`  ${item.description.slice(0, 60).padEnd(60)} Other -> ${newCat}`);
+      console.log(`  ${item.description.slice(0, 60).padEnd(60)} ${item.category} -> ${newCat}`);
       updated++;
     }
   }
