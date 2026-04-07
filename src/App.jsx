@@ -186,7 +186,7 @@ async function loadAll() {
       description:r.description,category:r.category,priority:r.priority,
       status:r.status,assignee:r.assignee||"",vendor:r.vendor||"",notes:r.notes||"",
       scheduledDate:(r.scheduled_date&&/^\d{4}-\d{2}-\d{2}$/.test(r.scheduled_date))?r.scheduled_date:"",completedDate:(r.completed_date&&/^\d{4}-\d{2}-\d{2}$/.test(r.completed_date))?r.completed_date:"",quoteUrl:r.quote_url||"",
-      createdAt:r.created_at,statusHistory:r.status_history||[],
+      createdAt:r.created_at,statusHistory:r.status_history||[],correspondence:r.correspondence||[],
     }));
     const tenants=(r3.data||[]).map(r=>({
       id:r.id,propertyId:r.property_id,companyName:r.company_name||"",
@@ -217,7 +217,7 @@ async function saveItemToDB(item) {
     description:item.description.replace(/\s*\([^)]*\)\s*$/,"").trim(),category:item.category,priority:item.priority,
     status:item.status,assignee:item.assignee||"",vendor:item.vendor||"",notes:item.notes||"",
     scheduled_date:item.scheduledDate||"",completed_date:item.completedDate||"",quote_url:item.quoteUrl||"",
-    created_at:item.createdAt,status_history:item.statusHistory,
+    created_at:item.createdAt,status_history:item.statusHistory,correspondence:item.correspondence||[],
   },{onConflict:"id"});
   if(error)console.error("saveItemToDB error:",error); return error;
 }
@@ -366,7 +366,7 @@ function parsePDF({pdfBase64,pdfImages,propertyId,inspectionId,overrideDate,over
       category:item.category,priority:item.priority,
       status:"Not Started",assignee:"",vendor:"",notes:"",
       createdAt:ts,scheduledDate:"",completedDate:"",
-      statusHistory:[{status:"Not Started",date:dateOnly}],
+      statusHistory:[{status:"Not Started",date:dateOnly}],correspondence:[],
     }));
     onResult({items:newItems,date:overrideDate||parsed.inspectionDate||dateOnly,inspector:overrideInspector||parsed.inspectorName||"",detectedProperty:parsed.propertyName});
     setLoading(false);
@@ -472,10 +472,14 @@ function ItemRow({item,showProperty,onClick,selectable,selected,onToggle}){
   );
 }
 
+const CORR_LABELS=["Email","Phone Call","Vendor","Tenant","Internal Note"];
+const CORR_COLORS={Email:"#0070f3","Phone Call":"#16a34a",Vendor:"#7c3aed",Tenant:"#e67e00","Internal Note":"#666"};
 function ItemDetail({item,inspections,onUpdate,onAdvance,onDelete,onClose}){
   const[editing,setEditing]=useState(false);const[form,setForm]=useState({...item});const[showQuote,setShowQuote]=useState(false);
+  const[corrText,setCorrText]=useState("");const[corrLabel,setCorrLabel]=useState("Email");
   const prop=PROPERTIES.find(p=>p.id===item.propertyId);const insp=inspections.find(i=>i.id===item.inspectionId);const next=STATUS_NEXT[item.status];
   function save(){onUpdate(form);setEditing(false);}
+  function addCorrespondence(){if(!corrText.trim())return;const entry={label:corrLabel,text:corrText.trim(),date:new Date().toISOString()};onUpdate({correspondence:[...(item.correspondence||[]),entry]});setCorrText("");}
   return(
     <SlideOver onClose={onClose} sub={`${GROUPS[prop?.group]} - ${prop?.name}`} title={item.description}>
       <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:18}}><PPill p={item.priority}/><SPill s={item.status}/><Chip label={item.category} tc={C.muted} bg={C.bg} bc={C.border}/></div>
@@ -497,6 +501,29 @@ function ItemDetail({item,inspections,onUpdate,onAdvance,onDelete,onClose}){
               <Dot color={SCOLOR[h.status]} size={8}/><span style={{fontSize:14,color:C.text,fontWeight:600,flex:1}}>{h.status}</span><span style={{fontSize:13,color:C.faint}}>{h.date}</span>
             </div>
           ))}
+        </div>
+
+        <ULabel>Correspondence log</ULabel>
+        <div style={{marginBottom:20}}>
+          <div style={{display:"flex",gap:8,marginBottom:10}}>
+            <select value={corrLabel} onChange={e=>setCorrLabel(e.target.value)} style={{fontFamily:"var(--font-sans)",fontSize:12,padding:"7px 10px",borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:C.text}}>
+              {CORR_LABELS.map(l=><option key={l} value={l}>{l}</option>)}
+            </select>
+            <div style={{flex:1}}/>
+          </div>
+          <textarea value={corrText} onChange={e=>setCorrText(e.target.value)} placeholder="Paste email, note a phone call, vendor response..." rows={3} style={{fontFamily:"var(--font-sans)",fontSize:13,width:"100%",borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:C.text,padding:"10px 12px",resize:"vertical",boxSizing:"border-box",marginBottom:8}}/>
+          <PrimaryBtn disabled={!corrText.trim()} onClick={addCorrespondence}>Add entry</PrimaryBtn>
+          {(item.correspondence||[]).length>0&&<div style={{marginTop:14,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
+            {[...(item.correspondence||[])].sort((a,b)=>new Date(b.date)-new Date(a.date)).map((c,i,arr)=>(
+              <div key={i} style={{padding:"12px 14px",background:i%2===0?C.surface:C.bg,borderBottom:i<arr.length-1?`1px solid ${C.border}`:"none"}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                  <span style={{fontSize:11,fontWeight:700,color:CORR_COLORS[c.label]||C.muted,textTransform:"uppercase",letterSpacing:"0.05em"}}>{c.label}</span>
+                  <span style={{fontSize:11,color:C.faint}}>{new Date(c.date).toLocaleDateString()} {new Date(c.date).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}</span>
+                </div>
+                <div style={{fontSize:13,color:C.text,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{c.text}</div>
+              </div>
+            ))}
+          </div>}
         </div>
 
         {/* Primary actions */}
@@ -672,7 +699,7 @@ function AddItemForm({selectedPropertyId,onSubmit,onClose}){
           <FInput label="Vendor" value={form.vendor} onChange={v=>setForm(f=>({...f,vendor:v}))} placeholder="Optional"/>
         </div>
         <FInput label="Notes" value={form.notes} onChange={v=>setForm(f=>({...f,notes:v}))} placeholder="Optional..." rows={2}/>
-        <PrimaryBtn full disabled={!form.description.trim()} onClick={()=>{const ts=nowISO();onSubmit({id:"r"+uid(),inspectionId:null,...form,status:"Not Started",createdAt:ts,scheduledDate:"",completedDate:"",statusHistory:[{status:"Not Started",date:today()}]});}}>Add item</PrimaryBtn>
+        <PrimaryBtn full disabled={!form.description.trim()} onClick={()=>{const ts=nowISO();onSubmit({id:"r"+uid(),inspectionId:null,...form,status:"Not Started",createdAt:ts,scheduledDate:"",completedDate:"",statusHistory:[{status:"Not Started",date:today()}],correspondence:[]});}}>Add item</PrimaryBtn>
       </div>
     </Overlay>
   );
@@ -866,7 +893,7 @@ function ExcelImportForm({onSubmit,onClose}){
         assignee:validAssignee,vendor:"",
         notes:get(row,"notes"),
         scheduledDate:schedDate,completedDate,quoteUrl:"",createdAt:ts,
-        statusHistory:[{status:validStatus,date:today()}],
+        statusHistory:[{status:validStatus,date:today()}],correspondence:[],
       };
     }).filter(Boolean);
   }
