@@ -185,7 +185,7 @@ async function loadAll() {
       id:r.id,inspectionId:r.inspection_id,propertyId:r.property_id,
       description:r.description,category:r.category,priority:r.priority,
       status:r.status,assignee:r.assignee||"",vendor:r.vendor||"",notes:r.notes||"",
-      scheduledDate:r.scheduled_date||"",completedDate:r.completed_date||"",quoteUrl:r.quote_url||"",
+      scheduledDate:(r.scheduled_date&&/^\d{4}-\d{2}-\d{2}$/.test(r.scheduled_date))?r.scheduled_date:"",completedDate:(r.completed_date&&/^\d{4}-\d{2}-\d{2}$/.test(r.completed_date))?r.completed_date:"",quoteUrl:r.quote_url||"",
       createdAt:r.created_at,statusHistory:r.status_history||[],
     }));
     const tenants=(r3.data||[]).map(r=>({
@@ -773,13 +773,20 @@ function ExcelImportForm({onSubmit,onClose}){
       const assigneeRaw=get(row,"assignee");
       const validAssignee=matchAssignee(assigneeRaw);
 
+      function parseExcelDate(raw){
+        if(!raw)return"";
+        const n=Number(raw);
+        if(Number.isFinite(n)&&n>1&&n<2958466){const d=new Date(Date.UTC(1899,11,30+Math.round(n)));return d.toISOString().slice(0,10);}
+        const d=new Date(raw);
+        if(!isNaN(d.getTime())&&d.getFullYear()>1900&&d.getFullYear()<2200)return d.toISOString().slice(0,10);
+        return"";
+      }
+
       const schedRaw=get(row,"scheduled");
-      let schedDate="";
-      if(schedRaw){const d=new Date(schedRaw);if(!isNaN(d.getTime()))schedDate=d.toISOString().slice(0,10);}
+      const schedDate=parseExcelDate(schedRaw);
 
       const closeRaw=get(row,"close");
-      let completedDate="";
-      if(closeRaw){const d=new Date(closeRaw);if(!isNaN(d.getTime()))completedDate=d.toISOString().slice(0,10);}
+      let completedDate=parseExcelDate(closeRaw);
       if(validStatus==="Completed"&&!completedDate)completedDate=today();
 
       return{
